@@ -31,6 +31,19 @@ class Evidence extends Model
     }
 
     /**
+     * Determine whether anyone may see the file on the public transparency board: it is marked
+     * public, its ABYIP is published, and its barangay takes part in the platform.
+     */
+    public function isPubliclyVisible(): bool
+    {
+        $this->loadMissing('ppa.abyip.barangay');
+
+        return $this->is_public
+            && $this->ppa->abyip->isPublished()
+            && $this->ppa->abyip->barangay->is_participating;
+    }
+
+    /**
      * Determine whether the file is a photo that can be shown inline.
      */
     public function isImage(): bool

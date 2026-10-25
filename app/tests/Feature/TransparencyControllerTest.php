@@ -61,6 +61,21 @@ class TransparencyControllerTest extends TestCase
         $this->get(route('transparency.evidence', $internal))->assertNotFound();
     }
 
+    public function test_public_evidence_of_a_barangay_that_was_turned_off_is_not_served(): void
+    {
+        Storage::fake();
+        $evidence = Evidence::factory()->public()->for(Ppa::factory()->state([
+            'abyip_id' => Abyip::factory()->approved()->state(['published_at' => now()]),
+        ]))->create();
+        Storage::put($evidence->path, 'img');
+
+        $this->get(route('transparency.evidence', $evidence))->assertOk();
+
+        $evidence->ppa->barangay->update(['is_participating' => false]);
+
+        $this->get(route('transparency.evidence', $evidence))->assertNotFound();
+    }
+
     public function test_public_evidence_of_unpublished_program_is_not_served(): void
     {
         Storage::fake();

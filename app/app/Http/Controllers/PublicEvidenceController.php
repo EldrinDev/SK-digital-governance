@@ -9,13 +9,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class PublicEvidenceController extends Controller
 {
     /**
-     * Serve a file on the public board: it must be marked public and belong to a published ABYIP.
+     * Serve a file on the public board, under the same rules as the board itself.
      */
     public function show(Evidence $evidence): StreamedResponse
     {
-        $evidence->loadMissing('ppa.abyip');
-
-        abort_unless($evidence->is_public && $evidence->ppa->abyip->isPublished(), 404);
+        abort_unless($evidence->isPubliclyVisible(), 404);
 
         return $evidence->isImage()
             ? Storage::response($evidence->path, $evidence->original_name)
