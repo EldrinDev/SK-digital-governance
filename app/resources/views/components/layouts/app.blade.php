@@ -59,7 +59,7 @@
 
         <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)]">
             {{-- Side menu (desktop) --}}
-            <aside class="hidden border-r border-line bg-white lg:flex lg:flex-col">
+            <aside class="hidden border-r border-line bg-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto">
                 <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-5 py-5">
                     <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10">
                     <span class="leading-tight">
