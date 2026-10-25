@@ -141,7 +141,7 @@
                                 Find a program
                                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['arrow'] !!}</svg>
                             </a>
-                            <a href="#transparency" class="inline-flex items-center rounded-[8px] border border-navy/80 bg-white px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white">
+                            <a href="{{ route('transparency.index') }}" class="inline-flex items-center rounded-[8px] border border-navy/80 bg-white px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white">
                                 See public records
                             </a>
                         </div>
@@ -221,6 +221,10 @@
                             <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0 text-info" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
                             Personal details of youth members are never published. Only approved, public documents appear here.
                         </p>
+                        <a href="{{ route('transparency.index') }}" class="mt-6 inline-flex items-center gap-2 rounded-[8px] bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep">
+                            Browse the transparency board
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['arrow'] !!}</svg>
+                        </a>
                     </div>
 
                     <ul class="divide-y divide-line rounded-[12px] border border-line">

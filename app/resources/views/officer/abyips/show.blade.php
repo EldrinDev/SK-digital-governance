@@ -105,5 +105,32 @@
             'lockNote' => 'Its PPAs, budgets, and schedules will be locked, and you can start recording progress on each one.',
             'emptyNote' => $abyip->ppas->isEmpty() ? 'Add at least one PPA before recording the approval.' : null,
         ])
+
+        @can('publish', $abyip)
+            <section class="mt-6 rounded-[12px] border border-line bg-white p-5" aria-labelledby="publish-heading">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <h2 id="publish-heading" class="font-display text-lg font-semibold">Public transparency board</h2>
+                        @if ($abyip->isPublished())
+                            <p class="mt-1 text-sm text-slate-muted">
+                                Published {{ $abyip->published_at->format('M j, Y') }}. Anyone can see its PPAs, budgets, progress, and the evidence you marked public.
+                                <a href="{{ route('transparency.show', $abyip->barangay_id) }}" target="_blank" class="font-semibold text-emerald hover:underline">View public page</a>
+                            </p>
+                        @else
+                            <p class="mt-1 text-sm text-slate-muted">Not published. Publishing shows its PPAs, budgets, progress, and public evidence to everyone. Internal evidence and personal details are never shown.</p>
+                        @endif
+                    </div>
+                    <form method="POST" action="{{ $abyip->isPublished() ? route('officer.abyips.publication.destroy', $abyip) : route('officer.abyips.publication.store', $abyip) }}">
+                        @csrf
+                        @if ($abyip->isPublished())
+                            @method('DELETE')
+                            <button type="submit" class="rounded-[8px] border border-line px-4 py-2.5 text-sm font-semibold hover:border-navy">Unpublish</button>
+                        @else
+                            <button type="submit" class="rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark">Publish to the board</button>
+                        @endif
+                    </form>
+                </div>
+            </section>
+        @endcan
     </div>
 </x-layouts.app>

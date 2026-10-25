@@ -105,8 +105,17 @@ class PpaControllerTest extends TestCase
         $this->actingAs($this->officer)->put(route('officer.ppas.update', $other), $this->payload())->assertNotFound();
     }
 
+    public function test_overdue_ppa_in_a_draft_abyip_is_not_delayed(): void
+    {
+        $ppa = Ppa::factory()->delayed()->create(['abyip_id' => $this->abyip->id]);
+
+        $this->assertFalse($ppa->isDelayed());
+        $this->assertSame(0, Ppa::delayed()->count());
+    }
+
     public function test_index_filters_delayed_ppas(): void
     {
+        $this->abyip->forceFill(['status' => 'approved'])->save();
         $delayed = Ppa::factory()->delayed()->create(['abyip_id' => $this->abyip->id, 'title' => 'Late clean-up drive']);
         Ppa::factory()->create(['abyip_id' => $this->abyip->id, 'title' => 'On-time sports fest']);
         Ppa::factory()->delayed()->create(['title' => 'Other barangay delay']);

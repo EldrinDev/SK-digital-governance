@@ -61,6 +61,8 @@ class AuditLog extends Model
         'meeting.minutes_uploaded' => 'Uploaded minutes',
         'resolution.recorded' => 'Added a resolution',
         'remark.created' => 'Left a monitoring remark',
+        'abyip.published' => 'Published an ABYIP',
+        'abyip.unpublished' => 'Unpublished an ABYIP',
     ];
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\PlanStatus;
 use App\PpaStatus;
 use Database\Factories\PpaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -46,15 +47,17 @@ class Ppa extends Model
     }
 
     /**
-     * Determine whether the PPA is still open after its end date.
+     * Determine whether the PPA is in implementation (its ABYIP is approved) and still open after its end date.
      */
     public function isDelayed(): bool
     {
-        return ! $this->status->isClosed() && $this->ends_on->isBefore(today());
+        return ! $this->status->isClosed()
+            && $this->ends_on->isBefore(today())
+            && $this->abyip->isApproved();
     }
 
     /**
-     * PPAs still open after their end date.
+     * PPAs in an approved ABYIP that are still open after their end date.
      *
      * @param  Builder<self>  $query
      */
@@ -62,7 +65,8 @@ class Ppa extends Model
     protected function delayed(Builder $query): void
     {
         $query->whereIn('status', [PpaStatus::Planned, PpaStatus::Ongoing])
-            ->whereDate('ends_on', '<', today());
+            ->whereDate('ends_on', '<', today())
+            ->whereHas('abyip', fn (Builder $abyip) => $abyip->where('status', PlanStatus::Approved));
     }
 
     /**

@@ -36,6 +36,23 @@ class AbyipPolicy
     }
 
     /**
+     * Determine whether the user can put the ABYIP on, or take it off, the public transparency board.
+     * Only approved programs can be published.
+     */
+    public function publish(User $user, Abyip $abyip): Response
+    {
+        $workspace = $this->inOwnWorkspace($user, $abyip->barangay_id);
+
+        if ($workspace->denied()) {
+            return $workspace;
+        }
+
+        return $abyip->isApproved()
+            ? Response::allow()
+            : Response::deny('Only an approved ABYIP can be published.');
+    }
+
+    /**
      * Determine whether the user can record the council's approval.
      */
     public function approve(User $user, Abyip $abyip): Response

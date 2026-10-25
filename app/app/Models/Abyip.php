@@ -6,6 +6,8 @@ use App\Models\Concerns\HasCouncilApproval;
 use App\PlanStatus;
 use Database\Factories\AbyipFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,7 +41,27 @@ class Abyip extends Model
         return [
             'status' => PlanStatus::class,
             'approved_on' => 'date',
+            'published_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Determine whether the ABYIP is on the public transparency board.
+     */
+    public function isPublished(): bool
+    {
+        return $this->published_at !== null;
+    }
+
+    /**
+     * ABYIPs on the public transparency board.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function published(Builder $query): void
+    {
+        $query->whereNotNull('published_at');
     }
 
     /**
@@ -63,6 +85,6 @@ class Abyip extends Model
      */
     public function ppas(): HasMany
     {
-        return $this->hasMany(Ppa::class);
+        return $this->hasMany(Ppa::class)->chaperone();
     }
 }

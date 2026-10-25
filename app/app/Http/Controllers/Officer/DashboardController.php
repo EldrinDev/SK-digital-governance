@@ -33,7 +33,7 @@ class DashboardController extends Controller
             'plannedBudget' => $currentAbyip?->ppas()->where('status', '!=', PpaStatus::Cancelled)->sum('budget') ?? 0,
             'activePpas' => (clone $ppas)
                 ->whereIn('status', [PpaStatus::Planned, PpaStatus::Ongoing])
-                ->with('milestones')
+                ->with(['milestones', 'abyip:id,status'])
                 ->orderBy('ends_on')
                 ->limit(5)
                 ->get(),

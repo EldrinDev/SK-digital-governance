@@ -8,10 +8,15 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\StaffSessionController;
 use App\Http\Controllers\Federation;
 use App\Http\Controllers\Officer;
+use App\Http\Controllers\PublicEvidenceController;
+use App\Http\Controllers\TransparencyController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 Route::view('/privacy', 'privacy')->name('privacy');
+Route::get('/transparency', [TransparencyController::class, 'index'])->name('transparency.index');
+Route::get('/transparency/evidence/{evidence}', [PublicEvidenceController::class, 'show'])->name('transparency.evidence');
+Route::get('/transparency/{barangay}', [TransparencyController::class, 'show'])->name('transparency.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -50,6 +55,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::resource('abyips', Officer\AbyipController::class)->only(['create', 'store', 'show']);
         Route::post('abyips/{abyip}/approval', [Officer\AbyipApprovalController::class, 'store'])->name('abyips.approval.store');
         Route::get('abyips/{abyip}/resolution', [Officer\AbyipApprovalController::class, 'show'])->name('abyips.resolution');
+        Route::post('abyips/{abyip}/publication', [Officer\AbyipPublicationController::class, 'store'])->name('abyips.publication.store');
+        Route::delete('abyips/{abyip}/publication', [Officer\AbyipPublicationController::class, 'destroy'])->name('abyips.publication.destroy');
 
         Route::get('ppas', [Officer\PpaController::class, 'index'])->name('ppas.index');
         Route::get('abyips/{abyip}/ppas/create', [Officer\PpaController::class, 'create'])->name('ppas.create');
