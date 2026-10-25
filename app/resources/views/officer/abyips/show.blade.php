@@ -11,6 +11,9 @@
     <x-slot:actions>
         <div class="flex items-center gap-3">
             <x-ui.plan-status :plan="$abyip" />
+            @if ($abyip->isApproved())
+                <a href="{{ route('officer.abyips.report', $abyip) }}" class="rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">Accomplishment report</a>
+            @endif
             @can('update', $abyip)
                 <a href="{{ route('officer.ppas.create', $abyip) }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark">
                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>

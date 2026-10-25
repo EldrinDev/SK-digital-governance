@@ -53,6 +53,14 @@ class AbyipPolicy
     }
 
     /**
+     * Determine whether the user can submit an accomplishment report for the approved ABYIP.
+     */
+    public function report(User $user, Abyip $abyip): Response
+    {
+        return $this->publish($user, $abyip);
+    }
+
+    /**
      * Determine whether the user can record the council's approval.
      */
     public function approve(User $user, Abyip $abyip): Response

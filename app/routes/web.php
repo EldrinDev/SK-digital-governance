@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\StaffSessionController;
 use App\Http\Controllers\Federation;
 use App\Http\Controllers\Officer;
 use App\Http\Controllers\PublicEvidenceController;
+use App\Http\Controllers\ReportPrintController;
 use App\Http\Controllers\TransparencyController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('abyips/{abyip}/resolution', [Officer\AbyipApprovalController::class, 'show'])->name('abyips.resolution');
         Route::post('abyips/{abyip}/publication', [Officer\AbyipPublicationController::class, 'store'])->name('abyips.publication.store');
         Route::delete('abyips/{abyip}/publication', [Officer\AbyipPublicationController::class, 'destroy'])->name('abyips.publication.destroy');
+        Route::get('abyips/{abyip}/report', [Officer\AccomplishmentReportController::class, 'show'])->name('abyips.report');
+        Route::get('abyips/{abyip}/report/print', [Officer\AccomplishmentReportController::class, 'print'])->name('abyips.report.print');
+        Route::post('abyips/{abyip}/report', [Officer\AccomplishmentReportController::class, 'store'])->name('abyips.report.store');
+        Route::get('disclosure', [Officer\DisclosureController::class, 'index'])->name('disclosure.index');
 
         Route::get('ppas', [Officer\PpaController::class, 'index'])->name('ppas.index');
         Route::get('abyips/{abyip}/ppas/create', [Officer\PpaController::class, 'create'])->name('ppas.create');
@@ -85,6 +90,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/', Federation\DashboardController::class)->name('dashboard');
         Route::get('barangays/{barangay}', [Federation\BarangayController::class, 'show'])->name('barangays.show');
         Route::post('barangays/{barangay}/remarks', [Federation\MonitoringRemarkController::class, 'store'])->name('barangays.remarks.store');
+        Route::get('reports', [Federation\AccomplishmentReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/{report}', [Federation\AccomplishmentReportController::class, 'show'])->name('reports.show');
+        Route::patch('reports/{report}', [Federation\AccomplishmentReportController::class, 'update'])->name('reports.update');
     });
 
     Route::middleware('role:administrator')->prefix('admin')->name('admin.')->group(function () {
@@ -94,6 +102,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('barangays/{barangay}', [Admin\BarangayController::class, 'update'])->name('barangays.update');
         Route::get('audit-trail', [Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
     });
+
+    Route::get('/reports/{report}/print', [ReportPrintController::class, 'show'])->middleware('role:officer,federation')->name('reports.print');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });

@@ -63,6 +63,8 @@ class AuditLog extends Model
         'remark.created' => 'Left a monitoring remark',
         'abyip.published' => 'Published an ABYIP',
         'abyip.unpublished' => 'Unpublished an ABYIP',
+        'report.submitted' => 'Submitted a report',
+        'report.reviewed' => 'Reviewed a report',
     ];
 
     /**

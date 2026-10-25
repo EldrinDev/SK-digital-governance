@@ -81,6 +81,14 @@ class Abyip extends Model
     }
 
     /**
+     * @return HasMany<AccomplishmentReport, $this>
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(AccomplishmentReport::class)->latest('submitted_at');
+    }
+
+    /**
      * @return HasMany<Ppa, $this>
      */
     public function ppas(): HasMany
