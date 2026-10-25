@@ -3,6 +3,7 @@
     'label',
     'type' => 'text',
     'hint' => null,
+    'value' => null,
 ])
 @php
     $hasError = $errors->has($name);
@@ -19,7 +20,7 @@
             id="{{ $name }}"
             name="{{ $name }}"
             type="{{ $type }}"
-            @if (! $isPassword) value="{{ old($name) }}" @endif
+            @if (! $isPassword) value="{{ old($name, $value) }}" @endif
             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
             @if ($hasError) aria-invalid="true" @endif
             {{ $attributes->class([

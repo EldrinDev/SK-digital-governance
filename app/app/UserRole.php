@@ -23,6 +23,19 @@ enum UserRole: string
     }
 
     /**
+     * Get the label for a group of accounts with this role.
+     */
+    public function pluralLabel(): string
+    {
+        return match ($this) {
+            self::Youth => 'Youth accounts',
+            self::Officer => 'Barangay SK officers',
+            self::Federation => 'SK Federation users',
+            self::Administrator => 'Administrators',
+        };
+    }
+
+    /**
      * Determine whether accounts with this role work inside one barangay workspace.
      */
     public function belongsToBarangay(): bool

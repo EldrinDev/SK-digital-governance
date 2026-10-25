@@ -30,7 +30,7 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'barangay_id' => ['required', 'integer', Rule::exists(Barangay::class, 'id')],
+            'barangay_id' => ['required', 'integer', Rule::exists(Barangay::class, 'id')->where('is_participating', true)],
             'privacy_consent' => ['accepted'],
         ];
     }

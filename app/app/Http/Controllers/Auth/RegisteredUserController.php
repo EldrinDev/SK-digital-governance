@@ -19,7 +19,7 @@ class RegisteredUserController extends Controller
     public function create(): View
     {
         return view('auth.register', [
-            'barangays' => Barangay::orderBy('name')->get(['id', 'name']),
+            'barangays' => Barangay::participating()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

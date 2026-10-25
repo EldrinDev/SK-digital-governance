@@ -38,6 +38,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'privacy_consented_at' => 'datetime',
+            'deactivated_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
         ];
@@ -62,6 +63,14 @@ class User extends Authenticatable
     public function hasRole(UserRole $role): bool
     {
         return $this->role === $role;
+    }
+
+    /**
+     * Determine whether the account can still sign in.
+     */
+    public function isActive(): bool
+    {
+        return $this->deactivated_at === null;
     }
 
     /**

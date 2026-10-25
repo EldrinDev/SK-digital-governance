@@ -63,7 +63,11 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $credentials = [...$this->only('email', 'password'), ...$this->accountConditions()];
+        $credentials = [
+            ...$this->only('email', 'password'),
+            'deactivated_at' => null,
+            ...$this->accountConditions(),
+        ];
 
         if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

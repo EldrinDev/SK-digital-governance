@@ -1,12 +1,14 @@
 @props([
     'busy',
     'tone' => 'emerald',
+    'block' => true,
 ])
 <button
     type="submit"
     data-busy-label="{{ $busy }}"
     {{ $attributes->class([
-        'flex w-full items-center justify-center gap-2 rounded-[8px] px-5 py-3 text-sm font-semibold text-white transition-colors disabled:cursor-wait disabled:opacity-80',
+        'flex items-center justify-center gap-2 rounded-[8px] px-5 py-3 text-sm font-semibold text-white transition-colors disabled:cursor-wait disabled:opacity-80',
+        'w-full' => $block,
         'bg-emerald shadow-sm shadow-emerald/30 hover:bg-emerald-dark' => $tone === 'emerald',
         'bg-navy hover:bg-navy-deep' => $tone === 'navy',
     ]) }}

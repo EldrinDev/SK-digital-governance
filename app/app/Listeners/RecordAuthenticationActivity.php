@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 
 /**
@@ -49,6 +50,14 @@ class RecordAuthenticationActivity
     public function handleLogout(Logout $event): void
     {
         $this->record('auth.logout', $event->user);
+    }
+
+    /**
+     * Record a password reset.
+     */
+    public function handlePasswordReset(PasswordReset $event): void
+    {
+        $this->record('auth.password_reset', $event->user);
     }
 
     /**

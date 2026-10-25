@@ -2,6 +2,7 @@
     'name',
     'label',
     'placeholder' => 'Choose one',
+    'placeholderSelectable' => false,
 ])
 @php
     $hasError = $errors->has($name);
@@ -18,7 +19,7 @@
             'border-error focus:border-error focus:ring-error/20' => $hasError,
         ]) }}
     >
-        <option value="" disabled @selected(old($name) === null)>{{ $placeholder }}</option>
+        <option value="" @disabled(! $placeholderSelectable) @selected(old($name) === null)>{{ $placeholder }}</option>
         {{ $slot }}
     </select>
     @error($name)

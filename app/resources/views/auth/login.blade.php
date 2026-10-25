@@ -6,6 +6,9 @@
 
         <x-form.input name="email" type="email" label="Email" autocomplete="email" inputmode="email" required :autofocus="! old('email')" />
         <x-form.input name="password" type="password" label="Password" autocomplete="current-password" required :autofocus="(bool) old('email')" />
+        <p class="-mt-2 text-right text-sm">
+            <a href="{{ route('password.request') }}" class="font-medium text-emerald underline-offset-4 hover:underline">Forgot password?</a>
+        </p>
 
         <label class="flex items-center gap-2.5 text-sm text-navy/80">
             <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="h-4 w-4 rounded border-line accent-emerald">

@@ -34,7 +34,7 @@ class StaffLoginRequest extends LoginRequest
             'workspace' => ['required', Rule::in([
                 self::FEDERATION_WORKSPACE,
                 self::ADMINISTRATION_WORKSPACE,
-                ...Barangay::pluck('id')->map(fn (int $id): string => (string) $id),
+                ...Barangay::participating()->pluck('id')->map(fn (int $id): string => (string) $id),
             ])],
         ];
     }

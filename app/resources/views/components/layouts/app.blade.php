@@ -1,8 +1,45 @@
 @props([
     'title',
+    'heading' => null,
+    'description' => null,
 ])
 @php
+    use App\UserRole;
+
     $user = auth()->user();
+
+    /**
+     * Side menu entries for each role: label, route name, the route pattern
+     * that marks it active, and an outline icon path.
+     *
+     * @var list<array{label: string, route: string, active: string, icon: string}> $navigation
+     */
+    $navigation = match ($user->role) {
+        UserRole::Administrator => [
+            ['label' => 'Overview', 'route' => 'admin.dashboard', 'active' => 'admin.dashboard', 'icon' => '<path d="M3 12 12 4l9 8"/><path d="M5 10v10h14V10"/>'],
+            ['label' => 'Users', 'route' => 'admin.users.index', 'active' => 'admin.users.*', 'icon' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
+            ['label' => 'Barangays', 'route' => 'admin.barangays.index', 'active' => 'admin.barangays.*', 'icon' => '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>'],
+            ['label' => 'Audit trail', 'route' => 'admin.audit-logs.index', 'active' => 'admin.audit-logs.*', 'icon' => '<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>'],
+        ],
+        UserRole::Officer => [
+            ['label' => 'Overview', 'route' => 'officer.dashboard', 'active' => 'officer.dashboard', 'icon' => '<path d="M3 12 12 4l9 8"/><path d="M5 10v10h14V10"/>'],
+            ['label' => 'Plans', 'route' => 'officer.plans.index', 'active' => 'officer.plans.*', 'icon' => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>'],
+            ['label' => 'PPAs', 'route' => 'officer.ppas.index', 'active' => 'officer.ppas.*', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 15 2 2 4-4"/>'],
+        ],
+        UserRole::Federation => [
+            ['label' => 'Overview', 'route' => 'federation.dashboard', 'active' => 'federation.dashboard', 'icon' => '<path d="M3 12 12 4l9 8"/><path d="M5 10v10h14V10"/>'],
+        ],
+        UserRole::Youth => [
+            ['label' => 'Dashboard', 'route' => 'dashboard', 'active' => 'dashboard', 'icon' => '<path d="M3 12 12 4l9 8"/><path d="M5 10v10h14V10"/>'],
+        ],
+    };
+
+    $navigation = array_values(array_filter($navigation, fn (array $item): bool => Route::has($item['route'])));
+    $workspace = $user->barangay?->name ?? match ($user->role) {
+        UserRole::Federation => 'SK Federation',
+        UserRole::Administrator => 'Administration',
+        default => 'Olongapo City',
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -15,31 +52,100 @@
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-mist font-sans text-navy antialiased">
-        <header class="border-b border-line bg-white">
-            <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
-                <div class="flex min-w-0 items-center gap-3">
-                    <a href="{{ route('home') }}" class="shrink-0 rounded-[8px]">
-                        <img src="{{ asset('images/sk-logo.svg') }}" alt="SK Digital Governance home" width="40" height="40" class="h-10 w-10">
-                    </a>
-                    <div class="min-w-0 leading-tight">
-                        <p class="truncate font-display text-base font-semibold">{{ $user->barangay?->name ?? 'Olongapo City' }}</p>
-                        <p class="truncate text-xs text-slate-muted">{{ $user->role->label() }}</p>
+    <body class="min-h-dvh bg-mist font-sans text-navy antialiased">
+        <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[8px] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to content</a>
+
+        <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+            {{-- Side menu (desktop) --}}
+            <aside class="hidden border-r border-line bg-white lg:flex lg:flex-col">
+                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-5 py-5">
+                    <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10">
+                    <span class="leading-tight">
+                        <span class="block font-display text-sm font-semibold">SK Digital Governance</span>
+                        <span class="block text-[0.65rem] font-medium tracking-[0.18em] text-slate-muted">OLONGAPO CITY</span>
+                    </span>
+                </a>
+
+                <nav class="flex-1 px-3 py-2" aria-label="Workspace">
+                    <ul class="space-y-1">
+                        @foreach ($navigation as $item)
+                            @php($isActive = request()->routeIs($item['active']))
+                            <li>
+                                <a href="{{ route($item['route']) }}" @class([
+                                    'flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-sm font-medium transition-colors',
+                                    'bg-emerald/10 text-emerald' => $isActive,
+                                    'text-navy/75 hover:bg-mist hover:text-navy' => ! $isActive,
+                                ]) @if ($isActive) aria-current="page" @endif>
+                                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
+                                    {{ $item['label'] }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </nav>
+
+                <div class="border-t border-line px-5 py-4 text-xs text-slate-muted">
+                    <a href="{{ route('home') }}" class="hover:text-emerald">Public site</a>
+                    ·
+                    <a href="{{ route('privacy') }}" class="hover:text-emerald">Privacy</a>
+                </div>
+            </aside>
+
+            <div class="flex min-w-0 flex-col">
+                <header class="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
+                    <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <details class="relative lg:hidden">
+                                <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-[8px] border border-line [&::-webkit-details-marker]:hidden">
+                                    <span class="sr-only">Open menu</span>
+                                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                                </summary>
+                                <ul class="absolute left-0 mt-2 w-56 rounded-[12px] border border-line bg-white p-2 shadow-lg shadow-navy/10">
+                                    @foreach ($navigation as $item)
+                                        <li><a href="{{ route($item['route']) }}" @class(['block rounded-[8px] px-3 py-2 text-sm font-medium hover:bg-mist', 'text-emerald' => request()->routeIs($item['active'])])>{{ $item['label'] }}</a></li>
+                                    @endforeach
+                                    <li class="mt-1 border-t border-line pt-1"><a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm text-slate-muted hover:bg-mist">Public site</a></li>
+                                </ul>
+                            </details>
+                            <div class="min-w-0 leading-tight">
+                                <p class="truncate font-display text-base font-semibold">{{ $workspace }}</p>
+                                <p class="truncate text-xs text-slate-muted">{{ $user->role->label() }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <p class="hidden text-sm text-navy/80 sm:block">{{ $user->name }}</p>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="rounded-[8px] border border-line px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:border-navy">Log out</button>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </header>
 
-                <div class="flex items-center gap-4">
-                    <p class="hidden text-sm text-navy/80 sm:block">{{ $user->name }}</p>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="rounded-[8px] border border-navy/80 px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white">Log out</button>
-                    </form>
-                </div>
+                <main id="main" class="flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                    @if (session('status'))
+                        <div role="status" class="mb-6 flex items-start gap-3 rounded-[12px] border border-success/30 bg-success/10 p-4 text-sm">
+                            <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0 text-success" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+                            <p>{{ session('status') }}</p>
+                        </div>
+                    @endif
+
+                    @if ($heading)
+                        <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+                            <div>
+                                <h1 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{{ $heading }}</h1>
+                                @if ($description)
+                                    <p class="mt-2 max-w-2xl text-slate-muted">{{ $description }}</p>
+                                @endif
+                            </div>
+                            {{ $actions ?? '' }}
+                        </div>
+                    @endif
+
+                    {{ $slot }}
+                </main>
             </div>
-        </header>
-
-        <main class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            {{ $slot }}
-        </main>
+        </div>
     </body>
 </html>

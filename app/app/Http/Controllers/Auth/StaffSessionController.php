@@ -16,7 +16,7 @@ class StaffSessionController extends Controller
     public function create(): View
     {
         return view('auth.staff-login', [
-            'barangays' => Barangay::orderBy('name')->get(['id', 'name']),
+            'barangays' => Barangay::participating()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

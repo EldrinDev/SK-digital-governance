@@ -66,6 +66,13 @@
                     @endif
 
                     <div class="mt-8">
+                        @if (session('status'))
+                            <div role="status" class="mb-6 flex items-start gap-3 rounded-[12px] border border-success/30 bg-success/10 p-4 text-sm leading-relaxed">
+                                <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0 text-success" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+                                <p>{{ session('status') }}</p>
+                            </div>
+                        @endif
+
                         {{ $slot }}
                     </div>
                 </div>
