@@ -43,6 +43,23 @@ class AccomplishmentReportControllerTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'report.reviewed']);
     }
 
+    public function test_a_reviewed_report_cannot_be_reviewed_again(): void
+    {
+        $first = User::factory()->federation()->create();
+        $report = AccomplishmentReport::factory()->create();
+
+        $this->actingAs($first)->patch(route('federation.reports.update', $report), ['review_note' => 'First review']);
+
+        $this->actingAs(User::factory()->federation()->create())
+            ->patch(route('federation.reports.update', $report), ['review_note' => 'Second review'])
+            ->assertForbidden();
+
+        $report->refresh();
+        $this->assertSame($first->id, $report->reviewed_by);
+        $this->assertSame('First review', $report->review_note);
+        $this->assertDatabaseCount('monitoring_remarks', 1);
+    }
+
     public function test_officers_cannot_review_reports(): void
     {
         $report = AccomplishmentReport::factory()->create();
