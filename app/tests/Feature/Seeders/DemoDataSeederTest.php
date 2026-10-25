@@ -1,0 +1,57 @@
+<?php
+
+namespace Tests\Feature\Seeders;
+
+use App\Models\Abyip;
+use App\Models\AccomplishmentReport;
+use App\Models\Barangay;
+use App\Models\Ppa;
+use App\Models\User;
+use Database\Seeders\DemoDataSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Tests\TestCase;
+
+class DemoDataSeederTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake();
+    }
+
+    public function test_seeds_three_pilot_barangays_at_different_stages(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $this->assertSame(DemoDataSeeder::PILOT, Barangay::participating()->orderByRaw("case name when 'Santa Rita' then 0 when 'Barretto' then 1 else 2 end")->pluck('name')->all());
+
+        $santaRita = Barangay::firstWhere('name', 'Santa Rita');
+        $this->assertSame(1, Ppa::where('barangay_id', $santaRita->id)->delayed()->count());
+        $this->assertSame(1, AccomplishmentReport::compile(Abyip::where('barangay_id', $santaRita->id)->sole())['missing_evidence']);
+
+        $this->actingAs(User::firstWhere('email', 'federation@sk.test'))
+            ->get(route('federation.dashboard'))
+            ->assertOk()
+            ->assertSeeText('Santa Rita')
+            ->assertSeeText('Barretto')
+            ->assertSeeText('Kalaklan');
+
+        $this->actingAs(User::firstWhere('email', 'officer@sk.test'))->get(route('officer.dashboard'))->assertOk();
+        $this->actingAs(User::firstWhere('email', 'youth@sk.test'))->get(route('dashboard'))->assertOk()->assertSeeText('How did it go?');
+        $this->get(route('transparency.show', $santaRita))->assertOk()->assertSeeText('Coastal clean-up drive');
+    }
+
+    public function test_refuses_to_run_twice(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $this->expectException(RuntimeException::class);
+
+        $this->app->make(DemoDataSeeder::class)->run();
+    }
+}
