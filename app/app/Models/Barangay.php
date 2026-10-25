@@ -74,6 +74,22 @@ class Barangay extends Model
     }
 
     /**
+     * @return HasMany<Event, $this>
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    /**
+     * @return HasMany<Feedback, $this>
+     */
+    public function feedback(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
+    }
+
+    /**
      * @return HasMany<Meeting, $this>
      */
     public function meetings(): HasMany

@@ -29,8 +29,13 @@
                     </span>
                 </a>
                 <div class="flex items-center gap-5 text-sm font-medium">
+                    <a href="{{ route('events.index') }}" @class(['hidden sm:inline', 'text-emerald' => request()->routeIs('events.*'), 'text-navy/80 hover:text-emerald' => ! request()->routeIs('events.*')])>Events</a>
                     <a href="{{ route('transparency.index') }}" @class(['hidden sm:inline', 'text-emerald' => request()->routeIs('transparency.*'), 'text-navy/80 hover:text-emerald' => ! request()->routeIs('transparency.*')])>Transparency</a>
-                    <a href="{{ route('login') }}" class="rounded-full bg-navy px-4 py-2 font-semibold text-white hover:bg-navy-deep">Log in</a>
+                    @auth
+                        <a href="{{ route(auth()->user()->role->homeRoute()) }}" class="rounded-full bg-navy px-4 py-2 font-semibold text-white hover:bg-navy-deep">My dashboard</a>
+                    @else
+                        <a href="{{ route('login') }}" class="rounded-full bg-navy px-4 py-2 font-semibold text-white hover:bg-navy-deep">Log in</a>
+                    @endauth
                 </div>
             </nav>
         </header>

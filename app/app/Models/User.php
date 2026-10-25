@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -55,6 +56,26 @@ class User extends Authenticatable
     public function barangay(): BelongsTo
     {
         return $this->belongsTo(Barangay::class);
+    }
+
+    /**
+     * The events this youth registered for.
+     *
+     * @return HasMany<EventRegistration, $this>
+     */
+    public function eventRegistrations(): HasMany
+    {
+        return $this->hasMany(EventRegistration::class);
+    }
+
+    /**
+     * Feedback and evaluations this youth sent.
+     *
+     * @return HasMany<Feedback, $this>
+     */
+    public function feedback(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
     }
 
     /**

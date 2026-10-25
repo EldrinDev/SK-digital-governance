@@ -6,16 +6,20 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\StaffSessionController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\Federation;
 use App\Http\Controllers\Officer;
 use App\Http\Controllers\PublicEvidenceController;
 use App\Http\Controllers\ReportPrintController;
 use App\Http\Controllers\TransparencyController;
+use App\Http\Controllers\Youth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::get('/transparency', [TransparencyController::class, 'index'])->name('transparency.index');
+Route::get('/events', [EventController::class, 'index'])->name('events.index');
+Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 Route::get('/transparency/evidence/{evidence}', [PublicEvidenceController::class, 'show'])->name('transparency.evidence');
 Route::get('/transparency/{barangay}', [TransparencyController::class, 'show'])->name('transparency.show');
 
@@ -39,7 +43,12 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'active'])->group(function () {
-    Route::view('/dashboard', 'dashboard')->middleware('role:youth')->name('dashboard');
+    Route::middleware('role:youth')->group(function () {
+        Route::get('/dashboard', Youth\DashboardController::class)->name('dashboard');
+        Route::post('/events/{event}/registration', [Youth\EventRegistrationController::class, 'store'])->name('events.registration.store');
+        Route::delete('/events/{event}/registration', [Youth\EventRegistrationController::class, 'destroy'])->name('events.registration.destroy');
+        Route::post('/feedback', [Youth\FeedbackController::class, 'store'])->name('feedback.store');
+    });
 
     Route::middleware('role:officer')->prefix('officer')->name('officer.')->group(function () {
         Route::get('/', Officer\DashboardController::class)->name('dashboard');
@@ -62,6 +71,13 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('abyips/{abyip}/report/print', [Officer\AccomplishmentReportController::class, 'print'])->name('abyips.report.print');
         Route::post('abyips/{abyip}/report', [Officer\AccomplishmentReportController::class, 'store'])->name('abyips.report.store');
         Route::get('disclosure', [Officer\DisclosureController::class, 'index'])->name('disclosure.index');
+
+        Route::resource('events', Officer\EventController::class)->only(['index', 'create', 'store', 'show']);
+        Route::patch('events/{event}/registrations/{registration}', [Officer\EventAttendanceController::class, 'update'])
+            ->scopeBindings()
+            ->name('events.registrations.update');
+        Route::get('feedback', [Officer\FeedbackController::class, 'index'])->name('feedback.index');
+        Route::patch('feedback/{feedback}', [Officer\FeedbackController::class, 'update'])->name('feedback.update');
 
         Route::get('ppas', [Officer\PpaController::class, 'index'])->name('ppas.index');
         Route::get('abyips/{abyip}/ppas/create', [Officer\PpaController::class, 'create'])->name('ppas.create');

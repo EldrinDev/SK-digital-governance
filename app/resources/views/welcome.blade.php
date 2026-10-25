@@ -137,7 +137,7 @@
                         </p>
 
                         <div class="mt-8 flex flex-wrap gap-3">
-                            <a href="#participate" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald/30 transition-colors hover:bg-emerald-dark">
+                            <a href="{{ route('events.index') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald/30 transition-colors hover:bg-emerald-dark">
                                 Find a program
                                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['arrow'] !!}</svg>
                             </a>

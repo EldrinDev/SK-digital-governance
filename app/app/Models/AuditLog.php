@@ -65,6 +65,12 @@ class AuditLog extends Model
         'abyip.unpublished' => 'Unpublished an ABYIP',
         'report.submitted' => 'Submitted a report',
         'report.reviewed' => 'Reviewed a report',
+        'event.created' => 'Posted an event',
+        'event.registered' => 'Registered for an event',
+        'event.unregistered' => 'Cancelled an event registration',
+        'event.checked_in' => 'Recorded event check-in',
+        'feedback.sent' => 'Sent feedback',
+        'feedback.answered' => 'Replied to feedback',
     ];
 
     /**
