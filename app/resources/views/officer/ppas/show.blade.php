@@ -97,6 +97,77 @@
                     @endif
                 @endcannot
             </section>
+
+            <section class="rounded-[12px] border border-line bg-white" aria-labelledby="evidence-heading">
+                <div class="border-b border-line px-5 py-4">
+                    <h2 id="evidence-heading" class="font-display text-lg font-semibold">Evidence</h2>
+                    <p class="mt-0.5 text-sm text-slate-muted">Photos and documents that show the work was done. Files are internal unless you mark them public.</p>
+                </div>
+
+                @if ($ppa->evidence->isEmpty())
+                    <p class="px-5 py-6 text-sm text-slate-muted">No evidence yet.</p>
+                @else
+                    <ul class="grid gap-4 p-5 sm:grid-cols-2">
+                        @foreach ($ppa->evidence as $file)
+                            <li class="overflow-hidden rounded-[12px] border border-line">
+                                <a href="{{ route('officer.ppas.evidence.show', [$ppa, $file]) }}" target="_blank" class="block aspect-[4/3] bg-mist">
+                                    @if ($file->isImage())
+                                        <img src="{{ route('officer.ppas.evidence.show', [$ppa, $file]) }}" alt="{{ $file->title }}" loading="lazy" class="h-full w-full object-cover">
+                                    @else
+                                        <span class="flex h-full flex-col items-center justify-center gap-2 text-slate-muted">
+                                            <svg viewBox="0 0 24 24" class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z"/><path d="M14 3v6h6"/></svg>
+                                            <span class="text-xs font-semibold">PDF · {{ $file->readableSize() }}</span>
+                                        </span>
+                                    @endif
+                                </a>
+                                <div class="space-y-2 p-3">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <p class="text-sm font-medium">{{ $file->title }}</p>
+                                        <x-ui.badge :tone="$file->is_public ? 'info' : 'neutral'">{{ $file->is_public ? 'Public' : 'Internal' }}</x-ui.badge>
+                                    </div>
+                                    <p class="text-xs text-slate-muted">{{ $file->uploader?->name ?? 'Someone' }} · {{ $file->created_at->format('M j, Y') }}</p>
+                                    @can('track', $ppa)
+                                        <div class="flex gap-4 text-xs font-semibold">
+                                            <form method="POST" action="{{ route('officer.ppas.evidence.update', [$ppa, $file]) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="is_public" value="{{ $file->is_public ? 0 : 1 }}">
+                                                <button type="submit" class="text-emerald hover:underline">{{ $file->is_public ? 'Make internal' : 'Make public' }}</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('officer.ppas.evidence.destroy', [$ppa, $file]) }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-slate-muted hover:text-error">Delete<span class="sr-only"> {{ $file->title }}</span></button>
+                                            </form>
+                                        </div>
+                                    @endcan
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                @can('track', $ppa)
+                    <form method="POST" action="{{ route('officer.ppas.evidence.store', $ppa) }}" enctype="multipart/form-data" class="space-y-4 border-t border-line p-5" novalidate>
+                        @csrf
+                        <x-form.input name="title" label="What it shows" placeholder="e.g. Day 1 attendance sheet" required />
+                        <div>
+                            <label for="file" class="block text-sm font-medium">Photo or PDF (up to 10 MB)</label>
+                            <input id="file" name="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" required
+                                @error('file') aria-invalid="true" aria-describedby="file-error" @enderror
+                                class="mt-1.5 block w-full rounded-[8px] border border-line bg-white text-sm text-navy/80 file:mr-3 file:border-0 file:border-r file:border-line file:bg-mist file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-navy">
+                            @error('file')
+                                <p id="file-error" class="mt-1.5 text-sm text-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <label class="flex items-start gap-2.5 text-sm text-navy/80">
+                            <input type="checkbox" name="is_public" value="1" @checked(old('is_public')) class="mt-1 h-4 w-4 rounded border-line accent-emerald">
+                            <span>Show on the public portal <span class="block text-xs text-slate-muted">Only when it has no personal details, like faces of minors or ID numbers.</span></span>
+                        </label>
+                        <x-form.submit busy="Uploading…" :block="false">Upload evidence</x-form.submit>
+                    </form>
+                @endcan
+            </section>
         </div>
 
         <div class="space-y-6">

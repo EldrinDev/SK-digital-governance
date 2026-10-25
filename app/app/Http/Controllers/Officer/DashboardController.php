@@ -28,6 +28,7 @@ class DashboardController extends Controller
             'currentAbyip' => $currentAbyip,
             'totalPpas' => (clone $ppas)->count(),
             'completedPpas' => (clone $ppas)->where('status', PpaStatus::Completed)->count(),
+            'completedWithEvidence' => (clone $ppas)->where('status', PpaStatus::Completed)->has('evidence')->count(),
             'delayedPpas' => (clone $ppas)->delayed()->count(),
             'plannedBudget' => $currentAbyip?->ppas()->where('status', '!=', PpaStatus::Cancelled)->sum('budget') ?? 0,
             'activePpas' => (clone $ppas)

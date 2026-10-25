@@ -16,6 +16,7 @@
             <div class="rounded-[12px] border border-line bg-white p-5">
                 <p class="text-sm text-slate-muted">Completed</p>
                 <p class="mt-2 font-display text-3xl font-semibold">{{ $completedPpas }}</p>
+                <p class="mt-1 text-xs text-slate-muted">{{ $completedWithEvidence }} with evidence uploaded</p>
             </div>
             <a href="{{ route('officer.ppas.index', ['status' => 'delayed']) }}" @class([
                 'rounded-[12px] border bg-white p-5 transition-colors',

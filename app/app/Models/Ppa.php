@@ -104,6 +104,14 @@ class Ppa extends Model
     }
 
     /**
+     * @return HasMany<Evidence, $this>
+     */
+    public function evidence(): HasMany
+    {
+        return $this->hasMany(Evidence::class)->latest();
+    }
+
+    /**
      * @return HasMany<Milestone, $this>
      */
     public function milestones(): HasMany

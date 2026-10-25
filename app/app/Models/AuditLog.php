@@ -53,6 +53,9 @@ class AuditLog extends Model
         'milestone.created' => 'Added a milestone',
         'milestone.completed' => 'Completed a milestone',
         'milestone.reopened' => 'Reopened a milestone',
+        'evidence.uploaded' => 'Uploaded evidence',
+        'evidence.visibility_changed' => 'Changed evidence visibility',
+        'evidence.deleted' => 'Deleted evidence',
     ];
 
     /**

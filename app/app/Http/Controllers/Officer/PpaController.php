@@ -80,7 +80,7 @@ class PpaController extends Controller
     {
         Gate::authorize('view', $ppa);
 
-        $ppa->load(['abyip.cbydp', 'priority', 'milestones']);
+        $ppa->load(['abyip.cbydp', 'priority', 'milestones', 'evidence.uploader:id,name']);
 
         return view('officer.ppas.show', [
             'ppa' => $ppa,

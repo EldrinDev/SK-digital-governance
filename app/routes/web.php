@@ -59,6 +59,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('ppas/{ppa}/milestones/{milestone}', [Officer\MilestoneController::class, 'update'])
             ->scopeBindings()
             ->name('ppas.milestones.update');
+        Route::post('ppas/{ppa}/evidence', [Officer\EvidenceController::class, 'store'])->name('ppas.evidence.store');
+        Route::scopeBindings()->group(function () {
+            Route::get('ppas/{ppa}/evidence/{evidence}', [Officer\EvidenceController::class, 'show'])->name('ppas.evidence.show');
+            Route::patch('ppas/{ppa}/evidence/{evidence}', [Officer\EvidenceController::class, 'update'])->name('ppas.evidence.update');
+            Route::delete('ppas/{ppa}/evidence/{evidence}', [Officer\EvidenceController::class, 'destroy'])->name('ppas.evidence.destroy');
+        });
     });
 
     Route::view('/federation', 'federation.dashboard')->middleware('role:federation')->name('federation.dashboard');
