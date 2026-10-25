@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\StaffSessionController;
+use App\Http\Controllers\Officer;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -32,7 +33,34 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::view('/dashboard', 'dashboard')->middleware('role:youth')->name('dashboard');
-    Route::view('/officer', 'officer.dashboard')->middleware('role:officer')->name('officer.dashboard');
+
+    Route::middleware('role:officer')->prefix('officer')->name('officer.')->group(function () {
+        Route::get('/', Officer\DashboardController::class)->name('dashboard');
+        Route::get('plans', [Officer\PlanController::class, 'index'])->name('plans.index');
+
+        Route::resource('cbydps', Officer\CbydpController::class)->only(['create', 'store', 'show']);
+        Route::post('cbydps/{cbydp}/priorities', [Officer\CbydpPriorityController::class, 'store'])->name('cbydps.priorities.store');
+        Route::delete('cbydps/{cbydp}/priorities/{priority}', [Officer\CbydpPriorityController::class, 'destroy'])
+            ->scopeBindings()
+            ->name('cbydps.priorities.destroy');
+        Route::post('cbydps/{cbydp}/approval', [Officer\CbydpApprovalController::class, 'store'])->name('cbydps.approval.store');
+        Route::get('cbydps/{cbydp}/resolution', [Officer\CbydpApprovalController::class, 'show'])->name('cbydps.resolution');
+
+        Route::resource('abyips', Officer\AbyipController::class)->only(['create', 'store', 'show']);
+        Route::post('abyips/{abyip}/approval', [Officer\AbyipApprovalController::class, 'store'])->name('abyips.approval.store');
+        Route::get('abyips/{abyip}/resolution', [Officer\AbyipApprovalController::class, 'show'])->name('abyips.resolution');
+
+        Route::get('ppas', [Officer\PpaController::class, 'index'])->name('ppas.index');
+        Route::get('abyips/{abyip}/ppas/create', [Officer\PpaController::class, 'create'])->name('ppas.create');
+        Route::post('abyips/{abyip}/ppas', [Officer\PpaController::class, 'store'])->name('ppas.store');
+        Route::resource('ppas', Officer\PpaController::class)->only(['show', 'edit', 'update', 'destroy']);
+        Route::patch('ppas/{ppa}/status', [Officer\PpaStatusController::class, 'update'])->name('ppas.status.update');
+        Route::post('ppas/{ppa}/milestones', [Officer\MilestoneController::class, 'store'])->name('ppas.milestones.store');
+        Route::patch('ppas/{ppa}/milestones/{milestone}', [Officer\MilestoneController::class, 'update'])
+            ->scopeBindings()
+            ->name('ppas.milestones.update');
+    });
+
     Route::view('/federation', 'federation.dashboard')->middleware('role:federation')->name('federation.dashboard');
 
     Route::middleware('role:administrator')->prefix('admin')->name('admin.')->group(function () {

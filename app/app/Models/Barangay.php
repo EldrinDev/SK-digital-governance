@@ -48,4 +48,28 @@ class Barangay extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * @return HasMany<Cbydp, $this>
+     */
+    public function cbydps(): HasMany
+    {
+        return $this->hasMany(Cbydp::class);
+    }
+
+    /**
+     * @return HasMany<Abyip, $this>
+     */
+    public function abyips(): HasMany
+    {
+        return $this->hasMany(Abyip::class);
+    }
+
+    /**
+     * @return HasMany<Ppa, $this>
+     */
+    public function ppas(): HasMany
+    {
+        return $this->hasMany(Ppa::class);
+    }
 }
