@@ -56,6 +56,10 @@ class AuditLog extends Model
         'evidence.uploaded' => 'Uploaded evidence',
         'evidence.visibility_changed' => 'Changed evidence visibility',
         'evidence.deleted' => 'Deleted evidence',
+        'meeting.created' => 'Recorded a session',
+        'meeting.attendance_recorded' => 'Recorded attendance',
+        'meeting.minutes_uploaded' => 'Uploaded minutes',
+        'resolution.recorded' => 'Added a resolution',
     ];
 
     /**

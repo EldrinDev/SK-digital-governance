@@ -65,6 +65,12 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::patch('ppas/{ppa}/evidence/{evidence}', [Officer\EvidenceController::class, 'update'])->name('ppas.evidence.update');
             Route::delete('ppas/{ppa}/evidence/{evidence}', [Officer\EvidenceController::class, 'destroy'])->name('ppas.evidence.destroy');
         });
+
+        Route::resource('meetings', Officer\MeetingController::class)->only(['index', 'create', 'store', 'show']);
+        Route::put('meetings/{meeting}/attendance', [Officer\MeetingAttendanceController::class, 'update'])->name('meetings.attendance.update');
+        Route::post('meetings/{meeting}/minutes', [Officer\MeetingMinutesController::class, 'store'])->name('meetings.minutes.store');
+        Route::get('meetings/{meeting}/minutes', [Officer\MeetingMinutesController::class, 'show'])->name('meetings.minutes.show');
+        Route::resource('resolutions', Officer\ResolutionController::class)->only(['index', 'store', 'show']);
     });
 
     Route::view('/federation', 'federation.dashboard')->middleware('role:federation')->name('federation.dashboard');

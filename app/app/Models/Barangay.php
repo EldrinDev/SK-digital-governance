@@ -66,6 +66,22 @@ class Barangay extends Model
     }
 
     /**
+     * @return HasMany<Meeting, $this>
+     */
+    public function meetings(): HasMany
+    {
+        return $this->hasMany(Meeting::class);
+    }
+
+    /**
+     * @return HasMany<Resolution, $this>
+     */
+    public function resolutions(): HasMany
+    {
+        return $this->hasMany(Resolution::class);
+    }
+
+    /**
      * @return HasMany<Ppa, $this>
      */
     public function ppas(): HasMany
