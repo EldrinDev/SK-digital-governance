@@ -1,4 +1,21 @@
 <x-layouts.app title="Overview" heading="Overview" :description="'Where '.$barangay->name.'’s youth programs stand today.'">
+    @if ($remarks->isNotEmpty())
+        <section class="mb-6 rounded-[12px] border border-info/30 bg-info/5 p-5" aria-labelledby="remarks-heading">
+            <h2 id="remarks-heading" class="flex items-center gap-2 font-display text-base font-semibold">
+                <svg viewBox="0 0 24 24" class="h-5 w-5 text-info" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1 1 21 12Z"/></svg>
+                Remarks from the SK Federation
+            </h2>
+            <ul class="mt-3 space-y-3 text-sm">
+                @foreach ($remarks as $remark)
+                    <li>
+                        <p class="leading-relaxed">{{ $remark->body }}</p>
+                        <p class="mt-0.5 text-xs text-slate-muted">{{ $remark->author?->name ?? 'SK Federation' }} · {{ $remark->created_at->diffForHumans() }}</p>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     @if ($totalPpas === 0)
         <section class="rounded-[12px] border border-dashed border-line bg-white p-8 text-center">
             <h2 class="font-display text-xl font-semibold">Start with your three-year plan</h2>

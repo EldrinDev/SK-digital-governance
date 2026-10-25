@@ -60,6 +60,7 @@ class AuditLog extends Model
         'meeting.attendance_recorded' => 'Recorded attendance',
         'meeting.minutes_uploaded' => 'Uploaded minutes',
         'resolution.recorded' => 'Added a resolution',
+        'remark.created' => 'Left a monitoring remark',
     ];
 
     /**

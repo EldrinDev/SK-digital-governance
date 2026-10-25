@@ -44,6 +44,7 @@ class DashboardController extends Controller
                 ->orderBy('due_on')
                 ->limit(6)
                 ->get(),
+            'remarks' => $barangay->remarks()->with('author:id,name')->limit(3)->get(),
             'recentActivity' => AuditLog::query()
                 ->where('barangay_id', $barangay->id)
                 ->whereNotIn('action', ['auth.login', 'auth.logout', 'auth.failed', 'auth.lockout'])

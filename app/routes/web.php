@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\StaffSessionController;
+use App\Http\Controllers\Federation;
 use App\Http\Controllers\Officer;
 use Illuminate\Support\Facades\Route;
 
@@ -73,7 +74,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::resource('resolutions', Officer\ResolutionController::class)->only(['index', 'store', 'show']);
     });
 
-    Route::view('/federation', 'federation.dashboard')->middleware('role:federation')->name('federation.dashboard');
+    Route::middleware('role:federation')->prefix('federation')->name('federation.')->group(function () {
+        Route::get('/', Federation\DashboardController::class)->name('dashboard');
+        Route::get('barangays/{barangay}', [Federation\BarangayController::class, 'show'])->name('barangays.show');
+        Route::post('barangays/{barangay}/remarks', [Federation\MonitoringRemarkController::class, 'store'])->name('barangays.remarks.store');
+    });
 
     Route::middleware('role:administrator')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', Admin\DashboardController::class)->name('dashboard');

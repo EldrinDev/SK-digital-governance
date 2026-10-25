@@ -66,6 +66,14 @@ class Barangay extends Model
     }
 
     /**
+     * @return HasMany<MonitoringRemark, $this>
+     */
+    public function remarks(): HasMany
+    {
+        return $this->hasMany(MonitoringRemark::class)->latest();
+    }
+
+    /**
      * @return HasMany<Meeting, $this>
      */
     public function meetings(): HasMany
