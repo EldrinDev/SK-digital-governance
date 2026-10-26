@@ -134,6 +134,21 @@ class DemoDataSeeder extends Seeder
             $sports->registrations()->create(['user_id' => $member->id]);
         }
 
+        $survey = $barangay->surveys()->create([
+            'title' => 'What should the SK focus on next year?',
+            'description' => 'Your answers shape the next ABYIP. They are anonymous.',
+        ]);
+        $survey->forceFill(['opened_at' => now()->subDays(5)])->save();
+        $focus = $survey->questions()->create(['position' => 1, 'prompt' => 'Which area matters most to you?', 'type' => 'choice', 'options' => ['Sports', 'Education', 'Jobs and skills', 'Mental health']]);
+        $rating = $survey->questions()->create(['position' => 2, 'prompt' => 'How well is the SK doing so far?', 'type' => 'rating']);
+        $idea = $survey->questions()->create(['position' => 3, 'prompt' => 'One project you’d like to see', 'type' => 'text']);
+        foreach ($youth->skip(1)->take(5)->values() as $index => $member) {
+            $response = $survey->responses()->create(['user_id' => $member->id]);
+            $response->answers()->create(['survey_question_id' => $focus->id, 'value' => ['Jobs and skills', 'Sports', 'Jobs and skills', 'Mental health', 'Education'][$index]]);
+            $response->answers()->create(['survey_question_id' => $rating->id, 'value' => (string) [4, 5, 3, 4, 4][$index]]);
+            $response->answers()->create(['survey_question_id' => $idea->id, 'value' => ['Free review classes for the board exam', 'A futsal court', 'Resume writing workshop', 'Peer counseling group', 'Study hub with Wi-Fi'][$index]]);
+        }
+
         $answered = $this->feedback($youth[1], null, null, 'Could we have a study hub with Wi-Fi at the barangay hall?');
         $answered->forceFill(['response' => 'Yes! It is in next year’s ABYIP draft. Join the consultation to add your ideas.', 'responded_by' => $chair->id, 'responded_at' => now()->subDays(2)])->save();
         $this->feedback($youth[2], null, null, 'The court lights are broken in the evening.');
