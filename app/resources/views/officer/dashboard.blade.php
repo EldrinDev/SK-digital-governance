@@ -86,6 +86,12 @@
             </section>
 
             <div class="space-y-6">
+                <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="checkins-heading">
+                    <h2 id="checkins-heading" class="font-display text-lg font-semibold">Youth check-ins</h2>
+                    <p class="mb-4 text-xs text-slate-muted">Event attendance, last six months.</p>
+                    <x-ui.column-chart label="Youth check-ins per month" unit="check-ins" :items="$monthlyCheckIns" />
+                </section>
+
                 <section class="rounded-[12px] border border-line bg-white p-5">
                     <h2 class="font-display text-lg font-semibold">Upcoming milestones</h2>
                     @if ($upcomingMilestones->isEmpty())

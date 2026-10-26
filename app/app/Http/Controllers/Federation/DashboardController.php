@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Federation;
 use App\Http\Controllers\Concerns\StreamsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
+use App\Models\EventRegistration;
+use App\Models\MonitoringRemark;
 use App\PlanStatus;
 use App\PpaStatus;
+use App\UserRole;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -28,11 +31,20 @@ class DashboardController extends Controller
         return view('federation.dashboard', [
             'year' => $year,
             'barangays' => $barangays,
+            'monthlyCheckIns' => EventRegistration::monthlyCheckIns($barangays->modelKeys()),
+            'latestRemarks' => MonitoringRemark::query()
+                ->whereIn('barangay_id', $barangays->modelKeys())
+                ->with(['barangay:id,name', 'author:id,name'])
+                ->latest()
+                ->limit(4)
+                ->get(),
             'totals' => [
                 'ppas' => $barangays->sum('ppas_count'),
                 'completionRate' => $openPpas > 0 ? (int) round($barangays->sum('completed_count') / $openPpas * 100) : 0,
                 'delayed' => $barangays->sum('delayed_count'),
                 'budget' => $barangays->sum('budget_this_year'),
+                'youth' => $barangays->sum('youth_count'),
+                'participants' => $barangays->sum('participants_this_year'),
             ],
         ]);
     }
@@ -82,7 +94,12 @@ class DashboardController extends Controller
                 'abyips as approved_abyip_count' => fn ($query) => $query->where('status', PlanStatus::Approved)->where('year', $year),
                 'abyips as draft_abyip_count' => fn ($query) => $query->where('status', PlanStatus::Draft)->where('year', $year),
                 'meetings as meetings_this_year_count' => fn ($query) => $query->whereYear('held_on', $year),
+                'users as youth_count' => fn ($query) => $query->where('role', UserRole::Youth)->whereNull('deactivated_at'),
+                'users as participants_this_year' => fn ($query) => $query->where('role', UserRole::Youth)
+                    ->whereHas('eventRegistrations', fn ($registration) => $registration->whereYear('attended_at', $year)),
             ])
+            ->withSum(['ppas as spent_this_year' => fn ($query) => $query
+                ->whereHas('abyip', fn ($abyip) => $abyip->where('year', $year))], 'amount_spent')
             ->withSum(['ppas as budget_this_year' => fn ($query) => $query
                 ->where('status', '!=', PpaStatus::Cancelled)
                 ->whereHas('abyip', fn ($abyip) => $abyip->where('year', $year))], 'budget')

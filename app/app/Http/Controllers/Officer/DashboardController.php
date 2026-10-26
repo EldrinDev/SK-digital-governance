@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Officer;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\EventRegistration;
 use App\Models\Milestone;
 use App\PpaStatus;
 use Illuminate\Http\Request;
@@ -46,6 +47,7 @@ class DashboardController extends Controller
                 ->orderBy('due_on')
                 ->limit(6)
                 ->get(),
+            'monthlyCheckIns' => EventRegistration::monthlyCheckIns([$barangay->id]),
             'remarks' => $barangay->remarks()->with('author:id,name')->limit(3)->get(),
             'recentActivity' => AuditLog::query()
                 ->where('barangay_id', $barangay->id)
