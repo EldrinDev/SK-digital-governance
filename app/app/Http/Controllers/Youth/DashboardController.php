@@ -33,6 +33,7 @@ class DashboardController extends Controller
                 ->whereDoesntHave('responses', fn ($query) => $query->where('user_id', $user->id))
                 ->latest('opened_at')
                 ->get(),
+            'announcements' => $user->barangay->announcements()->latest()->limit(3)->get(),
             'myFeedback' => $user->feedback()->with(['event:id,title', 'responder:id,name'])->latest()->limit(5)->get(),
         ]);
     }

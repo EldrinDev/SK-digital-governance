@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account;
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\StaffSessionController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\Federation;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Officer;
 use App\Http\Controllers\PublicEvidenceController;
@@ -17,9 +19,11 @@ use App\Http\Controllers\TransparencyController;
 use App\Http\Controllers\Youth;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::get('/transparency', [TransparencyController::class, 'index'])->name('transparency.index');
+Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 Route::get('/transparency/evidence/{evidence}', [PublicEvidenceController::class, 'show'])->name('transparency.evidence');
@@ -79,6 +83,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('abyips/{abyip}/report', [Officer\AccomplishmentReportController::class, 'store'])->name('abyips.report.store');
         Route::get('disclosure', [Officer\DisclosureController::class, 'index'])->name('disclosure.index');
 
+        Route::resource('announcements', Officer\AnnouncementController::class)->except('show');
         Route::resource('events', Officer\EventController::class)->only(['index', 'create', 'store', 'show']);
         Route::patch('events/{event}/registrations/{registration}', [Officer\EventAttendanceController::class, 'update'])
             ->scopeBindings()

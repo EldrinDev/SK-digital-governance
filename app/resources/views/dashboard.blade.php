@@ -101,6 +101,25 @@
         </div>
 
         <div class="space-y-6">
+            <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="news-heading">
+                <div class="flex items-center justify-between gap-3">
+                    <h2 id="news-heading" class="font-display text-lg font-semibold">Announcements</h2>
+                    <a href="{{ route('announcements.index', ['barangay' => $barangay->id]) }}" class="text-xs font-semibold text-emerald hover:underline">See all</a>
+                </div>
+                <ul class="mt-3 space-y-3">
+                    @forelse ($announcements as $announcement)
+                        <li>
+                            <a href="{{ route('announcements.show', $announcement) }}" class="block rounded-[8px] p-2 -mx-2 hover:bg-mist">
+                                <span class="block text-sm font-medium">{{ $announcement->title }}</span>
+                                <span class="block text-xs text-slate-muted">{{ $announcement->created_at->diffForHumans() }}</span>
+                            </a>
+                        </li>
+                    @empty
+                        <li class="text-sm text-slate-muted">No announcements from your SK yet.</li>
+                    @endforelse
+                </ul>
+            </section>
+
             <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="feedback-heading">
                 <h2 id="feedback-heading" class="font-display text-lg font-semibold">Tell your SK something</h2>
                 <form method="POST" action="{{ route('feedback.store') }}" class="mt-3 space-y-3" novalidate>

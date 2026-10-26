@@ -86,6 +86,14 @@ class Barangay extends Model
     }
 
     /**
+     * @return HasMany<Announcement, $this>
+     */
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class);
+    }
+
+    /**
      * @return HasMany<Survey, $this>
      */
     public function surveys(): HasMany

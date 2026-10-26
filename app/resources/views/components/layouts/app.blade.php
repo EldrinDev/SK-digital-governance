@@ -28,6 +28,7 @@
             ['label' => 'PPAs', 'route' => 'officer.ppas.index', 'active' => 'officer.ppas.*', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 15 2 2 4-4"/>'],
             ['label' => 'Meetings', 'route' => 'officer.meetings.index', 'active' => 'officer.meetings.*', 'icon' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
             ['label' => 'Resolutions', 'route' => 'officer.resolutions.index', 'active' => 'officer.resolutions.*', 'icon' => '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z"/><path d="M14 3v6h6"/><path d="m9 15 2 2 4-4"/>'],
+            ['label' => 'Announcements', 'route' => 'officer.announcements.index', 'active' => 'officer.announcements.*', 'icon' => '<path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'],
             ['label' => 'Events', 'route' => 'officer.events.index', 'active' => 'officer.events.*', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>'],
             ['label' => 'Feedback', 'route' => 'officer.feedback.index', 'active' => 'officer.feedback.*', 'icon' => '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1 1 21 12Z"/>'],
             ['label' => 'Surveys', 'route' => 'officer.surveys.index', 'active' => 'officer.surveys.*', 'icon' => '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>'],
@@ -39,6 +40,7 @@
         ],
         UserRole::Youth => [
             ['label' => 'Dashboard', 'route' => 'dashboard', 'active' => 'dashboard', 'icon' => '<path d="M3 12 12 4l9 8"/><path d="M5 10v10h14V10"/>'],
+            ['label' => 'Announcements', 'route' => 'announcements.index', 'active' => 'announcements.*', 'icon' => '<path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'],
             ['label' => 'Events', 'route' => 'events.index', 'active' => 'events.*', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'],
             ['label' => 'Transparency', 'route' => 'transparency.index', 'active' => 'transparency.*', 'icon' => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'],
         ],

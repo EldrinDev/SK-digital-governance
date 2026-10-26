@@ -209,6 +209,56 @@
                 </div>
             </section>
 
+            {{-- Latest from the barangay SK councils --}}
+            @if ($announcements->isNotEmpty() || $upcomingEvents->isNotEmpty())
+                <section id="news" class="scroll-mt-20 border-t border-line bg-white">
+                    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-20">
+                        <div>
+                            <div class="flex items-end justify-between gap-4">
+                                <h2 class="font-display text-2xl font-semibold tracking-tight text-navy sm:text-[1.75rem]">Latest announcements</h2>
+                                <a href="{{ route('announcements.index') }}" class="text-sm font-semibold text-emerald hover:underline">All news</a>
+                            </div>
+                            <ul class="mt-6 space-y-3">
+                                @forelse ($announcements as $announcement)
+                                    <li>
+                                        <a href="{{ route('announcements.show', $announcement) }}" class="block rounded-[12px] border border-line p-4 transition-colors hover:border-emerald/50">
+                                            <span class="text-xs font-semibold text-emerald">{{ $announcement->barangay->name }} · {{ $announcement->created_at->format('M j') }}</span>
+                                            <span class="mt-1 block font-semibold text-navy">{{ $announcement->title }}</span>
+                                        </a>
+                                    </li>
+                                @empty
+                                    <li class="text-sm text-slate-muted">No announcements yet.</li>
+                                @endforelse
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="flex items-end justify-between gap-4">
+                                <h2 class="font-display text-2xl font-semibold tracking-tight text-navy sm:text-[1.75rem]">Coming up</h2>
+                                <a href="{{ route('events.index') }}" class="text-sm font-semibold text-emerald hover:underline">All events</a>
+                            </div>
+                            <ul class="mt-6 space-y-3">
+                                @forelse ($upcomingEvents as $event)
+                                    <li>
+                                        <a href="{{ route('events.show', $event) }}" class="flex items-center gap-4 rounded-[12px] border border-line p-4 transition-colors hover:border-emerald/50">
+                                            <span class="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[8px] bg-emerald/10 text-emerald">
+                                                <span class="text-[0.65rem] font-semibold uppercase">{{ $event->starts_at->format('M') }}</span>
+                                                <span class="font-display text-xl font-semibold leading-none">{{ $event->starts_at->format('j') }}</span>
+                                            </span>
+                                            <span class="min-w-0">
+                                                <span class="block truncate font-semibold text-navy">{{ $event->title }}</span>
+                                                <span class="block truncate text-sm text-slate-muted">{{ $event->barangay->name }} · {{ $event->venue }}</span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                @empty
+                                    <li class="text-sm text-slate-muted">No upcoming events right now.</li>
+                                @endforelse
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            @endif
+
             {{-- Public records --}}
             <section id="transparency" class="scroll-mt-20 bg-white">
                 <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
