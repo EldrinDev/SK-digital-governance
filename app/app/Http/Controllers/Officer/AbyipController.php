@@ -55,6 +55,8 @@ class AbyipController extends Controller
         $abyip->load([
             'cbydp',
             'approvalRecorder:id,name',
+            'openAmendment.opener:id,name',
+            'amendments' => fn ($query) => $query->where('status', PlanStatus::Approved)->with('approvalRecorder:id,name'),
             'ppas' => fn ($query) => $query->with(['priority', 'milestones'])->orderBy('starts_on'),
         ]);
 

@@ -30,9 +30,43 @@ class AbyipPolicy
             return $workspace;
         }
 
-        return $abyip->isApproved()
-            ? Response::deny('This ABYIP is approved and locked. Changes need an amendment approved by the council.')
-            : Response::allow();
+        return $abyip->isEditable()
+            ? Response::allow()
+            : Response::deny('This ABYIP is approved and locked. Start an amendment to change it.');
+    }
+
+    /**
+     * Determine whether the user can start an amendment to the approved ABYIP.
+     */
+    public function amend(User $user, Abyip $abyip): Response
+    {
+        $workspace = $this->inOwnWorkspace($user, $abyip->barangay_id);
+
+        if ($workspace->denied()) {
+            return $workspace;
+        }
+
+        return match (true) {
+            ! $abyip->isApproved() => Response::deny('A draft ABYIP can be edited directly.'),
+            $abyip->isBeingAmended() => Response::deny('An amendment is already open.'),
+            default => Response::allow(),
+        };
+    }
+
+    /**
+     * Determine whether the user can record the council's approval of the open amendment.
+     */
+    public function approveAmendment(User $user, Abyip $abyip): Response
+    {
+        $workspace = $this->inOwnWorkspace($user, $abyip->barangay_id);
+
+        if ($workspace->denied()) {
+            return $workspace;
+        }
+
+        return $abyip->isBeingAmended()
+            ? Response::allow()
+            : Response::deny('There is no open amendment.');
     }
 
     /**
@@ -65,6 +99,14 @@ class AbyipPolicy
      */
     public function approve(User $user, Abyip $abyip): Response
     {
-        return $this->update($user, $abyip);
+        $workspace = $this->inOwnWorkspace($user, $abyip->barangay_id);
+
+        if ($workspace->denied()) {
+            return $workspace;
+        }
+
+        return $abyip->isApproved()
+            ? Response::deny('This ABYIP is already approved.')
+            : Response::allow();
     }
 }

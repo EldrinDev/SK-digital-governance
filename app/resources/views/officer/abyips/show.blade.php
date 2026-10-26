@@ -25,6 +25,36 @@
 
     <p class="mb-6 text-sm"><a href="{{ route('officer.plans.index') }}" class="font-medium text-slate-muted hover:text-emerald">&larr; All plans</a></p>
 
+    @if ($abyip->isBeingAmended())
+        <section role="status" class="mb-6 rounded-[12px] border border-warning/40 bg-warning/10 p-5">
+            <h2 class="font-display text-lg font-semibold">Amendment in progress</h2>
+            <p class="mt-1 text-sm">
+                Started by {{ $abyip->openAmendment->opener?->name ?? 'an officer' }} on {{ $abyip->openAmendment->created_at->format('M j, Y') }}:
+                “{{ $abyip->openAmendment->reason }}”
+            </p>
+            <p class="mt-1 text-sm text-navy/75">The PPAs below can be changed. The ABYIP is hidden from the public board until the council approves the amendment. Every change is kept in the audit trail.</p>
+
+            @can('approveAmendment', $abyip)
+                <form method="POST" action="{{ route('officer.abyips.amendments.approve', $abyip) }}" enctype="multipart/form-data" class="mt-4 grid gap-4 rounded-[12px] border border-line bg-white p-4 sm:grid-cols-2" novalidate>
+                    @csrf
+                    <p class="text-sm font-semibold sm:col-span-2">Record the council’s approval of the amendment</p>
+                    <x-form.input name="resolution_number" label="Resolution number" required />
+                    <x-form.input name="approved_on" type="date" label="Date approved" :max="now()->toDateString()" required />
+                    <div class="sm:col-span-2">
+                        <label for="resolution_file" class="block text-sm font-medium">Signed resolution (PDF)</label>
+                        <input id="resolution_file" name="resolution_file" type="file" accept="application/pdf" required class="mt-1.5 block w-full rounded-[8px] border border-line bg-white text-sm text-navy/80 file:mr-3 file:border-0 file:border-r file:border-line file:bg-mist file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-navy">
+                        @error('resolution_file')
+                            <p class="mt-1.5 text-sm text-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="sm:col-span-2">
+                        <x-form.submit busy="Recording…" tone="navy" :block="false">Approve amendment and lock</x-form.submit>
+                    </div>
+                </form>
+            @endcan
+        </section>
+    @endif
+
     {{-- Plan life cycle --}}
     <ol class="mb-6 grid gap-2 rounded-[12px] border border-line bg-white p-4 sm:grid-cols-4" aria-label="Plan life cycle">
         @foreach ($steps as $index => $step)
@@ -108,6 +138,41 @@
             'lockNote' => 'Its PPAs, budgets, and schedules will be locked, and you can start recording progress on each one.',
             'emptyNote' => $abyip->ppas->isEmpty() ? 'Add at least one PPA before recording the approval.' : null,
         ])
+
+        @can('amend', $abyip)
+            <section class="mt-6 rounded-[12px] border border-line bg-white p-5" aria-labelledby="amend-heading">
+                <h2 id="amend-heading" class="font-display text-lg font-semibold">Need to change this ABYIP?</h2>
+                <p class="mt-1 text-sm text-slate-muted">An approved ABYIP stays locked. Start an amendment to change its PPAs, then record the council’s resolution approving it.</p>
+                <form method="POST" action="{{ route('officer.abyips.amendments.store', $abyip) }}" class="mt-4 space-y-3" novalidate>
+                    @csrf
+                    <label for="reason" class="block text-sm font-medium">Reason for the amendment</label>
+                    <textarea id="reason" name="reason" rows="2" placeholder="e.g. Moving the leadership summit budget to the clean-up drive" class="block w-full rounded-[8px] border border-line px-3.5 py-2.5 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">{{ old('reason') }}</textarea>
+                    @error('reason')
+                        <p class="text-sm text-error">{{ $message }}</p>
+                    @enderror
+                    <x-form.submit busy="Starting…" tone="navy" :block="false">Start amendment</x-form.submit>
+                </form>
+            </section>
+        @endcan
+
+        @if ($abyip->amendments->isNotEmpty())
+            <section class="mt-6 rounded-[12px] border border-line bg-white p-5" aria-labelledby="amendments-heading">
+                <h2 id="amendments-heading" class="font-display text-lg font-semibold">Approved amendments</h2>
+                <ul class="mt-3 space-y-3 text-sm">
+                    @foreach ($abyip->amendments as $amendment)
+                        <li class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p class="font-medium">{{ $amendment->resolution_number }} · {{ $amendment->approved_on->format('M j, Y') }}</p>
+                                <p class="text-navy/75">{{ $amendment->reason }}</p>
+                            </div>
+                            @if ($amendment->resolution_path)
+                                <a href="{{ route('officer.amendments.resolution', $amendment) }}" class="text-xs font-semibold text-emerald hover:underline">PDF</a>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
 
         @can('publish', $abyip)
             <section class="mt-6 rounded-[12px] border border-line bg-white p-5" aria-labelledby="publish-heading">

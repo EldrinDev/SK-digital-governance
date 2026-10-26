@@ -40,6 +40,7 @@ class Evidence extends Model
 
         return $this->is_public
             && $this->ppa->abyip->isPublished()
+            && ! $this->ppa->abyip->isBeingAmended()
             && $this->ppa->abyip->barangay->is_participating;
     }
 

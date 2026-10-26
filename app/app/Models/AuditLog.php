@@ -46,6 +46,8 @@ class AuditLog extends Model
         'cbydp.approved' => 'Recorded CBYDP approval',
         'abyip.created' => 'Created an ABYIP',
         'abyip.approved' => 'Recorded ABYIP approval',
+        'abyip.amendment_opened' => 'Started an ABYIP amendment',
+        'abyip.amendment_approved' => 'Recorded amendment approval',
         'ppa.created' => 'Added a PPA',
         'ppa.updated' => 'Updated a PPA',
         'ppa.deleted' => 'Removed a PPA',

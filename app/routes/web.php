@@ -70,6 +70,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('abyips/{abyip}/resolution', [Officer\AbyipApprovalController::class, 'show'])->name('abyips.resolution');
         Route::post('abyips/{abyip}/publication', [Officer\AbyipPublicationController::class, 'store'])->name('abyips.publication.store');
         Route::delete('abyips/{abyip}/publication', [Officer\AbyipPublicationController::class, 'destroy'])->name('abyips.publication.destroy');
+        Route::post('abyips/{abyip}/amendments', [Officer\AbyipAmendmentController::class, 'store'])->name('abyips.amendments.store');
+        Route::post('abyips/{abyip}/amendments/approval', [Officer\AbyipAmendmentController::class, 'approve'])->name('abyips.amendments.approve');
+        Route::get('amendments/{amendment}/resolution', [Officer\AbyipAmendmentController::class, 'resolution'])->name('amendments.resolution');
         Route::get('abyips/{abyip}/report', [Officer\AccomplishmentReportController::class, 'show'])->name('abyips.report');
         Route::get('abyips/{abyip}/report/print', [Officer\AccomplishmentReportController::class, 'print'])->name('abyips.report.print');
         Route::post('abyips/{abyip}/report', [Officer\AccomplishmentReportController::class, 'store'])->name('abyips.report.store');
