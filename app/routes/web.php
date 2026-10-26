@@ -61,6 +61,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('role:officer')->prefix('officer')->name('officer.')->group(function () {
         Route::get('/', Officer\DashboardController::class)->name('dashboard');
         Route::get('plans', [Officer\PlanController::class, 'index'])->name('plans.index');
+        Route::get('search', Officer\SearchController::class)->name('search');
 
         Route::resource('cbydps', Officer\CbydpController::class)->only(['create', 'store', 'show']);
         Route::post('cbydps/{cbydp}/priorities', [Officer\CbydpPriorityController::class, 'store'])->name('cbydps.priorities.store');

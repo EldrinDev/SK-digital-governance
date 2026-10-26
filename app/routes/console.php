@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:send-event-reminders')->dailyAt('18:00');
 Schedule::command('app:backup')->dailyAt('02:00');
+Schedule::command('app:send-progress-alerts')->weekdays()->at('07:00');

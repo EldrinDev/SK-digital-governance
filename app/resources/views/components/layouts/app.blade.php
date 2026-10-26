@@ -129,6 +129,15 @@
                         </div>
 
                         <div class="flex items-center gap-4">
+                            @if ($user->isOfficer())
+                                <form method="GET" action="{{ route('officer.search') }}" role="search" class="hidden md:block">
+                                    <label for="workspace-search" class="sr-only">Search your workspace</label>
+                                    <input id="workspace-search" name="q" type="search" value="{{ request()->routeIs('officer.search') ? request('q') : '' }}" placeholder="Search records…" class="w-56 rounded-[8px] border border-line bg-mist/60 px-3 py-2 text-sm outline-none focus:border-emerald focus:bg-white focus:ring-3 focus:ring-emerald/20">
+                                </form>
+                                <a href="{{ route('officer.search') }}" class="flex h-10 w-10 items-center justify-center rounded-[8px] border border-line hover:border-navy md:hidden" aria-label="Search your workspace">
+                                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                                </a>
+                            @endif
                             @php($unread = $user->unreadNotifications()->count())
                             <a href="{{ route('notifications.index') }}" class="relative flex h-10 w-10 items-center justify-center rounded-[8px] border border-line hover:border-navy" aria-label="Notifications{{ $unread ? ', '.$unread.' unread' : '' }}">
                                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
