@@ -1,14 +1,23 @@
 <x-layouts.app title="Administration" heading="Administration" description="Accounts, workspaces, and recent activity across the platform.">
+    <x-slot:actions>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-3.5 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M19 8v6M22 11h-6"/></svg>
+                Add an account
+            </a>
+            <a href="{{ route('admin.backups.index') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-3.5 py-2 text-sm font-semibold hover:border-navy">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+                Backups
+            </a>
+        </div>
+    </x-slot:actions>
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ($accountsByRole as $label => $total)
-            <div class="rounded-[12px] border border-line bg-white p-5">
-                <p class="text-sm text-slate-muted">{{ $label }}</p>
-                <p class="mt-2 font-display text-3xl font-semibold">{{ number_format($total) }}</p>
-            </div>
+            <x-ui.stat :label="$label" :value="number_format($total)" :icon="['user', 'users', 'building', 'shield'][$loop->index] ?? 'users'" :href="route('admin.users.index')" />
         @endforeach
     </div>
 
-    <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div class="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section class="rounded-[12px] border border-line bg-white">
             <div class="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
                 <h2 class="font-display text-lg font-semibold">Recent activity</h2>

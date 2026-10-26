@@ -17,10 +17,14 @@ class DashboardController extends Controller
         $registrations = $user->eventRegistrations()->with('event')->get();
         $evaluated = $user->feedback()->whereNotNull('event_id')->pluck('event_id');
 
+        $upcoming = $registrations->filter(fn ($registration) => ! $registration->event->hasStarted())
+            ->sortBy('event.starts_at')->values();
+
         return view('dashboard', [
             'barangay' => $user->barangay,
-            'myUpcoming' => $registrations->filter(fn ($registration) => ! $registration->event->hasStarted())
-                ->sortBy('event.starts_at')->values(),
+            'nextUp' => $upcoming->first()?->event,
+            'attendedCount' => $registrations->filter->attended()->count(),
+            'myUpcoming' => $upcoming,
             'toEvaluate' => $registrations->filter(fn ($registration) => $registration->attended() && ! $evaluated->contains($registration->event_id))
                 ->values(),
             'openEvents' => $user->barangay->events()->upcoming()

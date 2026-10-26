@@ -7,31 +7,17 @@
     </x-slot:actions>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-[12px] border border-line bg-white p-5">
-            <p class="text-sm text-slate-muted">Youth participants in {{ $year }}</p>
-            <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{{ number_format($totals['participants']) }}</p>
-            <p class="mt-1 text-xs text-slate-muted">checked in at an event, of {{ number_format($totals['youth']) }} youth accounts in {{ $barangays->count() }} barangays</p>
-        </div>
-        <div class="rounded-[12px] border border-line bg-white p-5">
-            <p class="text-sm text-slate-muted">PPAs completed</p>
-            <p class="mt-2 font-display text-3xl font-semibold">{{ $totals['completionRate'] }}%</p>
-            <p class="mt-1 text-xs text-slate-muted">of {{ $totals['ppas'] }} PPAs, not counting cancelled</p>
-        </div>
-        <div @class(['rounded-[12px] border bg-white p-5', 'border-error/40' => $totals['delayed'] > 0, 'border-line' => $totals['delayed'] === 0])>
-            <p class="text-sm text-slate-muted">Delayed PPAs</p>
-            <p @class(['mt-2 font-display text-3xl font-semibold', 'text-[#b91c1c]' => $totals['delayed'] > 0])>{{ $totals['delayed'] }}</p>
-        </div>
-        <div class="rounded-[12px] border border-line bg-white p-5">
-            <p class="text-sm text-slate-muted">Budget in {{ $year }} ABYIPs</p>
-            <p class="mt-2 font-display text-3xl font-semibold">₱{{ number_format($totals['budget']) }}</p>
-        </div>
+        <x-ui.stat :label="'Youth participants in '.$year" :value="number_format($totals['participants'])" icon="users" :hint="'checked in at an event, of '.number_format($totals['youth']).' youth accounts in '.$barangays->count().' barangays'" />
+        <x-ui.stat label="PPAs completed" :value="$totals['completionRate'].'%'" icon="check" :hint="'of '.$totals['ppas'].' PPAs, not counting cancelled'" />
+        <x-ui.stat label="Delayed PPAs" :value="$totals['delayed']" icon="clock" :tone="$totals['delayed'] > 0 ? 'danger' : 'neutral'" :hint="$totals['delayed'] > 0 ? 'see the compliance table below' : 'everything on schedule'" />
+        <x-ui.stat :label="'Budget in '.$year.' ABYIPs'" :value="'₱'.number_format($totals['budget'])" icon="peso" hint="approved and draft programs" />
     </div>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-3">
         <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="completion-heading">
             <h2 id="completion-heading" class="font-display text-lg font-semibold">PPA completion</h2>
             <p class="mb-4 text-xs text-slate-muted">Share of PPAs completed, not counting cancelled.</p>
-            <x-ui.bar-list label="PPA completion by barangay" :items="$barangays->map(function ($barangay) {
+            <x-ui.bar-list label="PPA completion by barangay" :limit="6" :items="$barangays->map(function ($barangay) {
                 $open = $barangay->ppas_count - $barangay->cancelled_count;
                 $rate = $open > 0 ? (int) round($barangay->completed_count / $open * 100) : 0;
 
@@ -41,7 +27,7 @@
         <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="budget-used-heading">
             <h2 id="budget-used-heading" class="font-display text-lg font-semibold">Budget used</h2>
             <p class="mb-4 text-xs text-slate-muted">Spending recorded against each {{ $year }} ABYIP.</p>
-            <x-ui.bar-list label="Budget used by barangay" :items="$barangays->map(function ($barangay) {
+            <x-ui.bar-list label="Budget used by barangay" :limit="6" :items="$barangays->map(function ($barangay) {
                 $used = $barangay->budget_this_year > 0 ? (int) round($barangay->spent_this_year / $barangay->budget_this_year * 100) : 0;
 
                 return ['label' => $barangay->name, 'value' => $used, 'display' => $used.'%'];

@@ -1,4 +1,24 @@
-<x-layouts.app title="Overview" heading="Overview" :description="'Where '.$barangay->name.'’s youth programs stand today.'">
+@php
+    $hour = (int) now()->format('G');
+    $greeting = $hour < 12 ? 'Magandang umaga' : ($hour < 18 ? 'Magandang hapon' : 'Magandang gabi');
+@endphp
+<x-layouts.app title="Overview" :heading="$greeting.', '.str(auth()->user()->name)->before(' ').'!'" :description="now()->format('l, F j').'. Here’s where '.$barangay->name.'’s youth programs stand.'">
+    <x-slot:actions>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('officer.announcements.create') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-3.5 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                Post announcement
+            </a>
+            <a href="{{ route('officer.events.create') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-3.5 py-2 text-sm font-semibold hover:border-navy">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Post event
+            </a>
+            <a href="{{ route('officer.meetings.create') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-3.5 py-2 text-sm font-semibold hover:border-navy">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+                Record session
+            </a>
+        </div>
+    </x-slot:actions>
     @if ($remarks->isNotEmpty())
         <section class="mb-6 rounded-[12px] border border-info/30 bg-info/5 p-5" aria-labelledby="remarks-heading">
             <h2 id="remarks-heading" class="flex items-center gap-2 font-display text-base font-semibold">
@@ -26,26 +46,10 @@
         </section>
     @else
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-[12px] border border-line bg-white p-5">
-                <p class="text-sm text-slate-muted">Total PPAs</p>
-                <p class="mt-2 font-display text-3xl font-semibold">{{ $totalPpas }}</p>
-            </div>
-            <div class="rounded-[12px] border border-line bg-white p-5">
-                <p class="text-sm text-slate-muted">Completed</p>
-                <p class="mt-2 font-display text-3xl font-semibold">{{ $completedPpas }}</p>
-                <p class="mt-1 text-xs text-slate-muted">{{ $completedWithEvidence }} with evidence uploaded</p>
-            </div>
-            <a href="{{ route('officer.ppas.index', ['status' => 'delayed']) }}" @class([
-                'rounded-[12px] border bg-white p-5 transition-colors',
-                'border-error/40 hover:border-error' => $delayedPpas > 0,
-                'border-line hover:border-navy/30' => $delayedPpas === 0,
-            ])>
-                <p class="text-sm text-slate-muted">Delayed</p>
-                <p @class(['mt-2 font-display text-3xl font-semibold', 'text-[#b91c1c]' => $delayedPpas > 0])>{{ $delayedPpas }}</p>
-            </a>
-            <div class="rounded-[12px] border border-line bg-white p-5">
-                <p class="text-sm text-slate-muted">Budget used · ABYIP {{ $year }}</p>
-                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">₱{{ number_format($spentBudget) }}</p>
+            <x-ui.stat label="PPAs" :value="$totalPpas" icon="clipboard" hint="across all plans" :href="route('officer.ppas.index')" />
+            <x-ui.stat label="Completed" :value="$completedPpas" icon="check" :hint="$completedWithEvidence.' with evidence uploaded'" :href="route('officer.ppas.index', ['status' => 'completed'])" />
+            <x-ui.stat label="Delayed" :value="$delayedPpas" icon="clock" :tone="$delayedPpas > 0 ? 'danger' : 'neutral'" :hint="$delayedPpas > 0 ? 'past their end date, still open' : 'everything on schedule'" :href="route('officer.ppas.index', ['status' => 'delayed'])" />
+            <x-ui.stat :label="'Budget used, ABYIP '.$year" :value="'₱'.number_format($spentBudget)" icon="peso">
                 @if ($currentAbyip)
                     <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-mist" role="progressbar" aria-valuenow="{{ $budgetUsedPercent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Budget used">
                         <div class="h-full rounded-full bg-emerald" style="width: {{ $budgetUsedPercent }}%"></div>
@@ -54,10 +58,10 @@
                 @else
                     <p class="mt-1 text-xs text-slate-muted">No ABYIP for {{ $year }} yet.</p>
                 @endif
-            </div>
+            </x-ui.stat>
         </div>
 
-        <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div class="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <section class="rounded-[12px] border border-line bg-white">
                 <div class="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
                     <h2 class="font-display text-lg font-semibold">Open PPAs, by end date</h2>

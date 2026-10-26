@@ -1,4 +1,8 @@
-<x-layouts.app title="Dashboard" :heading="'Welcome, '.auth()->user()->name" :description="'Events, consultations, and replies from the '.$barangay->name.' SK.'">
+@php
+    $hour = (int) now()->format('G');
+    $greeting = $hour < 12 ? 'Magandang umaga' : ($hour < 18 ? 'Magandang hapon' : 'Magandang gabi');
+@endphp
+<x-layouts.app title="Dashboard">
     @if ($errors->any())
         <div role="alert" class="mb-6 rounded-[12px] border border-error/30 bg-error/5 p-4 text-sm">
             @foreach ($errors->all() as $message)
@@ -6,6 +10,47 @@
             @endforeach
         </div>
     @endif
+
+    <section class="mb-6 overflow-hidden rounded-[16px] bg-navy text-white" aria-labelledby="hello-heading">
+        <div class="relative grid grid-cols-1 gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-center">
+            <img src="{{ $barangay->logoUrl() }}" alt="" class="pointer-events-none absolute -right-14 -top-14 h-64 w-64 opacity-[0.08]">
+            <div class="relative">
+                <p class="text-sm text-white/70">{{ $greeting }}, ka-SK {{ $barangay->name }}!</p>
+                <h1 id="hello-heading" class="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Hi, {{ str(auth()->user()->name)->before(' ') }}</h1>
+                <dl class="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+                    <div>
+                        <dt class="text-xs text-white/60">Events attended</dt>
+                        <dd class="font-display text-2xl font-semibold tabular-nums">{{ $attendedCount }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-white/60">Coming up for you</dt>
+                        <dd class="font-display text-2xl font-semibold tabular-nums">{{ $myUpcoming->count() }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-white/60">Surveys to answer</dt>
+                        <dd @class(['font-display text-2xl font-semibold tabular-nums', 'text-gold' => $openSurveys->isNotEmpty()])>{{ $openSurveys->count() }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            @if ($nextUp)
+                <a href="{{ route('events.show', $nextUp) }}" class="relative flex min-w-0 items-center gap-4 rounded-[14px] bg-white p-4 text-navy transition-transform hover:-translate-y-0.5">
+                    <x-event.date-block :event="$nextUp" />
+                    <span class="min-w-0">
+                        <span class="text-xs font-semibold text-emerald">Your next event, {{ $nextUp->starts_at->isToday() ? 'today' : ($nextUp->starts_at->isTomorrow() ? 'tomorrow' : 'in '.(int) ceil(now()->diffInDays($nextUp->starts_at)).' days') }}</span>
+                        <span class="mt-0.5 line-clamp-2 block font-display font-semibold leading-snug">{{ $nextUp->title }}</span>
+                        <span class="mt-0.5 block truncate text-sm text-slate-muted">{{ $nextUp->starts_at->format('g:i A') }}, {{ $nextUp->venue }}</span>
+                    </span>
+                </a>
+            @else
+                <div class="relative rounded-[14px] bg-white/10 p-5">
+                    <p class="font-semibold">No events lined up yet</p>
+                    <p class="mt-1 text-sm text-white/75">See what your SK has planned and save your spot.</p>
+                    <a href="{{ route('events.index', ['barangay' => $barangay->id]) }}" class="mt-4 inline-flex rounded-[8px] bg-gold px-4 py-2 text-sm font-semibold text-navy hover:bg-white">Browse events</a>
+                </div>
+            @endif
+        </div>
+    </section>
 
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div class="space-y-6">
