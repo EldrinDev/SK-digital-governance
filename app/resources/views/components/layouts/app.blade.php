@@ -64,18 +64,21 @@
         <title>{{ $title }} · SK Digital Governance</title>
         <link rel="icon" type="image/svg+xml" href="{{ asset('images/sk-logo.svg') }}">
 
+        {{-- Apply the remembered side menu state before first paint, so it doesn't jump. --}}
+        <script>try { if (localStorage.getItem('sk.sidebar') === 'collapsed') { document.documentElement.dataset.sidebar = 'collapsed'; } } catch (error) {}</script>
+
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-dvh bg-mist font-sans text-navy antialiased">
         <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[8px] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to content</a>
 
-        <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+        <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)]">
             {{-- Side menu (desktop) --}}
             <aside class="hidden border-r border-line bg-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto">
-                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-5 py-5">
+                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-5 py-5 lg:collapsed:justify-center lg:collapsed:px-0" title="SK Digital Governance">
                     <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10">
-                    <span class="leading-tight">
+                    <span class="leading-tight lg:collapsed:sr-only">
                         <span class="block font-display text-sm font-semibold">SK Digital Governance</span>
                         <span class="block text-[0.65rem] font-medium tracking-[0.18em] text-slate-muted">OLONGAPO CITY</span>
                     </span>
@@ -85,19 +88,20 @@
                     @foreach ($navigationSections as $section => $items)
                         <div>
                             @if ($section !== '')
-                                <p class="mb-1.5 px-3 text-xs font-semibold text-slate-muted">{{ $section }}</p>
+                                <p class="mb-1.5 px-3 text-xs font-semibold text-slate-muted lg:collapsed:sr-only">{{ $section }}</p>
+                                <span class="mx-3 mb-2 hidden border-t border-line lg:collapsed:block" aria-hidden="true"></span>
                             @endif
                             <ul class="space-y-0.5">
                                 @foreach ($items as $item)
                                     @php($isActive = request()->routeIs($item['active']))
                                     <li>
-                                        <a href="{{ route($item['route']) }}" @class([
-                                            'relative flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors',
+                                        <a href="{{ route($item['route']) }}" title="{{ $item['label'] }}" @class([
+                                            'relative flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors lg:collapsed:justify-center lg:collapsed:px-0 lg:collapsed:py-2.5',
                                             'bg-emerald/10 text-emerald before:absolute before:inset-y-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-emerald' => $isActive,
                                             'text-navy/75 hover:bg-mist hover:text-navy' => ! $isActive,
                                         ]) @if ($isActive) aria-current="page" @endif>
-                                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
-                                            {{ $item['label'] }}
+                                            <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
+                                            <span class="lg:collapsed:sr-only">{{ $item['label'] }}</span>
                                         </a>
                                     </li>
                                 @endforeach
@@ -107,14 +111,14 @@
                 </nav>
 
                 <div class="border-t border-line p-3">
-                    <a href="{{ route('account.edit') }}" class="flex items-center gap-3 rounded-[10px] p-2 hover:bg-mist">
+                    <a href="{{ route('account.edit') }}" title="{{ $user->name }}" class="flex items-center gap-3 rounded-[10px] p-2 hover:bg-mist lg:collapsed:justify-center">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
-                        <span class="min-w-0 leading-tight">
+                        <span class="min-w-0 leading-tight lg:collapsed:sr-only">
                             <span class="block truncate text-sm font-semibold">{{ $user->name }}</span>
                             <span class="block truncate text-xs text-slate-muted">{{ $roleLine }}</span>
                         </span>
                     </a>
-                    <p class="mt-2 px-2 text-xs text-slate-muted">
+                    <p class="mt-2 px-2 text-xs text-slate-muted lg:collapsed:hidden">
                         <a href="{{ route('home') }}" class="hover:text-emerald">Public site</a>
                         <span aria-hidden="true">·</span>
                         <a href="{{ route('privacy') }}" class="hover:text-emerald">Privacy</a>
@@ -126,6 +130,10 @@
                 <header class="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
                     <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                         <div class="flex min-w-0 items-center gap-3">
+                            <button type="button" data-sidebar-toggle aria-pressed="false" class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-line text-navy/80 hover:border-navy hover:text-navy lg:flex">
+                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="m15 10-2 2 2 2" class="collapsed:hidden"/><path d="m13 10 2 2-2 2" class="hidden collapsed:block"/></svg>
+                                <span class="sr-only" data-sidebar-label>Collapse menu</span>
+                            </button>
                             <details class="relative lg:hidden">
                                 <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-[8px] border border-line [&::-webkit-details-marker]:hidden">
                                     <span class="sr-only">Open menu</span>

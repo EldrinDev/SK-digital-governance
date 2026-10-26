@@ -102,9 +102,6 @@
                     @endif
                 </p>
 
-                @if (session('status'))
-                    <p role="status" class="mt-4 rounded-[8px] bg-success/10 p-3 text-sm">{{ session('status') }}</p>
-                @endif
                 @error('registration')
                     <p role="alert" class="mt-4 rounded-[8px] bg-error/5 p-3 text-sm text-[#b91c1c]">{{ $message }}</p>
                 @enderror

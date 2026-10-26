@@ -68,3 +68,36 @@ window.addEventListener('pageshow', (event) => {
         button.querySelector('[data-busy-text]').textContent = button.dataset.idleLabel;
     });
 });
+
+// Fold the workspace side menu down to icons, and remember the choice in this browser.
+const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
+
+const showSidebarState = () => {
+    const isCollapsed = document.documentElement.dataset.sidebar === 'collapsed';
+
+    sidebarToggle.setAttribute('aria-pressed', String(isCollapsed));
+    sidebarToggle.title = isCollapsed ? 'Expand menu' : 'Collapse menu';
+    sidebarToggle.querySelector('[data-sidebar-label]').textContent = sidebarToggle.title;
+};
+
+if (sidebarToggle) {
+    showSidebarState();
+
+    sidebarToggle.addEventListener('click', () => {
+        const isCollapsed = document.documentElement.dataset.sidebar === 'collapsed';
+
+        if (isCollapsed) {
+            delete document.documentElement.dataset.sidebar;
+        } else {
+            document.documentElement.dataset.sidebar = 'collapsed';
+        }
+
+        try {
+            localStorage.setItem('sk.sidebar', isCollapsed ? 'expanded' : 'collapsed');
+        } catch (error) {
+            // Private browsing or blocked storage: the menu still folds, it just isn't remembered.
+        }
+
+        showSidebarState();
+    });
+}

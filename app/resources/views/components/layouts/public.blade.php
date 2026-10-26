@@ -2,6 +2,17 @@
     'title',
     'description' => null,
 ])
+{{--
+    Signed-in people stay inside their workspace (side menu, notifications, account menu)
+    when they open a public page; guests get the public site's header and footer.
+--}}
+@auth
+<x-layouts.app :title="$title">
+    <div class="mx-auto w-full max-w-7xl">
+        {{ $slot }}
+    </div>
+</x-layouts.app>
+@else
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -56,3 +67,4 @@
         </footer>
     </body>
 </html>
+@endauth
