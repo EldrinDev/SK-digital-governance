@@ -28,7 +28,7 @@
 @elseif ($size === 'thumb')
     <span {{ $attributes->class(['flex h-full w-full flex-col items-center justify-center gap-1 p-1.5 text-center', $tone['bg'], $tone['text']]) }} aria-hidden="true">
         <img src="{{ $announcement->barangay->logoUrl() }}" alt="" class="h-1/2 max-h-12 w-auto object-contain">
-        <span class="text-[0.6rem] font-semibold leading-none">{{ $announcement->category->label() }}</span>
+        <span class="max-w-full truncate px-0.5 text-[0.55rem] font-semibold leading-none">{{ $announcement->category->label() }}</span>
     </span>
 @else
     <div {{ $attributes->class(['relative flex h-full w-full flex-col justify-between overflow-hidden', $tone['bg'], $tone['text'], 'p-7 sm:p-8' => $size === 'feature', 'p-5' => $size !== 'feature']) }} aria-hidden="true">
