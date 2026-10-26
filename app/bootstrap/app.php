@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
             'active' => EnsureAccountIsActive::class,
         ]);
+
+        $middleware->append(AddSecurityHeaders::class);
 
         $middleware->redirectUsersTo(fn (Request $request) => route($request->user()->role->homeRoute()));
     })

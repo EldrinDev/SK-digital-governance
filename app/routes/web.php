@@ -37,7 +37,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/sk-access', [StaffSessionController::class, 'store'])->name('staff.login.store');
 
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
+    Route::post('/register', [RegisteredUserController::class, 'store'])->middleware('throttle:10,1')->name('register.store');
 
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
@@ -45,11 +45,11 @@ Route::middleware('guest')->group(function () {
         ->name('password.email');
 
     Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
-    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:6,1')->name('password.store');
 });
 
 Route::middleware(['auth', 'active'])->group(function () {
-    Route::middleware('role:youth')->group(function () {
+    Route::middleware(['role:youth', 'throttle:public-forms'])->group(function () {
         Route::get('/dashboard', Youth\DashboardController::class)->name('dashboard');
         Route::post('/events/{event}/registration', [Youth\EventRegistrationController::class, 'store'])->name('events.registration.store');
         Route::delete('/events/{event}/registration', [Youth\EventRegistrationController::class, 'destroy'])->name('events.registration.destroy');
