@@ -27,6 +27,7 @@ Route::get('/announcements/{announcement}', [AnnouncementController::class, 'sho
 Route::get('/announcements/{announcement}/image', [AnnouncementController::class, 'image'])->name('announcements.image');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+Route::get('/events/{event}/calendar', [EventController::class, 'calendar'])->name('events.calendar');
 Route::get('/transparency/evidence/{evidence}', [PublicEvidenceController::class, 'show'])->name('transparency.evidence');
 Route::get('/transparency/{barangay}', [TransparencyController::class, 'show'])->name('transparency.show');
 
