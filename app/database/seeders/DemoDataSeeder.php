@@ -69,6 +69,32 @@ class DemoDataSeeder extends Seeder
         $this->seedBarretto();
         $this->seedKalaklan();
         $this->seedRestOfTheCity();
+        $this->seedLogos();
+    }
+
+    /**
+     * Give each barangay SK its own logo when one has been dropped into
+     * database/seeders/images/logos, named after the barangay (santa-rita.png,
+     * east-bajac-bajac.jpg). Barangays without a file keep the national SK logo.
+     * Add official logos only with the SK's permission.
+     */
+    private function seedLogos(): void
+    {
+        foreach (Barangay::all() as $barangay) {
+            $slug = str($barangay->name)->slug();
+
+            foreach (['png', 'webp', 'jpg', 'jpeg'] as $extension) {
+                $file = database_path("seeders/images/logos/{$slug}.{$extension}");
+
+                if (is_file($file)) {
+                    $barangay->logo_path = "barangays/{$barangay->id}/logo.{$extension}";
+                    Storage::put($barangay->logo_path, file_get_contents($file));
+                    $barangay->save();
+
+                    break;
+                }
+            }
+        }
     }
 
     /**

@@ -49,6 +49,29 @@ class DemoDataSeederTest extends TestCase
         $this->get(route('transparency.show', $santaRita))->assertOk()->assertSeeText('Coastal clean-up drive');
     }
 
+    public function test_loads_sk_logos_dropped_into_the_logos_folder(): void
+    {
+        $file = database_path('seeders/images/logos/gordon-heights.png');
+        $alreadyThere = is_file($file);
+
+        if (! $alreadyThere) {
+            imagepng(imagecreatetruecolor(64, 64), $file);
+        }
+
+        try {
+            $this->seed(DemoDataSeeder::class);
+        } finally {
+            if (! $alreadyThere) {
+                unlink($file);
+            }
+        }
+
+        $gordonHeights = Barangay::firstWhere('name', 'Gordon Heights');
+        $this->assertNotNull($gordonHeights->logo_path);
+        Storage::assertExists($gordonHeights->logo_path);
+        $this->assertStringContainsString('/barangays/', $gordonHeights->logoUrl());
+    }
+
     public function test_refuses_to_run_twice(): void
     {
         $this->seed(DemoDataSeeder::class);
