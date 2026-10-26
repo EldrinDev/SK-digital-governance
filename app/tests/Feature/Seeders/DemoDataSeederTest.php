@@ -28,7 +28,10 @@ class DemoDataSeederTest extends TestCase
     {
         $this->seed(DemoDataSeeder::class);
 
-        $this->assertSame(DemoDataSeeder::PILOT, Barangay::participating()->orderByRaw("case name when 'Santa Rita' then 0 when 'Barretto' then 1 else 2 end")->pluck('name')->all());
+        $this->assertSame(17, Barangay::participating()->count());
+        $this->assertSame(0, Barangay::doesntHave('announcements')->count(), 'Every barangay has at least one post.');
+        $this->assertSame(17, Barangay::whereHas('announcements', fn ($query) => $query->whereNotNull('image_credit'))->count(), 'Every barangay has a credited photo.');
+        $this->assertSame(DemoDataSeeder::PILOT, Barangay::has('cbydps')->orderByRaw("case name when 'Santa Rita' then 0 when 'Barretto' then 1 else 2 end")->pluck('name')->all());
 
         $santaRita = Barangay::firstWhere('name', 'Santa Rita');
         $this->assertSame(1, Ppa::where('barangay_id', $santaRita->id)->delayed()->count());

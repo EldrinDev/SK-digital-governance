@@ -61,12 +61,55 @@ class DemoDataSeeder extends Seeder
 
         $this->call(DemoAccountSeeder::class);
 
-        Barangay::query()->update(['is_participating' => false]);
-        Barangay::whereIn('name', self::PILOT)->update(['is_participating' => true]);
+        // Every barangay is on the public portal for the demo; the three pilot barangays
+        // also have officers, plans and PPAs.
+        Barangay::query()->update(['is_participating' => true]);
 
         $this->seedSantaRita();
         $this->seedBarretto();
         $this->seedKalaklan();
+        $this->seedRestOfTheCity();
+    }
+
+    /**
+     * One sample post (and for some, an upcoming event) for each of the other 14 barangays,
+     * written in the Taglish style SK pages use. Photos are real street photos of each
+     * barangay from Wikimedia Commons (CC0 / public domain), credited on the post.
+     */
+    private function seedRestOfTheCity(): void
+    {
+        $posts = [
+            'Asinan' => [AnnouncementCategory::Event, 'Liga ng Kabataan 2026: bukas na ang registration!', ['🏀 Basketball at 🏐 Volleyball, boys and girls division!', '', '🗓️ Opening: '.now()->addDays(12)->format('F j, Y'), '📍 Asinan Covered Court', '', 'Bumuo na ng team (8 hanggang 12 players) at mag-register sa Events page. Libre ang jersey para sa unang 6 na team!', '', '#SKAsinan #LigaNgKabataan #BatangGapo'], 3, [EventKind::Event, 'Liga ng Kabataan opening day', 12, 'Asinan Covered Court', 96]],
+            'Banicain' => [AnnouncementCategory::Reminder, 'PAALALA: Katipunan ng Kabataan Profiling', ['📋 PAALALA SA LAHAT NG KABATAAN NG BANICAIN!', '', 'Patuloy ang KK Profiling para sa edad 15 hanggang 30. Kailangan ito para maisama ka sa mga programa ng SK at sa paggawa ng CBYDP.', '', '🕘 Lunes hanggang Biyernes, 9:00 AM hanggang 4:00 PM', '📍 Banicain Barangay Hall', '', 'Magdala ng kahit anong valid ID. 🙏', '', '#SKBanicain #KKProfiling #BatangGapo'], 5, null],
+            'East Bajac-Bajac' => [AnnouncementCategory::Event, 'Tree Planting Activity: Kabataan para sa Kalikasan', ['🌱 TARA, MAGTANIM TAYO!', '', 'Samahan ang SK East Bajac-Bajac sa ating tree planting activity sa tabi ng ilog.', '', '🗓️ '.now()->addDays(9)->format('F j, Y'), '🕖 7:00 AM', '📍 East Bajac-Bajac riverside park', '', 'Magdala ng tumbler at sumbrero. Sagot ng SK ang seedlings at merienda!', '', '#SKEastBajacBajac #KabataanParaSaKalikasan #BatangGapo'], 2, [EventKind::Event, 'Tree planting by the river', 9, 'East Bajac-Bajac riverside park', 60]],
+            'East Tapinac' => [AnnouncementCategory::Recognition, 'Salamat sa pagdalo sa Linggo ng Kabataan dito sa East Tapinac!', ['💚 MARAMING SALAMAT, KABATAAN!', '', 'Naging tahanan ang East Tapinac ng Mobile Legends: Bang Bang Inter-Barangay Tournament ng SK Olongapo noong Agosto 22 bilang bahagi ng Linggo ng Kabataan 2026.', '', 'Salamat sa lahat ng team, sa mga nanood at sa mga volunteer na tumulong sa venue. Kita-kits sa susunod na taon! 🎮', '', '#LinggoNgKabataan2026 #SKOlongapo #SKEastTapinac'], 60, null],
+            'Gordon Heights' => [AnnouncementCategory::Announcement, 'Libreng Tutorial Program para sa Grade School', ['📚 LIBRENG TUTORIAL, TUWING SABADO!', '', 'Para sa mga batang Grade 1 hanggang Grade 6 na kailangan ng tulong sa Reading at Math. Ang mga tutor ay mga kabataang volunteer ng Gordon Heights.', '', '🕘 Tuwing Sabado, 9:00 hanggang 11:00 AM', '📍 Gordon Heights Barangay Hall', '', 'Gusto mo bang maging volunteer tutor? Mag-message sa amin! 🙌', '', '#SKGordonHeights #EdukasyonParaSaLahat #BatangGapo'], 4, null],
+            'Mabayuan' => [AnnouncementCategory::Event, 'Bloodletting Activity: Dugtong-Buhay', ['🩸 ISANG BAG NG DUGO, TATLONG BUHAY ANG MASASAGIP', '', 'Inaanyayahan ang lahat ng kabataang 18 pataas na nasa mabuting kalusugan na makiisa sa ating Bloodletting Activity.', '', '🗓️ '.now()->addDays(15)->format('F j, Y'), '🕗 8:00 AM hanggang 12:00 NN', '📍 Mabayuan Covered Court', '', 'Matulog nang sapat at kumain bago pumunta. Bawal ang may sipon o lagnat.', '', '#SKMabayuan #DugtongBuhay #BatangGapo'], 1, [EventKind::Event, 'Bloodletting activity', 15, 'Mabayuan Covered Court', 80]],
+            'New Cabalan' => [AnnouncementCategory::Announcement, 'Mental Health Awareness Talk: Okay lang na hindi okay', ['🧠 USAP TAYO TUNGKOL SA MENTAL HEALTH', '', 'Magkakaroon ng libreng talk tungkol sa stress, anxiety at kung paano humingi ng tulong. Bukas ito sa mga estudyante at working youth.', '', 'Abangan ang petsa dito sa ating page. Kung kailangan mo ng kausap ngayon, tumawag sa NCMH Crisis Hotline: 1553. 💚', '', '#SKNewCabalan #MentalHealthMatters #BatangGapo'], 7, null],
+            'New Ilalim' => [AnnouncementCategory::Event, 'River Clean-up Drive ngayong buwan', ['🌊 LINIS-ILOG, PARA SA LAHAT!', '', 'Tulong-tulong nating linisin ang ilog sa ating barangay bago dumating ang tag-ulan.', '', '🗓️ '.now()->addDays(6)->format('F j, Y'), '🕕 6:00 AM', '📍 New Ilalim riverbank', '', 'Gloves, sako at merienda, sagot ng SK!', '', '#SKNewIlalim #MalinisNaGapo #BatangGapo'], 2, [EventKind::Event, 'River clean-up drive', 6, 'New Ilalim riverbank', 50]],
+            'New Kababae' => [AnnouncementCategory::Announcement, 'Bukas na ang aplikasyon sa SK Educational Assistance', ['🎓 PARA SA MGA ESTUDYANTE NG NEW KABABAE', '', 'Tumatanggap na ang SK ng aplikasyon para sa educational assistance ngayong semestre.', '', 'Mga kailangan: certificate of enrollment, kopya ng grades at barangay certificate. Ipasa sa Barangay Hall hanggang katapusan ng buwan.', '', '#SKNewKababae #EdukasyonParaSaLahat #BatangGapo'], 6, null],
+            'New Kalalake' => [AnnouncementCategory::Event, 'Zumba sa Plaza tuwing Sabado', ['💃 GALAW-GALAW, KABATAAN!', '', 'Libreng Zumba session para sa lahat ng edad. Magdala ng tubig at towel!', '', '🗓️ Simula '.now()->addDays(5)->format('F j, Y'), '🕕 5:30 AM', '📍 New Kalalake plaza', '', '#SKNewKalalake #HealthyKabataan #BatangGapo'], 1, [EventKind::Event, 'Zumba sa plaza', 5, 'New Kalalake plaza', null]],
+            'Old Cabalan' => [AnnouncementCategory::Announcement, 'Youth Skills Training: Basic Computer Literacy', ['💻 MATUTO NG BASIC COMPUTER SKILLS!', '', 'Libreng training sa MS Word, Excel at paggawa ng resume para sa out-of-school youth at mga naghahanap ng trabaho.', '', 'Limitado ang slots. Mag-message sa amin o pumunta sa Barangay Hall para magpalista.', '', '#SKOldCabalan #SkillsParaSaKabataan #BatangGapo'], 8, null],
+            'Pag-asa' => [AnnouncementCategory::Reminder, 'PAALALA: Katipunan ng Kabataan Assembly', ['📢 PAALALA, KABATAAN NG PAG-ASA!', '', 'Inaanyayahan ang lahat sa ating KK Assembly. Pag-uusapan natin ang mga programa ng SK at ang budget para sa susunod na taon.', '', '🗓️ '.now()->addDays(10)->format('F j, Y'), '🕑 2:00 PM', '📍 Pag-asa Barangay Hall', '', '#SKPagAsa #KatipunanNgKabataan #BatangGapo'], 3, null],
+            'West Bajac-Bajac' => [AnnouncementCategory::Event, 'Anti-Drug Abuse Symposium para sa Kabataan', ['🚫 KABATAAN, IWAS DROGA!', '', 'Isang symposium tungkol sa panganib ng ipinagbabawal na gamot at kung paano tumanggi sa barkada.', '', '🗓️ '.now()->addDays(18)->format('F j, Y'), '🕑 1:00 PM', '📍 West Bajac-Bajac Barangay Hall', '', '#SKWestBajacBajac #DrugFreeKabataan #BatangGapo'], 4, [EventKind::Event, 'Anti-drug abuse symposium', 18, 'West Bajac-Bajac Barangay Hall', 120]],
+            'West Tapinac' => [AnnouncementCategory::Recognition, 'Salamat sa mga volunteer ng Brigada Eskwela!', ['🏫 SALAMAT, MGA VOLUNTEER!', '', 'Maraming salamat sa mga kabataang tumulong maglinis, magpintura at mag-ayos ng mga silid-aralan para sa pagbubukas ng klase.', '', 'Kayo ang patunay na ang kabataan ng West Tapinac ay handang tumulong! 💚', '', '#SKWestTapinac #BrigadaEskwela #BatangGapo'], 75, null],
+        ];
+
+        $credits = json_decode(file_get_contents(database_path('seeders/images/barangays/credits.json')), true);
+
+        foreach ($posts as $name => [$category, $title, $lines, $daysAgo, $event]) {
+            $barangay = Barangay::firstWhere('name', $name);
+            $photo = $credits[$name];
+
+            $this->announcement($barangay, null, $category, $title, implode("\n", $lines), now()->subDays($daysAgo)->setTime(18, 30),
+                image: database_path('seeders/images/barangays/'.$photo['file']),
+                imageCredit: "{$photo['author']}, Wikimedia Commons ({$photo['license']})");
+
+            if ($event !== null) {
+                [$kind, $eventTitle, $inDays, $venue, $capacity] = $event;
+                $this->event($barangay, $kind, $eventTitle, $inDays, $venue, $capacity);
+            }
+        }
     }
 
     /**
@@ -198,7 +241,7 @@ class DemoDataSeeder extends Seeder
             'Mag-register sa Events page para makapaghanda kami ng sapat na gamit. Bahagi ito ng ating ABYIP program para sa kalikasan.',
             '',
             '#SKSantaRita #MalinisNaGapo #KabataanParaSaKalikasan',
-        ]), now()->subDays(4));
+        ]), now()->subDays(4), image: database_path('seeders/images/barangays/santa-rita.jpg'), imageCredit: 'Judgefloro, Wikimedia Commons (CC0)');
 
         $this->announcement($barangay, $secretary, AnnouncementCategory::Announcement, "ABYIP {$year}, bukas na sa publiko", implode("\n", [
             "📊 Naka-post na sa Transparency Board ang ABYIP {$year} ng SK Santa Rita, na inaprubahan ng konseho sa Res. No. 7, s. {$year}.",
@@ -216,18 +259,19 @@ class DemoDataSeeder extends Seeder
             'Ipinakita ng ating team ang teamwork, disiplina at sportsmanship. Salamat sa mga magulang at kaibigang sumuporta. Hanggang sa susunod na laban! 💚',
             '',
             '#LinggoNgKabataan2026 #SKOlongapo #SKSantaRita',
-        ]), Carbon::parse('2026-08-24 18:30')->min(now()->subDays(30)), image: 'skyline-freeport.jpg');
+        ]), Carbon::parse('2026-08-24 18:30')->min(now()->subDays(30)), image: public_path('images/skyline-freeport.jpg'));
     }
 
     /**
      * Post an announcement, optionally pinned or with a sample photo.
      */
-    private function announcement(Barangay $barangay, User $author, AnnouncementCategory $category, string $title, string $body, Carbon $postedAt, bool $pinned = false, ?string $image = null): void
+    private function announcement(Barangay $barangay, ?User $author, AnnouncementCategory $category, string $title, string $body, Carbon $postedAt, bool $pinned = false, ?string $image = null, ?string $imageCredit = null): void
     {
         $announcement = new Announcement(['category' => $category, 'title' => $title, 'body' => $body]);
         $announcement->forceFill([
             'barangay_id' => $barangay->id,
-            'user_id' => $author->id,
+            'user_id' => $author?->id,
+            'image_credit' => $imageCredit,
             'pinned_at' => $pinned ? $postedAt : null,
             'created_at' => $postedAt,
             'updated_at' => $postedAt,
@@ -235,7 +279,7 @@ class DemoDataSeeder extends Seeder
 
         if ($image !== null) {
             $announcement->image_path = "announcements/{$barangay->id}/demo-".str($title)->slug()->limit(40, '').'.jpg';
-            Storage::put($announcement->image_path, file_get_contents(public_path("images/{$image}")));
+            Storage::put($announcement->image_path, file_get_contents($image));
         }
 
         $announcement->save();
@@ -257,7 +301,7 @@ class DemoDataSeeder extends Seeder
             'Sports, edukasyon, kalusugan o trabaho? Ikaw ang magsabi. 🙌',
             '',
             '#SKBarretto #KabataanAngBoses #BatangGapo',
-        ]), now()->subDays(2), pinned: true);
+        ]), now()->subDays(2), pinned: true, image: database_path('seeders/images/barangays/barretto.jpg'), imageCredit: 'Judgefloro, Wikimedia Commons (CC0)');
 
         $year = (int) now()->format('Y');
         $cbydp = $this->cbydp($barangay, $year, approvedBy: $chair, resolution: "Res. No. 1, s. {$year}");
@@ -294,7 +338,7 @@ class DemoDataSeeder extends Seeder
             'Abangan ang petsa at lugar dito! 📚',
             '',
             '#SKKalaklan #EdukasyonParaSaLahat #BatangGapo',
-        ]), now()->subDays(6));
+        ]), now()->subDays(6), image: database_path('seeders/images/barangays/kalaklan.jpg'), imageCredit: 'Judgefloro, Wikimedia Commons (CC0)');
 
         $cbydp = $this->cbydp($barangay, (int) now()->format('Y'));
         $this->priorities($cbydp, [
