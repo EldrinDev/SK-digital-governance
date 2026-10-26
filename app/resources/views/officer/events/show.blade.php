@@ -4,7 +4,13 @@
 @endphp
 <x-layouts.app :title="$event->title" :heading="$event->title" :description="$event->kind->label().' · '.$event->starts_at->format('l, F j, Y · g:i A').' · '.$event->venue">
     <x-slot:actions>
+        <div class="flex flex-wrap items-center gap-3">
+        <a href="{{ route('officer.events.export', $event) }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download CSV
+        </a>
         <a href="{{ route('events.show', $event) }}" target="_blank" class="rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">View public page</a>
+        </div>
     </x-slot:actions>
 
     <p class="mb-6 text-sm"><a href="{{ route('officer.events.index') }}" class="font-medium text-slate-muted hover:text-emerald">&larr; All events</a></p>

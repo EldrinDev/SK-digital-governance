@@ -3,10 +3,16 @@
 @endphp
 <x-layouts.app title="Users" heading="Users" description="Everyone who can sign in, with their role and workspace.">
     <x-slot:actions>
+        <div class="flex flex-wrap items-center gap-3">
+        <a href="{{ route('admin.users.export') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download CSV
+        </a>
         <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark">
             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             Add account
         </a>
+        </div>
     </x-slot:actions>
 
     <form method="GET" class="mb-5 grid gap-3 rounded-[12px] border border-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))_auto]">

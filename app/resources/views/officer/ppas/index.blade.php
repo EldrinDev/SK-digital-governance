@@ -2,6 +2,13 @@
     use App\PpaStatus;
 @endphp
 <x-layouts.app title="PPAs" heading="PPAs" description="Every program, project, and activity in your barangay’s ABYIPs.">
+    <x-slot:actions>
+        <a href="{{ route('officer.ppas.export') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download CSV
+        </a>
+    </x-slot:actions>
+
     <form method="GET" class="mb-5 grid gap-3 rounded-[12px] border border-line bg-white p-4 sm:grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,1fr))_auto]">
         <label class="sr-only" for="search">Search PPAs</label>
         <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by name" class="rounded-[8px] border border-line px-3 py-2 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">

@@ -2,6 +2,13 @@
     use App\Models\AuditLog;
 @endphp
 <x-layouts.app title="Audit trail" heading="Audit trail" description="What was done, when, and by whom. Entries can’t be edited or deleted.">
+    <x-slot:actions>
+        <a href="{{ route('admin.audit-logs.export', request()->query()) }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download CSV
+        </a>
+    </x-slot:actions>
+
     <form method="GET" class="mb-5 grid gap-3 rounded-[12px] border border-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_repeat(2,minmax(0,1fr))_repeat(2,minmax(0,0.8fr))_auto]">
         <label class="sr-only" for="search">Search by person</label>
         <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search person or email" class="rounded-[8px] border border-line px-3 py-2 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">

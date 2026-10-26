@@ -81,6 +81,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('feedback/{feedback}', [Officer\FeedbackController::class, 'update'])->name('feedback.update');
 
         Route::get('ppas', [Officer\PpaController::class, 'index'])->name('ppas.index');
+        Route::get('ppas-export', [Officer\ExportController::class, 'ppas'])->name('ppas.export');
+        Route::get('events/{event}/registrants-export', [Officer\ExportController::class, 'eventRegistrations'])->name('events.export');
         Route::get('abyips/{abyip}/ppas/create', [Officer\PpaController::class, 'create'])->name('ppas.create');
         Route::post('abyips/{abyip}/ppas', [Officer\PpaController::class, 'store'])->name('ppas.store');
         Route::resource('ppas', Officer\PpaController::class)->only(['show', 'edit', 'update', 'destroy']);
@@ -105,6 +107,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::middleware('role:federation')->prefix('federation')->name('federation.')->group(function () {
         Route::get('/', Federation\DashboardController::class)->name('dashboard');
+        Route::get('compliance-export', [Federation\DashboardController::class, 'export'])->name('compliance.export');
         Route::get('barangays/{barangay}', [Federation\BarangayController::class, 'show'])->name('barangays.show');
         Route::post('barangays/{barangay}/remarks', [Federation\MonitoringRemarkController::class, 'store'])->name('barangays.remarks.store');
         Route::get('reports', [Federation\AccomplishmentReportController::class, 'index'])->name('reports.index');
@@ -118,6 +121,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('barangays', [Admin\BarangayController::class, 'index'])->name('barangays.index');
         Route::patch('barangays/{barangay}', [Admin\BarangayController::class, 'update'])->name('barangays.update');
         Route::get('audit-trail', [Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('audit-trail/export', [Admin\AuditLogController::class, 'export'])->name('audit-logs.export');
+        Route::get('users-export', Admin\UserExportController::class)->name('users.export');
     });
 
     Route::get('/reports/{report}/print', [ReportPrintController::class, 'show'])->middleware('role:officer,federation')->name('reports.print');
