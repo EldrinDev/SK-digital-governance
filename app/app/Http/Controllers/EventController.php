@@ -35,7 +35,7 @@ class EventController extends Controller
             ->whereHas('barangay', fn ($query) => $query->participating())
             ->when($barangayId, fn ($query) => $query->where('barangay_id', $barangayId))
             ->when($kind, fn ($query) => $query->where('kind', $kind))
-            ->with('barangay:id,name')
+            ->with('barangay:id,name,logo_path')
             ->withCount('registrations')
             ->orderBy('starts_at')
             ->paginate(20)

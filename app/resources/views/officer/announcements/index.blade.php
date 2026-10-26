@@ -22,7 +22,7 @@
                                     <span class="rounded-full bg-gold/20 px-2 py-0.5 font-semibold">Pinned</span>
                                 @endif
                                 <span class="text-slate-muted">
-                                    {{ $announcement->created_at->format('M j, Y · g:i A') }}{{ $announcement->author ? ', by '.$announcement->author->name : '' }}
+                                    {{ $announcement->postedAt()->format('M j, Y · g:i A') }}{{ $announcement->author ? ', by '.$announcement->author->name : '' }}
                                 </span>
                             </p>
                             <h2 class="mt-1.5 font-display text-base font-semibold leading-snug sm:text-lg">{{ $announcement->title }}</h2>

@@ -14,11 +14,11 @@ class HomeController extends Controller
     public function __invoke(): View
     {
         return view('welcome', [
-            'announcements' => Announcement::query()->visibleToPublic()->with('barangay:id,name')->pinnedFirst()->limit(3)->get(),
+            'announcements' => Announcement::query()->visibleToPublic()->with('barangay:id,name,logo_path')->pinnedFirst()->limit(3)->get(),
             'upcomingEvents' => Event::query()
                 ->upcoming()
                 ->whereHas('barangay', fn ($query) => $query->participating())
-                ->with('barangay:id,name')
+                ->with('barangay:id,name,logo_path')
                 ->orderBy('starts_at')
                 ->limit(3)
                 ->get(),

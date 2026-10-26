@@ -6,12 +6,15 @@
 <x-layouts.public :title="$barangay->name.' transparency board'" :description="'Approved youth programs and budgets of the '.$barangay->name.' SK.'">
     <p class="text-sm"><a href="{{ route('transparency.index') }}" class="font-medium text-slate-muted hover:text-emerald">&larr; All barangays</a></p>
 
-    <div class="mt-5 flex items-center gap-4">
-        <img src="{{ asset('images/sk-logo.svg') }}" alt="" class="h-14 w-14 rounded-full border border-line bg-white p-1">
-        <div>
-            <h1 class="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{{ $barangay->name }}</h1>
-            <p class="text-slate-muted">Approved programs of the Sangguniang Kabataan, as published by its officers.</p>
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <img src="{{ $barangay->logoUrl() }}" alt="Logo of SK {{ $barangay->name }}" class="h-16 w-16 rounded-full border border-line bg-white object-contain p-1">
+            <div>
+                <h1 class="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{{ $barangay->name }}</h1>
+                <p class="text-slate-muted">Approved programs of the Sangguniang Kabataan, as published by its officers.</p>
+            </div>
         </div>
+        <x-barangay.facebook-link :barangay="$barangay" />
     </div>
 
     @forelse ($abyips as $abyip)

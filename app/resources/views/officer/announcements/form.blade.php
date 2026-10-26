@@ -59,6 +59,9 @@
                 @error('image')
                     <p class="mt-1.5 text-sm text-error">{{ $message }}</p>
                 @enderror
+                <div class="mt-3">
+                    <x-form.input name="image_credit" label="Photo credit (optional)" :value="$announcement->image_credit" placeholder="e.g. SK Santa Rita" maxlength="150" />
+                </div>
                 @if ($announcement->image_path)
                     <label class="mt-3 flex items-center gap-2 text-sm">
                         <input type="checkbox" name="remove_image" value="1" class="accent-error">
@@ -66,6 +69,15 @@
                     </label>
                 @endif
             </section>
+
+            <details class="rounded-[12px] border border-line bg-white p-5" @if (old('source_url', $announcement->source_url) || $errors->hasAny(['source_url', 'originally_posted_at'])) open @endif>
+                <summary class="cursor-pointer text-sm font-semibold">Bringing it over from Facebook?</summary>
+                <p class="mt-2 text-xs leading-relaxed text-slate-muted">Paste the link to your SK’s Facebook post and when it went up. The post keeps its original date and links back to Facebook. Posts older than three days don’t notify youth again.</p>
+                <div class="mt-3 space-y-3">
+                    <x-form.input name="source_url" type="url" label="Facebook post link" :value="$announcement->source_url" placeholder="https://www.facebook.com/…" />
+                    <x-form.input name="originally_posted_at" type="datetime-local" label="Posted on Facebook" :value="$announcement->originally_posted_at?->format('Y-m-d\TH:i')" />
+                </div>
+            </details>
 
             <section class="rounded-[12px] border border-line bg-white p-5">
                 <label class="flex items-start gap-3">

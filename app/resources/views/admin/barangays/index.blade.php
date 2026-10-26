@@ -1,18 +1,27 @@
 <x-layouts.app title="Barangays" heading="Barangays" description="Only participating barangays appear on the register and SK access pages. Turn on the pilot barangays and turn off the rest.">
     <div class="overflow-x-auto rounded-[12px] border border-line bg-white">
-        <table class="w-full min-w-[36rem] text-left text-sm">
+        <table class="w-full min-w-[44rem] text-left text-sm">
             <thead class="border-b border-line bg-mist/60 text-xs font-semibold text-slate-muted">
                 <tr>
                     <th scope="col" class="px-5 py-3">Barangay</th>
                     <th scope="col" class="px-5 py-3 text-right">SK officers</th>
                     <th scope="col" class="px-5 py-3 text-right">Youth</th>
                     <th scope="col" class="px-5 py-3">Participation</th>
+                    <th scope="col" class="px-5 py-3"><span class="sr-only">Profile</span></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-line">
                 @foreach ($barangays as $barangay)
                     <tr>
-                        <th scope="row" class="px-5 py-3 font-medium">{{ $barangay->name }}</th>
+                        <th scope="row" class="px-5 py-3 font-medium">
+                            <span class="flex items-center gap-3">
+                                <img src="{{ $barangay->logoUrl() }}" alt="" class="h-8 w-8 rounded-full border border-line bg-white object-contain p-0.5">
+                                {{ $barangay->name }}
+                                @if ($barangay->facebook_url)
+                                    <span class="rounded-full bg-info/10 px-2 py-0.5 text-xs font-semibold text-info">Facebook</span>
+                                @endif
+                            </span>
+                        </th>
                         <td class="px-5 py-3 text-right tabular-nums">{{ $barangay->officers_count }}</td>
                         <td class="px-5 py-3 text-right tabular-nums">{{ $barangay->youth_count }}</td>
                         <td class="px-5 py-3">
@@ -29,6 +38,7 @@
                                 @endif
                             </form>
                         </td>
+                        <td class="px-5 py-3 text-right"><a href="{{ route('admin.barangays.edit', $barangay) }}" class="text-xs font-semibold text-emerald hover:underline">Logo and Facebook<span class="sr-only"> of {{ $barangay->name }}</span></a></td>
                     </tr>
                 @endforeach
             </tbody>

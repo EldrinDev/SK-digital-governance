@@ -28,7 +28,7 @@ class DashboardController extends Controller
             'participatingBarangays' => Barangay::participating()->orderBy('name')->pluck('name'),
             'barangayCount' => Barangay::count(),
             'failedLoginsToday' => AuditLog::where('action', 'auth.failed')->whereDate('created_at', today())->count(),
-            'recentEntries' => AuditLog::with(['user:id,name', 'barangay:id,name'])->latest('created_at')->latest('id')->limit(8)->get(),
+            'recentEntries' => AuditLog::with(['user:id,name', 'barangay:id,name,logo_path'])->latest('created_at')->latest('id')->limit(8)->get(),
         ]);
     }
 }

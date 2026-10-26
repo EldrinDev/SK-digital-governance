@@ -16,7 +16,7 @@ class PersonalDataController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user()->load([
-            'barangay:id,name',
+            'barangay:id,name,logo_path',
             'eventRegistrations.event:id,title,starts_at,venue',
             'feedback.event:id,title',
             'surveyResponses.survey:id,title',

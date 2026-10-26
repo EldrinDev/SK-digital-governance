@@ -27,17 +27,17 @@
     >
 @elseif ($size === 'thumb')
     <span {{ $attributes->class(['flex h-full w-full flex-col items-center justify-center gap-1 p-1.5 text-center', $tone['bg'], $tone['text']]) }} aria-hidden="true">
-        <img src="{{ asset('images/sk-logo.svg') }}" alt="" class="h-1/2 max-h-12 w-auto">
+        <img src="{{ $announcement->barangay->logoUrl() }}" alt="" class="h-1/2 max-h-12 w-auto object-contain">
         <span class="text-[0.6rem] font-semibold leading-none">{{ $announcement->category->label() }}</span>
     </span>
 @else
     <div {{ $attributes->class(['relative flex h-full w-full flex-col justify-between overflow-hidden', $tone['bg'], $tone['text'], 'p-7 sm:p-8' => $size === 'feature', 'p-5' => $size !== 'feature']) }} aria-hidden="true">
-        <img src="{{ asset('images/sk-logo.svg') }}" alt="" @class([
+        <img src="{{ $announcement->barangay->logoUrl() }}" alt="" @class([
             'pointer-events-none absolute opacity-[0.14]',
             '-right-16 -top-12 h-80 w-80' => $size === 'feature',
             '-right-10 -top-8 h-48 w-48' => $size !== 'feature',
         ])>
-        <img src="{{ asset('images/sk-logo.svg') }}" alt="" @class(['relative rounded-full bg-white p-0.5', 'h-11 w-11' => $size === 'feature', 'h-9 w-9' => $size !== 'feature'])>
+        <img src="{{ $announcement->barangay->logoUrl() }}" alt="" @class(['relative rounded-full bg-white object-contain p-0.5', 'h-11 w-11' => $size === 'feature', 'h-9 w-9' => $size !== 'feature'])>
         <div class="relative">
             <span @class(['block h-1.5 rounded-full', $tone['rule'], 'mb-4 w-14' => $size === 'feature', 'mb-3 w-10' => $size !== 'feature'])></span>
             <p @class([

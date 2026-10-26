@@ -31,7 +31,7 @@ class UserController extends Controller
         ]);
 
         $users = User::query()
-            ->with('barangay:id,name')
+            ->with('barangay:id,name,logo_path')
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(fn ($inner) => $inner
                     ->where('name', 'like', "%{$search}%")

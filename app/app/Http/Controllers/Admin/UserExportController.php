@@ -18,7 +18,7 @@ class UserExportController extends Controller
     {
         return $this->csv('accounts-'.now()->format('Y-m-d').'.csv',
             ['Name', 'Email', 'Role', 'Barangay', 'Status', 'Created', 'Privacy notice accepted'],
-            User::with('barangay:id,name')->orderBy('name')->lazy()->map(fn (User $user): array => [
+            User::with('barangay:id,name,logo_path')->orderBy('name')->lazy()->map(fn (User $user): array => [
                 $user->name,
                 $user->email,
                 $user->role->label(),

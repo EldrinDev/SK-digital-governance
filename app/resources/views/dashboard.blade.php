@@ -71,7 +71,7 @@
                                 @if ($latest->isPinned())
                                     <span class="rounded-full bg-gold/20 px-2 py-0.5 font-semibold text-navy">Pinned</span>
                                 @endif
-                                <time datetime="{{ $latest->created_at->toIso8601String() }}">{{ $latest->created_at->diffForHumans() }}</time>
+                                <time datetime="{{ $latest->postedAt()->toIso8601String() }}">{{ $latest->postedAt()->diffForHumans() }}</time>
                             </p>
                             <h3 class="mt-2 font-display text-lg font-semibold leading-snug">
                                 <a href="{{ route('announcements.show', $latest) }}" class="hover:text-emerald">{{ $latest->title }}</a>
@@ -92,7 +92,7 @@
                                         </span>
                                         <span class="min-w-0">
                                             <span class="line-clamp-2 text-sm font-semibold leading-snug">{{ $announcement->title }}</span>
-                                            <span class="block text-xs text-slate-muted">{{ $announcement->created_at->diffForHumans() }}</span>
+                                            <span class="block text-xs text-slate-muted">{{ $announcement->postedAt()->diffForHumans() }}</span>
                                         </span>
                                     </a>
                                 </li>

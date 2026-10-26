@@ -21,6 +21,7 @@
                 <x-event.date-block :event="$event" size="lg" />
                 <div class="min-w-0">
                     <p class="flex flex-wrap items-center gap-2 text-sm">
+                        <img src="{{ $event->barangay->logoUrl() }}" alt="" class="h-6 w-6 rounded-full border border-line bg-white object-contain">
                         <span class="font-semibold text-emerald">SK {{ $event->barangay->name }}</span>
                         <span @class(['rounded-full px-2.5 py-0.5 text-xs font-semibold', 'bg-gold/25 text-navy' => $isConsultation, 'bg-emerald/10 text-emerald' => ! $isConsultation])>{{ $event->kind->label() }}</span>
                     </p>
@@ -149,6 +150,7 @@
                     </a>
                 @endunless
             </div>
+            <x-barangay.facebook-link :barangay="$event->barangay" class="mt-3 flex w-full justify-center" />
         </aside>
     </div>
 </x-layouts.public>

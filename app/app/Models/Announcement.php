@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -31,6 +32,7 @@ class Announcement extends Model
         return [
             'category' => AnnouncementCategory::class,
             'pinned_at' => 'datetime',
+            'originally_posted_at' => 'datetime',
         ];
     }
 
@@ -53,7 +55,35 @@ class Announcement extends Model
     #[Scope]
     protected function pinnedFirst(Builder $query): void
     {
-        $query->orderByRaw('pinned_at is null')->orderByDesc('pinned_at')->latest()->orderByDesc('id');
+        $query->orderByRaw('pinned_at is null')->orderByDesc('pinned_at')->newestFirst();
+    }
+
+    /**
+     * Newest first by when the post first went out, which for a post brought over
+     * from Facebook is its original date.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function newestFirst(Builder $query): void
+    {
+        $query->orderByRaw('coalesce(originally_posted_at, created_at) desc')->orderByDesc('id');
+    }
+
+    /**
+     * Get when the post first went out: its original date on Facebook, or when it was posted here.
+     */
+    public function postedAt(): Carbon
+    {
+        return $this->originally_posted_at ?? $this->created_at;
+    }
+
+    /**
+     * Determine whether the post was brought over from the SK's Facebook page.
+     */
+    public function isFromFacebook(): bool
+    {
+        return $this->source_url !== null;
     }
 
     /**

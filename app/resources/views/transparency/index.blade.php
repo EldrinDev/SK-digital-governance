@@ -41,7 +41,7 @@
                     'border-dashed border-line hover:border-navy/30' => ! $hasPublished,
                 ])>
                     <span class="flex items-center gap-3">
-                        <img src="{{ asset('images/sk-logo.svg') }}" alt="" class="h-10 w-10 rounded-full border border-line p-0.5">
+                        <img src="{{ $barangay->logoUrl() }}" alt="" class="h-10 w-10 rounded-full border border-line bg-white object-contain p-0.5">
                         <span class="leading-tight">
                             <span class="block font-display text-lg font-semibold group-hover:text-emerald">{{ $barangay->name }}</span>
                             <span class="text-xs text-slate-muted">

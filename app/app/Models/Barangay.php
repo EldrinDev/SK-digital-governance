@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'is_participating'])]
+#[Fillable(['name', 'is_participating', 'facebook_url'])]
 class Barangay extends Model
 {
     /** @use HasFactory<BarangayFactory> */
@@ -39,6 +39,17 @@ class Barangay extends Model
     protected function participating(Builder $query): void
     {
         $query->where('is_participating', true);
+    }
+
+    /**
+     * Get the address of the SK's logo: its own when the administrator uploaded one,
+     * otherwise the national SK logo.
+     */
+    public function logoUrl(): string
+    {
+        return $this->logo_path !== null
+            ? route('barangays.logo', ['barangay' => $this, 'v' => substr(md5($this->logo_path), 0, 8)])
+            : asset('images/sk-logo.svg');
     }
 
     /**

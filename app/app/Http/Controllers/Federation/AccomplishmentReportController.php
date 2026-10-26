@@ -22,7 +22,7 @@ class AccomplishmentReportController extends Controller
     {
         return view('federation.reports.index', [
             'reports' => AccomplishmentReport::query()
-                ->with(['barangay:id,name', 'abyip:id,year', 'submitter:id,name'])
+                ->with(['barangay:id,name,logo_path', 'abyip:id,year', 'submitter:id,name'])
                 ->orderByRaw('case when status = ? then 0 else 1 end', [ReportStatus::Submitted->value])
                 ->latest('submitted_at')
                 ->paginate(20),
@@ -36,7 +36,7 @@ class AccomplishmentReportController extends Controller
     {
         Gate::authorize('view', $report);
 
-        $report->load(['barangay:id,name', 'submitter:id,name', 'reviewer:id,name']);
+        $report->load(['barangay:id,name,logo_path', 'submitter:id,name', 'reviewer:id,name']);
 
         return view('federation.reports.show', ['report' => $report]);
     }

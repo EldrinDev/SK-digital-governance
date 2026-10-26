@@ -116,6 +116,43 @@ class AnnouncementControllerTest extends TestCase
         $this->get(route('announcements.index'))->assertOk()->assertSeeInOrder(['Pinned post', 'Newer post']);
     }
 
+    public function test_post_brought_over_from_facebook_keeps_its_date_and_links_back(): void
+    {
+        Notification::fake();
+        $officer = User::factory()->officer()->create();
+        $officer->barangay->update(['is_participating' => true]);
+        User::factory()->create(['barangay_id' => $officer->barangay_id]);
+        Announcement::factory()->for($officer->barangay)->create(['title' => 'Posted here yesterday', 'created_at' => now()->subDay()]);
+
+        $this->actingAs($officer)->post(route('officer.announcements.store'), [
+            'category' => 'recognition',
+            'title' => 'Salamat sa Linggo ng Kabataan',
+            'body' => 'Recap.',
+            'source_url' => 'https://www.facebook.com/sk/posts/123',
+            'originally_posted_at' => now()->subMonth()->format('Y-m-d\TH:i'),
+            'image_credit' => 'SK photo team',
+        ])->assertSessionHas('status', fn (string $status): bool => str_contains($status, 'weren’t notified'));
+
+        $imported = Announcement::firstWhere('title', 'Salamat sa Linggo ng Kabataan');
+        $this->assertTrue($imported->isFromFacebook());
+        $this->assertTrue($imported->postedAt()->lessThan(now()->subWeeks(3)));
+        Notification::assertNothingSent();
+
+        $this->get(route('announcements.index'))->assertSeeInOrder(['Posted here yesterday', 'Salamat sa Linggo ng Kabataan']);
+        $this->get(route('announcements.show', $imported))
+            ->assertSeeText('Originally posted on Facebook')
+            ->assertSee('https://www.facebook.com/sk/posts/123', false);
+    }
+
+    public function test_source_link_must_be_facebook_and_needs_a_date(): void
+    {
+        $officer = User::factory()->officer()->create();
+
+        $this->actingAs($officer)->post(route('officer.announcements.store'), [
+            'category' => 'announcement', 'title' => 'X', 'body' => 'Y', 'source_url' => 'https://phishing.example/post',
+        ])->assertSessionHasErrors(['source_url', 'originally_posted_at']);
+    }
+
     public function test_youth_cannot_post_announcements(): void
     {
         $this->actingAs(User::factory()->create())

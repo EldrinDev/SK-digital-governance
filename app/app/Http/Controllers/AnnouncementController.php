@@ -25,7 +25,7 @@ class AnnouncementController extends Controller
             'announcements' => Announcement::query()
                 ->visibleToPublic()
                 ->when($barangayId, fn ($query) => $query->where('barangay_id', $barangayId))
-                ->with('barangay:id,name')
+                ->with('barangay:id,name,logo_path')
                 ->pinnedFirst()
                 ->paginate(9)
                 ->withQueryString(),
@@ -43,7 +43,7 @@ class AnnouncementController extends Controller
 
         return view('announcements.show', [
             'announcement' => $announcement,
-            'more' => $announcement->barangay->announcements()->with('barangay:id,name')->whereKeyNot($announcement->id)->latest()->limit(3)->get(),
+            'more' => $announcement->barangay->announcements()->with('barangay:id,name,logo_path')->whereKeyNot($announcement->id)->newestFirst()->limit(3)->get(),
         ]);
     }
 

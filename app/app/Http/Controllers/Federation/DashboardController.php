@@ -34,7 +34,7 @@ class DashboardController extends Controller
             'monthlyCheckIns' => EventRegistration::monthlyCheckIns($barangays->modelKeys()),
             'latestRemarks' => MonitoringRemark::query()
                 ->whereIn('barangay_id', $barangays->modelKeys())
-                ->with(['barangay:id,name', 'author:id,name'])
+                ->with(['barangay:id,name,logo_path', 'author:id,name'])
                 ->latest()
                 ->limit(4)
                 ->get(),

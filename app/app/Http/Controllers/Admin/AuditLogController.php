@@ -72,7 +72,7 @@ class AuditLogController extends Controller
     private function query(array $filters): Builder
     {
         return AuditLog::query()
-            ->with(['user:id,name,email', 'barangay:id,name'])
+            ->with(['user:id,name,email', 'barangay:id,name,logo_path'])
             ->when($filters['action'] ?? null, fn ($query, string $action) => $query->where('action', $action))
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->whereHas('user', fn ($user) => $user
                 ->where('name', 'like', "%{$search}%")

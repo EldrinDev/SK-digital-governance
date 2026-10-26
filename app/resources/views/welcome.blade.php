@@ -233,7 +233,7 @@
                                         <div class="flex flex-col p-6 sm:p-7">
                                             <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                                                 <span class="font-semibold text-emerald">SK {{ $featured->barangay->name }}</span>
-                                                <span class="text-slate-muted">posted {{ $featured->created_at->diffForHumans() }}</span>
+                                                <span class="text-slate-muted">posted {{ $featured->postedAt()->diffForHumans() }}</span>
                                                 @if ($featured->isPinned())
                                                     <span class="rounded-full bg-gold/20 px-2 py-0.5 text-xs font-semibold text-navy">Pinned</span>
                                                 @endif
@@ -259,7 +259,7 @@
                                                     <span class="min-w-0 py-1">
                                                         <span class="text-xs font-semibold text-emerald">SK {{ $announcement->barangay->name }}</span>
                                                         <span class="mt-1 line-clamp-2 block font-semibold leading-snug text-navy">{{ $announcement->title }}</span>
-                                                        <span class="mt-1 block text-xs text-slate-muted">{{ $announcement->created_at->format('M j, Y') }}</span>
+                                                        <span class="mt-1 block text-xs text-slate-muted">{{ $announcement->postedAt()->format('M j, Y') }}</span>
                                                     </span>
                                                 </a>
                                             </li>
