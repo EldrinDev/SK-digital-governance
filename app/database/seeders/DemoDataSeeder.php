@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\AnnouncementCategory;
 use App\AttendanceStatus;
 use App\CenterOfParticipation;
 use App\EventKind;
@@ -160,17 +161,84 @@ class DemoDataSeeder extends Seeder
         $answered->forceFill(['response' => 'Yes! It is in next year’s ABYIP draft. Join the consultation to add your ideas.', 'responded_by' => $chair->id, 'responded_at' => now()->subDays(2)])->save();
         $this->feedback($youth[2], null, null, 'The court lights are broken in the evening.');
 
-        $this->announcement($barangay, $chair, 'Coastal clean-up this Saturday', "Meet us at the Santa Rita seawall at 6:00 AM. Bring gloves and a water bottle; sacks and snacks are on the SK.\n\nRegister on the Events page so we can prepare enough supplies.", 4);
-        $this->announcement($barangay, $officers[1], 'ABYIP 2026 now on the transparency board', 'The council-approved ABYIP, with every PPA and its budget, is now public. See how the SK fund is being used on the transparency board.', 12);
+        $this->seedSantaRitaAnnouncements($barangay, $chair, $officers[1], $year);
     }
 
     /**
-     * Post an announcement dated some days back.
+     * Posts written the way barangay SK pages in Olongapo caption theirs: Taglish, with emoji
+     * markers for date, time and venue, and the SK's hashtags. The recap follows SK Olongapo's
+     * real Mobile Legends inter-barangay tournament for Linggo ng Kabataan (August 22, 2026, East Tapinac).
      */
-    private function announcement(Barangay $barangay, User $author, string $title, string $body, int $daysAgo): void
+    private function seedSantaRitaAnnouncements(Barangay $barangay, User $chair, User $secretary, int $year): void
     {
-        $announcement = new Announcement(['title' => $title, 'body' => $body]);
-        $announcement->forceFill(['barangay_id' => $barangay->id, 'user_id' => $author->id, 'created_at' => now()->subDays($daysAgo), 'updated_at' => now()->subDays($daysAgo)])->save();
+        $assembly = now()->next(Carbon::SATURDAY)->addWeek();
+        $this->announcement($barangay, $chair, AnnouncementCategory::Reminder, 'PAALALA: Katipunan ng Kabataan Assembly', implode("\n", [
+            '📢 PAALALA, KABATAAN NG SANTA RITA!',
+            '',
+            'Inaanyayahan ang lahat ng kabataang edad 15 hanggang 30 sa ating Katipunan ng Kabataan (KK) Assembly.',
+            '',
+            '🗓️ '.$assembly->format('F j, Y').' ('.$assembly->format('l').')',
+            '🕑 2:00 PM',
+            '📍 Santa Rita Covered Court',
+            '',
+            'Pag-uusapan natin ang mga nagawa ng SK ngayong taon at ang mga programang isasama sa ABYIP '.($year + 1).'. Boses mo ang kailangan namin! Magdala ng valid ID o school ID para sa attendance.',
+            '',
+            '#SKSantaRita #KatipunanNgKabataan #BatangGapo',
+        ]), now()->subDay(), pinned: true);
+
+        $this->announcement($barangay, $chair, AnnouncementCategory::Event, 'Coastal Clean-up Drive ngayong Sabado', implode("\n", [
+            '🌊 TARA, LINIS TAYO SA DALAMPASIGAN!',
+            '',
+            'Samahan ang SK Santa Rita sa ating Coastal Clean-up Drive.',
+            '',
+            '📍 Santa Rita seawall',
+            '🕕 6:00 AM',
+            '🧤 Magdala ng gloves, tumbler at sumbrero. Sagot ng SK ang sako at merienda!',
+            '',
+            'Mag-register sa Events page para makapaghanda kami ng sapat na gamit. Bahagi ito ng ating ABYIP program para sa kalikasan.',
+            '',
+            '#SKSantaRita #MalinisNaGapo #KabataanParaSaKalikasan',
+        ]), now()->subDays(4));
+
+        $this->announcement($barangay, $secretary, AnnouncementCategory::Announcement, "ABYIP {$year}, bukas na sa publiko", implode("\n", [
+            "📊 Naka-post na sa Transparency Board ang ABYIP {$year} ng SK Santa Rita, na inaprubahan ng konseho sa Res. No. 7, s. {$year}.",
+            '',
+            'Makikita rito ang bawat PPA, ang budget nito at ang progreso. Ang SK fund ay pondo ng kabataan, kaya karapatan ninyong malaman kung saan ito napupunta. 💚',
+            '',
+            '#SKSantaRita #FullDisclosure #TransparencySaSK',
+        ]), now()->subDays(12));
+
+        $this->announcement($barangay, $chair, AnnouncementCategory::Recognition, 'Salamat sa lahat ng sumali sa MLBB Inter-Barangay Tournament!', implode("\n", [
+            '🎮 MARAMING SALAMAT SA LAHAT NG NAKIISA!',
+            '',
+            'Bilang bahagi ng Linggo ng Kabataan 2026, lumaban ang ating mga manlalaro sa Mobile Legends: Bang Bang Inter-Barangay Tournament ng SK Olongapo noong Agosto 22 sa East Tapinac.',
+            '',
+            'Ipinakita ng ating team ang teamwork, disiplina at sportsmanship. Salamat sa mga magulang at kaibigang sumuporta. Hanggang sa susunod na laban! 💚',
+            '',
+            '#LinggoNgKabataan2026 #SKOlongapo #SKSantaRita',
+        ]), Carbon::parse('2026-08-24 18:30')->min(now()->subDays(30)), image: 'skyline-freeport.jpg');
+    }
+
+    /**
+     * Post an announcement, optionally pinned or with a sample photo.
+     */
+    private function announcement(Barangay $barangay, User $author, AnnouncementCategory $category, string $title, string $body, Carbon $postedAt, bool $pinned = false, ?string $image = null): void
+    {
+        $announcement = new Announcement(['category' => $category, 'title' => $title, 'body' => $body]);
+        $announcement->forceFill([
+            'barangay_id' => $barangay->id,
+            'user_id' => $author->id,
+            'pinned_at' => $pinned ? $postedAt : null,
+            'created_at' => $postedAt,
+            'updated_at' => $postedAt,
+        ]);
+
+        if ($image !== null) {
+            $announcement->image_path = "announcements/{$barangay->id}/demo-".str($title)->slug()->limit(40, '').'.jpg';
+            Storage::put($announcement->image_path, file_get_contents(public_path("images/{$image}")));
+        }
+
+        $announcement->save();
     }
 
     /**
@@ -181,7 +249,15 @@ class DemoDataSeeder extends Seeder
         $barangay = Barangay::firstWhere('name', 'Barretto');
         $chair = $this->officers($barangay, ['Paolo Cruz' => 'officer.barretto@sk.test'])->first();
         $this->youth($barangay, 4);
-        $this->announcement($barangay, $chair, 'Youth consultation for next year’s plan', 'We are drafting the ABYIP. Tell us which programs matter most to you at the youth consultation, or answer our survey online.', 2);
+        $this->announcement($barangay, $chair, AnnouncementCategory::Event, 'Youth Consultation para sa ABYIP', implode("\n", [
+            '🗣️ ANO ANG GUSTO MONG PROGRAMA?',
+            '',
+            'Binubuo na ng SK Barretto ang ABYIP para sa susunod na taon, at gusto naming marinig ang boses mo! Dumalo sa Youth Consultation sa Barretto Barangay Hall, o mag-iwan ng mungkahi sa Feedback ng platform.',
+            '',
+            'Sports, edukasyon, kalusugan o trabaho? Ikaw ang magsabi. 🙌',
+            '',
+            '#SKBarretto #KabataanAngBoses #BatangGapo',
+        ]), now()->subDays(2), pinned: true);
 
         $year = (int) now()->format('Y');
         $cbydp = $this->cbydp($barangay, $year, approvedBy: $chair, resolution: "Res. No. 1, s. {$year}");
@@ -209,6 +285,16 @@ class DemoDataSeeder extends Seeder
         $barangay = Barangay::firstWhere('name', 'Kalaklan');
         $this->officers($barangay, ['Rina Aquino' => 'officer.kalaklan@sk.test']);
         $this->youth($barangay, 2);
+
+        $this->announcement($barangay, User::firstWhere('email', 'officer.kalaklan@sk.test'), AnnouncementCategory::Announcement, 'Scholarship Information Drive para sa mga estudyante', implode("\n", [
+            '🎓 PARA SA MGA ESTUDYANTE NG KALAKLAN',
+            '',
+            'Magkakaroon ang SK Kalaklan ng Scholarship Information Drive para sa senior high at college students. Ituturo namin kung paano mag-apply sa mga scholarship ng lungsod, ng CHED at ng iba pang ahensya.',
+            '',
+            'Abangan ang petsa at lugar dito! 📚',
+            '',
+            '#SKKalaklan #EdukasyonParaSaLahat #BatangGapo',
+        ]), now()->subDays(6));
 
         $cbydp = $this->cbydp($barangay, (int) now()->format('Y'));
         $this->priorities($cbydp, [

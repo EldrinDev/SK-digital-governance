@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Officer;
 
+use App\AnnouncementCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\AuditLog;
@@ -9,21 +10,24 @@ use App\Notifications\AnnouncementPosted;
 use App\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AnnouncementController extends Controller
 {
     /**
-     * List the barangay's announcements, newest first.
+     * List the barangay's announcements, pinned first.
      */
     public function index(Request $request): View
     {
         return view('officer.announcements.index', [
             'announcements' => $request->user()->barangay->announcements()
-                ->with('author:id,name')
-                ->latest()
+                ->with(['author:id,name', 'barangay:id,name'])
+                ->pinnedFirst()
                 ->paginate(15),
         ]);
     }
@@ -31,9 +35,15 @@ class AnnouncementController extends Controller
     /**
      * Show the form for a new announcement.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('officer.announcements.form', ['announcement' => new Announcement]);
+        $announcement = new Announcement(['category' => AnnouncementCategory::Announcement]);
+        $announcement->setRelation('barangay', $request->user()->barangay);
+
+        return view('officer.announcements.form', [
+            'announcement' => $announcement,
+            'categories' => AnnouncementCategory::cases(),
+        ]);
     }
 
     /**
@@ -46,6 +56,12 @@ class AnnouncementController extends Controller
         $announcement = new Announcement($this->validated($request));
         $announcement->barangay_id = $barangay->id;
         $announcement->user_id = $request->user()->id;
+        $announcement->pinned_at = $request->boolean('pinned') ? now() : null;
+
+        if ($request->hasFile('image')) {
+            $announcement->image_path = $request->file('image')->store("announcements/{$barangay->id}");
+        }
+
         $announcement->save();
 
         AuditLog::record('announcement.posted', $request->user(), ['title' => $announcement->title], $announcement);
@@ -65,7 +81,10 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('update', $announcement);
 
-        return view('officer.announcements.form', ['announcement' => $announcement]);
+        return view('officer.announcements.form', [
+            'announcement' => $announcement,
+            'categories' => AnnouncementCategory::cases(),
+        ]);
     }
 
     /**
@@ -75,7 +94,17 @@ class AnnouncementController extends Controller
     {
         Gate::authorize('update', $announcement);
 
-        $announcement->update($this->validated($request));
+        $announcement->fill($this->validated($request));
+        $announcement->pinned_at = $request->boolean('pinned') ? ($announcement->pinned_at ?? now()) : null;
+
+        if ($request->hasFile('image') || $request->boolean('remove_image')) {
+            $this->deleteImage($announcement);
+            $announcement->image_path = $request->hasFile('image')
+                ? $request->file('image')->store("announcements/{$announcement->barangay_id}")
+                : null;
+        }
+
+        $announcement->save();
 
         AuditLog::record('announcement.updated', $request->user(), ['title' => $announcement->title], $announcement);
 
@@ -91,22 +120,39 @@ class AnnouncementController extends Controller
 
         AuditLog::record('announcement.removed', $request->user(), ['title' => $announcement->title], $announcement);
 
+        $this->deleteImage($announcement);
         $announcement->delete();
 
         return redirect()->route('officer.announcements.index')->with('status', 'Announcement taken down.');
     }
 
     /**
-     * @return array{title: string, body: string}
+     * Validate the form. The image is checked here and stored by the caller.
+     *
+     * @return array{category: string, title: string, body: string}
      */
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
+            'category' => ['required', Rule::enum(AnnouncementCategory::class)],
             'title' => ['required', 'string', 'max:150'],
             'body' => ['required', 'string', 'max:5000'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ], [
             'title.required' => 'Give the announcement a headline.',
-            'body.required' => 'Write what you want to announce.',
+            'body.required' => 'Write the caption.',
+            'image.image' => 'Attach a photo or pubmat: JPG, PNG or WebP.',
+            'image.mimes' => 'Attach a photo or pubmat: JPG, PNG or WebP.',
+            'image.max' => 'The image can be at most 5 MB.',
         ]);
+
+        return Arr::only($validated, ['category', 'title', 'body']);
+    }
+
+    private function deleteImage(Announcement $announcement): void
+    {
+        if ($announcement->image_path !== null) {
+            Storage::delete($announcement->image_path);
+        }
     }
 }

@@ -24,6 +24,7 @@ Route::view('/privacy', 'privacy')->name('privacy');
 Route::get('/transparency', [TransparencyController::class, 'index'])->name('transparency.index');
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
 Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
+Route::get('/announcements/{announcement}/image', [AnnouncementController::class, 'image'])->name('announcements.image');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 Route::get('/transparency/evidence/{evidence}', [PublicEvidenceController::class, 'show'])->name('transparency.evidence');

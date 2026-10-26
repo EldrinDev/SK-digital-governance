@@ -14,7 +14,7 @@ class HomeController extends Controller
     public function __invoke(): View
     {
         return view('welcome', [
-            'announcements' => Announcement::query()->visibleToPublic()->with('barangay:id,name')->latest()->limit(3)->get(),
+            'announcements' => Announcement::query()->visibleToPublic()->with('barangay:id,name')->pinnedFirst()->limit(3)->get(),
             'upcomingEvents' => Event::query()
                 ->upcoming()
                 ->whereHas('barangay', fn ($query) => $query->participating())

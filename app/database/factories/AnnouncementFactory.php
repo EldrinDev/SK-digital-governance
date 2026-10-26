@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\AnnouncementCategory;
 use App\Models\Announcement;
 use App\Models\Barangay;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,6 +21,7 @@ class AnnouncementFactory extends Factory
     {
         return [
             'barangay_id' => Barangay::factory(),
+            'category' => AnnouncementCategory::Announcement,
             'title' => fake()->sentence(5),
             'body' => fake()->paragraphs(2, true),
         ];

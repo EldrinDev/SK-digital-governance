@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Announcement;
 use App\Models\Barangay;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Public announcements from participating barangays.
@@ -13,7 +15,7 @@ use Illuminate\View\View;
 class AnnouncementController extends Controller
 {
     /**
-     * List announcements, optionally for one barangay.
+     * List announcements, optionally for one barangay, pinned posts first.
      */
     public function index(Request $request): View
     {
@@ -24,8 +26,8 @@ class AnnouncementController extends Controller
                 ->visibleToPublic()
                 ->when($barangayId, fn ($query) => $query->where('barangay_id', $barangayId))
                 ->with('barangay:id,name')
-                ->latest()
-                ->paginate(10)
+                ->pinnedFirst()
+                ->paginate(9)
                 ->withQueryString(),
             'barangays' => Barangay::participating()->orderBy('name')->get(['id', 'name']),
             'selectedBarangay' => $barangayId,
@@ -33,12 +35,25 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * Show one announcement.
+     * Show one announcement, with more from the same SK.
      */
     public function show(Announcement $announcement): View
     {
         abort_unless($announcement->barangay->is_participating, 404);
 
-        return view('announcements.show', ['announcement' => $announcement]);
+        return view('announcements.show', [
+            'announcement' => $announcement,
+            'more' => $announcement->barangay->announcements()->with('barangay:id,name')->whereKeyNot($announcement->id)->latest()->limit(3)->get(),
+        ]);
+    }
+
+    /**
+     * Serve the post's photo or pubmat.
+     */
+    public function image(Announcement $announcement): StreamedResponse
+    {
+        abort_unless($announcement->barangay->is_participating && $announcement->image_path !== null, 404);
+
+        return Storage::response($announcement->image_path, headers: ['Cache-Control' => 'public, max-age=86400']);
     }
 }

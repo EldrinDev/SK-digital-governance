@@ -51,6 +51,56 @@
                 </section>
             @endif
 
+            <section aria-labelledby="news-heading">
+                <div class="mb-3 flex items-end justify-between gap-3">
+                    <h2 id="news-heading" class="font-display text-lg font-semibold">From SK {{ $barangay->name }}</h2>
+                    <a href="{{ route('announcements.index', ['barangay' => $barangay->id]) }}" class="text-sm font-semibold text-emerald hover:underline">All announcements</a>
+                </div>
+                @if ($announcements->isEmpty())
+                    <p class="rounded-[12px] border border-dashed border-line bg-white p-6 text-sm text-slate-muted">Your SK hasn’t posted anything yet. Announcements show up here as soon as they do.</p>
+                @else
+                    @php($latest = $announcements->first())
+                    <article class="grid overflow-hidden rounded-[12px] border border-line bg-white sm:grid-cols-[14rem_minmax(0,1fr)]">
+                        <a href="{{ route('announcements.show', $latest) }}" class="block aspect-[4/3] bg-mist sm:aspect-auto sm:min-h-52">
+                            <x-announcement.cover :announcement="$latest" />
+                            <span class="sr-only">{{ $latest->title }}</span>
+                        </a>
+                        <div class="flex flex-col p-5">
+                            <p class="flex flex-wrap items-center gap-2 text-xs text-slate-muted">
+                                <span class="rounded-full bg-mist px-2 py-0.5 font-semibold text-navy">{{ $latest->category->label() }}</span>
+                                @if ($latest->isPinned())
+                                    <span class="rounded-full bg-gold/20 px-2 py-0.5 font-semibold text-navy">Pinned</span>
+                                @endif
+                                <time datetime="{{ $latest->created_at->toIso8601String() }}">{{ $latest->created_at->diffForHumans() }}</time>
+                            </p>
+                            <h3 class="mt-2 font-display text-lg font-semibold leading-snug">
+                                <a href="{{ route('announcements.show', $latest) }}" class="hover:text-emerald">{{ $latest->title }}</a>
+                            </h3>
+                            <p class="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-navy/75">{{ $latest->captionHtml(200) }}</p>
+                            <a href="{{ route('announcements.show', $latest) }}" class="mt-auto pt-3 text-sm font-semibold text-emerald hover:underline">Read the full post</a>
+                        </div>
+                    </article>
+
+                    @if ($announcements->count() > 1)
+                        <ul class="mt-3 grid gap-3 sm:grid-cols-2">
+                            @foreach ($announcements->skip(1) as $announcement)
+                                <li>
+                                    <a href="{{ route('announcements.show', $announcement) }}" class="flex h-full items-center gap-3 rounded-[12px] border border-line bg-white p-2.5 hover:border-emerald/50">
+                                        <span class="block h-14 w-14 shrink-0 overflow-hidden rounded-[8px]">
+                                            <x-announcement.cover :announcement="$announcement" size="thumb" />
+                                        </span>
+                                        <span class="min-w-0">
+                                            <span class="line-clamp-2 text-sm font-semibold leading-snug">{{ $announcement->title }}</span>
+                                            <span class="block text-xs text-slate-muted">{{ $announcement->created_at->diffForHumans() }}</span>
+                                        </span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                @endif
+            </section>
+
             <section class="rounded-[12px] border border-line bg-white" aria-labelledby="mine-heading">
                 <h2 id="mine-heading" class="border-b border-line px-5 py-4 font-display text-lg font-semibold">My upcoming events</h2>
                 <ul class="divide-y divide-line">
@@ -101,25 +151,6 @@
         </div>
 
         <div class="space-y-6">
-            <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="news-heading">
-                <div class="flex items-center justify-between gap-3">
-                    <h2 id="news-heading" class="font-display text-lg font-semibold">Announcements</h2>
-                    <a href="{{ route('announcements.index', ['barangay' => $barangay->id]) }}" class="text-xs font-semibold text-emerald hover:underline">See all</a>
-                </div>
-                <ul class="mt-3 space-y-3">
-                    @forelse ($announcements as $announcement)
-                        <li>
-                            <a href="{{ route('announcements.show', $announcement) }}" class="block rounded-[8px] p-2 -mx-2 hover:bg-mist">
-                                <span class="block text-sm font-medium">{{ $announcement->title }}</span>
-                                <span class="block text-xs text-slate-muted">{{ $announcement->created_at->diffForHumans() }}</span>
-                            </a>
-                        </li>
-                    @empty
-                        <li class="text-sm text-slate-muted">No announcements from your SK yet.</li>
-                    @endforelse
-                </ul>
-            </section>
-
             <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="feedback-heading">
                 <h2 id="feedback-heading" class="font-display text-lg font-semibold">Tell your SK something</h2>
                 <form method="POST" action="{{ route('feedback.store') }}" class="mt-3 space-y-3" novalidate>

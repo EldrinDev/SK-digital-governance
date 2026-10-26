@@ -58,6 +58,7 @@
     $navLinks = [
         ['label' => 'Home', 'href' => '#home'],
         ['label' => 'Programs', 'href' => '#participate'],
+        ['label' => 'News', 'href' => route('announcements.index')],
         ['label' => 'Transparency', 'href' => '#transparency'],
         ['label' => 'How it works', 'href' => '#how-it-works'],
         ['label' => 'Contact', 'href' => '#contact'],
@@ -212,55 +213,91 @@
             {{-- Latest from the barangay SK councils --}}
             @if ($announcements->isNotEmpty() || $upcomingEvents->isNotEmpty())
                 <section id="news" class="scroll-mt-20 border-t border-line bg-white">
-                    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-20">
-                        <div>
-                            <div class="flex items-end justify-between gap-4">
-                                <h2 class="font-display text-2xl font-semibold tracking-tight text-navy sm:text-[1.75rem]">Latest announcements</h2>
-                                <a href="{{ route('announcements.index') }}" class="text-sm font-semibold text-emerald hover:underline">All news</a>
+                    <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+                        <div class="flex flex-wrap items-end justify-between gap-4">
+                            <div class="max-w-xl">
+                                <h2 class="font-display text-3xl font-semibold tracking-tight text-navy sm:text-[2.1rem]">Latest from your SK</h2>
+                                <p class="mt-3 leading-relaxed text-slate-muted">Announcements and reminders posted by the barangay SK councils, so you don’t miss them in your feed.</p>
                             </div>
-                            <ul class="mt-6 space-y-3">
-                                @forelse ($announcements as $announcement)
-                                    <li>
-                                        <a href="{{ route('announcements.show', $announcement) }}" class="block rounded-[12px] border border-line p-4 transition-colors hover:border-emerald/50">
-                                            <span class="text-xs font-semibold text-emerald">{{ $announcement->barangay->name }} · {{ $announcement->created_at->format('M j') }}</span>
-                                            <span class="mt-1 block font-semibold text-navy">{{ $announcement->title }}</span>
-                                        </a>
-                                    </li>
-                                @empty
-                                    <li class="text-sm text-slate-muted">No announcements yet.</li>
-                                @endforelse
-                            </ul>
+                            <a href="{{ route('announcements.index') }}" class="rounded-[8px] border border-navy/80 px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white">All announcements</a>
                         </div>
-                        <div>
-                            <div class="flex items-end justify-between gap-4">
-                                <h2 class="font-display text-2xl font-semibold tracking-tight text-navy sm:text-[1.75rem]">Coming up</h2>
-                                <a href="{{ route('events.index') }}" class="text-sm font-semibold text-emerald hover:underline">All events</a>
-                            </div>
-                            <ul class="mt-6 space-y-3">
-                                @forelse ($upcomingEvents as $event)
-                                    <li>
-                                        <a href="{{ route('events.show', $event) }}" class="flex items-center gap-4 rounded-[12px] border border-line p-4 transition-colors hover:border-emerald/50">
-                                            <span class="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[8px] bg-emerald/10 text-emerald">
-                                                <span class="text-[0.65rem] font-semibold uppercase">{{ $event->starts_at->format('M') }}</span>
-                                                <span class="font-display text-xl font-semibold leading-none">{{ $event->starts_at->format('j') }}</span>
-                                            </span>
-                                            <span class="min-w-0">
-                                                <span class="block truncate font-semibold text-navy">{{ $event->title }}</span>
-                                                <span class="block truncate text-sm text-slate-muted">{{ $event->barangay->name }} · {{ $event->venue }}</span>
-                                            </span>
+
+                        <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                            <div class="space-y-5">
+                                @if ($featured = $announcements->first())
+                                    <article class="grid overflow-hidden rounded-[16px] border border-line bg-white md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+                                        <a href="{{ route('announcements.show', $featured) }}" class="block aspect-[4/3] bg-mist md:aspect-auto md:min-h-80">
+                                            <x-announcement.cover :announcement="$featured" size="feature" />
+                                            <span class="sr-only">{{ $featured->title }}</span>
                                         </a>
-                                    </li>
-                                @empty
-                                    <li class="text-sm text-slate-muted">No upcoming events right now.</li>
-                                @endforelse
-                            </ul>
+                                        <div class="flex flex-col p-6 sm:p-7">
+                                            <div class="flex items-center gap-3">
+                                                <img src="{{ asset('images/sk-logo.svg') }}" alt="" class="h-9 w-9 rounded-full border border-line p-0.5">
+                                                <p class="text-sm leading-tight">
+                                                    <span class="block font-semibold">SK {{ $featured->barangay->name }}</span>
+                                                    <span class="text-slate-muted">{{ $featured->category->label() }}, {{ $featured->created_at->diffForHumans() }}</span>
+                                                </p>
+                                            </div>
+                                            <h3 class="mt-5 font-display text-2xl font-semibold leading-snug tracking-tight">
+                                                <a href="{{ route('announcements.show', $featured) }}" class="hover:text-emerald">{{ $featured->title }}</a>
+                                            </h3>
+                                            <p class="mt-3 whitespace-pre-line text-[0.95rem] leading-relaxed text-navy/75">{{ $featured->captionHtml(260) }}</p>
+                                            <a href="{{ route('announcements.show', $featured) }}" class="mt-auto pt-5 text-sm font-semibold text-emerald hover:underline">Read the full post</a>
+                                        </div>
+                                    </article>
+                                @endif
+
+                                @if ($announcements->count() > 1)
+                                    <ul class="grid gap-5 sm:grid-cols-2">
+                                        @foreach ($announcements->skip(1) as $announcement)
+                                            <li>
+                                                <a href="{{ route('announcements.show', $announcement) }}" class="flex h-full gap-4 rounded-[12px] border border-line bg-white p-3 transition-colors hover:border-emerald/50">
+                                                    <span class="block h-24 w-24 shrink-0 overflow-hidden rounded-[8px]">
+                                                        <x-announcement.cover :announcement="$announcement" size="thumb" />
+                                                    </span>
+                                                    <span class="min-w-0 py-1">
+                                                        <span class="text-xs font-semibold text-emerald">SK {{ $announcement->barangay->name }}</span>
+                                                        <span class="mt-1 line-clamp-2 block font-semibold leading-snug text-navy">{{ $announcement->title }}</span>
+                                                        <span class="mt-1 block text-xs text-slate-muted">{{ $announcement->created_at->format('M j, Y') }}</span>
+                                                    </span>
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </div>
+
+                            <div>
+                                <div class="flex items-end justify-between gap-4">
+                                    <h3 class="font-display text-lg font-semibold text-navy">Coming up</h3>
+                                    <a href="{{ route('events.index') }}" class="text-sm font-semibold text-emerald hover:underline">All events</a>
+                                </div>
+                                <ul class="mt-4 space-y-3">
+                                    @forelse ($upcomingEvents as $event)
+                                        <li>
+                                            <a href="{{ route('events.show', $event) }}" class="flex items-center gap-4 rounded-[12px] border border-line p-3.5 transition-colors hover:border-emerald/50">
+                                                <span class="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[8px] bg-emerald/10 text-emerald">
+                                                    <span class="text-[0.65rem] font-semibold">{{ $event->starts_at->format('M') }}</span>
+                                                    <span class="font-display text-xl font-semibold leading-none">{{ $event->starts_at->format('j') }}</span>
+                                                </span>
+                                                <span class="min-w-0">
+                                                    <span class="block truncate font-semibold text-navy">{{ $event->title }}</span>
+                                                    <span class="block truncate text-sm text-slate-muted">{{ $event->barangay->name }}, {{ $event->venue }}</span>
+                                                </span>
+                                            </a>
+                                        </li>
+                                    @empty
+                                        <li class="rounded-[12px] border border-dashed border-line p-5 text-sm text-slate-muted">No upcoming events right now.</li>
+                                    @endforelse
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </section>
             @endif
 
             {{-- Public records --}}
-            <section id="transparency" class="scroll-mt-20 bg-white">
+            <section id="transparency" class="scroll-mt-20 border-t border-line bg-white">
                 <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
                     <div>
                         <h2 class="font-display text-3xl font-semibold tracking-tight text-navy sm:text-[2.1rem]">Every peso, out in the open</h2>
