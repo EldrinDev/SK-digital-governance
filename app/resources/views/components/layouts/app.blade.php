@@ -95,6 +95,8 @@
                 </nav>
 
                 <div class="border-t border-line px-5 py-4 text-xs text-slate-muted">
+                    <a href="{{ route('account.edit') }}" class="hover:text-emerald">Account</a>
+                    ·
                     <a href="{{ route('home') }}" class="hover:text-emerald">Public site</a>
                     ·
                     <a href="{{ route('privacy') }}" class="hover:text-emerald">Privacy</a>
@@ -114,7 +116,8 @@
                                     @foreach ($navigation as $item)
                                         <li><a href="{{ route($item['route']) }}" @class(['block rounded-[8px] px-3 py-2 text-sm font-medium hover:bg-mist', 'text-emerald' => request()->routeIs($item['active'])])>{{ $item['label'] }}</a></li>
                                     @endforeach
-                                    <li class="mt-1 border-t border-line pt-1"><a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm text-slate-muted hover:bg-mist">Public site</a></li>
+                                    <li class="mt-1 border-t border-line pt-1"><a href="{{ route('account.edit') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">Account settings</a></li>
+                                    <li><a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm text-slate-muted hover:bg-mist">Public site</a></li>
                                 </ul>
                             </details>
                             <div class="min-w-0 leading-tight">
@@ -131,7 +134,7 @@
                                     <span class="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[0.65rem] font-semibold text-white" aria-hidden="true">{{ $unread > 9 ? '9+' : $unread }}</span>
                                 @endif
                             </a>
-                            <p class="hidden text-sm text-navy/80 sm:block">{{ $user->name }}</p>
+                            <a href="{{ route('account.edit') }}" class="hidden text-sm text-navy/80 hover:text-emerald hover:underline sm:block" title="Account settings">{{ $user->name }}</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="rounded-[8px] border border-line px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:border-navy">Log out</button>

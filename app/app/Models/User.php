@@ -79,6 +79,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Survey answers this youth submitted.
+     *
+     * @return HasMany<SurveyResponse, $this>
+     */
+    public function surveyResponses(): HasMany
+    {
+        return $this->hasMany(SurveyResponse::class);
+    }
+
+    /**
      * Determine whether the user has the given role.
      */
     public function hasRole(UserRole $role): bool
