@@ -76,7 +76,8 @@
                             <h3 class="mt-2 font-display text-lg font-semibold leading-snug">
                                 <a href="{{ route('announcements.show', $latest) }}" class="hover:text-emerald">{{ $latest->title }}</a>
                             </h3>
-                            <p class="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-navy/75">{{ $latest->captionHtml(200) }}</p>
+                            <x-announcement.details :announcement="$latest" class="mt-3" />
+                            <p class="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy/75">{{ $latest->captionHtml(180, withoutDetails: true) }}</p>
                             <a href="{{ route('announcements.show', $latest) }}" class="mt-auto pt-3 text-sm font-semibold text-emerald hover:underline">Read the full post</a>
                         </div>
                     </article>

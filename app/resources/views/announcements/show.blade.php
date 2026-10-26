@@ -20,7 +20,8 @@
 
             <div class="px-5 py-6 sm:px-8 sm:py-8">
                 <h1 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{{ $announcement->title }}</h1>
-                <p class="mt-4 max-w-[68ch] whitespace-pre-line leading-relaxed text-navy/85">{{ $announcement->captionHtml() }}</p>
+                <x-announcement.details :announcement="$announcement" class="mt-5 max-w-md" />
+                <p class="mt-4 max-w-[68ch] whitespace-pre-line leading-relaxed text-navy/85">{{ $announcement->captionHtml(withoutDetails: true) }}</p>
             </div>
         </article>
 

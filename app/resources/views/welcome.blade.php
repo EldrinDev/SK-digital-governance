@@ -231,17 +231,18 @@
                                             <span class="sr-only">{{ $featured->title }}</span>
                                         </a>
                                         <div class="flex flex-col p-6 sm:p-7">
-                                            <div class="flex items-center gap-3">
-                                                <img src="{{ asset('images/sk-logo.svg') }}" alt="" class="h-9 w-9 rounded-full border border-line p-0.5">
-                                                <p class="text-sm leading-tight">
-                                                    <span class="block font-semibold">SK {{ $featured->barangay->name }}</span>
-                                                    <span class="text-slate-muted">{{ $featured->category->label() }}, {{ $featured->created_at->diffForHumans() }}</span>
-                                                </p>
-                                            </div>
-                                            <h3 class="mt-5 font-display text-2xl font-semibold leading-snug tracking-tight">
+                                            <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                                                <span class="font-semibold text-emerald">SK {{ $featured->barangay->name }}</span>
+                                                <span class="text-slate-muted">posted {{ $featured->created_at->diffForHumans() }}</span>
+                                                @if ($featured->isPinned())
+                                                    <span class="rounded-full bg-gold/20 px-2 py-0.5 text-xs font-semibold text-navy">Pinned</span>
+                                                @endif
+                                            </p>
+                                            <h3 class="mt-3 font-display text-2xl font-semibold leading-snug tracking-tight">
                                                 <a href="{{ route('announcements.show', $featured) }}" class="hover:text-emerald">{{ $featured->title }}</a>
                                             </h3>
-                                            <p class="mt-3 whitespace-pre-line text-[0.95rem] leading-relaxed text-navy/75">{{ $featured->captionHtml(260) }}</p>
+                                            <x-announcement.details :announcement="$featured" class="mt-4" />
+                                            <p class="mt-4 whitespace-pre-line text-[0.95rem] leading-relaxed text-navy/75">{{ $featured->captionHtml(220, withoutDetails: true) }}</p>
                                             <a href="{{ route('announcements.show', $featured) }}" class="mt-auto pt-5 text-sm font-semibold text-emerald hover:underline">Read the full post</a>
                                         </div>
                                     </article>
@@ -281,7 +282,7 @@
                                                     <span class="font-display text-xl font-semibold leading-none">{{ $event->starts_at->format('j') }}</span>
                                                 </span>
                                                 <span class="min-w-0">
-                                                    <span class="block truncate font-semibold text-navy">{{ $event->title }}</span>
+                                                    <span class="line-clamp-2 block font-semibold leading-snug text-navy">{{ $event->title }}</span>
                                                     <span class="block truncate text-sm text-slate-muted">{{ $event->barangay->name }}, {{ $event->venue }}</span>
                                                 </span>
                                             </a>

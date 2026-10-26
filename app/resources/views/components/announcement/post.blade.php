@@ -29,7 +29,7 @@
         <h3 class="font-display text-base font-semibold leading-snug">
             <a href="{{ route('announcements.show', $announcement) }}" class="hover:text-emerald">{{ $announcement->title }}</a>
         </h3>
-        <p class="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-navy/75">{{ $announcement->captionHtml($excerpt) }}</p>
+        <p class="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-navy/75">{{ $announcement->captionHtml($excerpt, withoutDetails: true) }}</p>
         <a href="{{ route('announcements.show', $announcement) }}" class="mt-auto pt-3 text-sm font-semibold text-emerald hover:underline">Read the full post</a>
     </div>
 </article>
