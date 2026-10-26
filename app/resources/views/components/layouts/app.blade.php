@@ -73,35 +73,45 @@
     <body class="min-h-dvh bg-mist font-sans text-navy antialiased">
         <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[8px] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to content</a>
 
-        <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)]">
+        {{--
+            The side menu slides between full width and an icon rail. Labels stay in the layout and
+            fade out (so screen readers still hear them); the rail is narrow enough that only icons show.
+        --}}
+        <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-300 lg:ease-[cubic-bezier(.2,.8,.2,1)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)] motion-reduce:transition-none">
             {{-- Side menu (desktop) --}}
-            <aside class="hidden border-r border-line bg-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto">
-                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-5 py-5 lg:collapsed:justify-center lg:collapsed:px-0" title="SK Digital Governance">
-                    <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10">
-                    <span class="leading-tight lg:collapsed:sr-only">
+            <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden">
+                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-[1.125rem] py-5" title="SK Digital Governance">
+                    <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0">
+                    <span class="whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
                         <span class="block font-display text-sm font-semibold">SK Digital Governance</span>
                         <span class="block text-[0.65rem] font-medium tracking-[0.18em] text-slate-muted">OLONGAPO CITY</span>
                     </span>
                 </a>
 
-                <nav class="flex-1 space-y-5 px-3 py-2" aria-label="Workspace">
+                <nav class="flex-1 space-y-5 px-3 py-2 lg:collapsed:space-y-3" aria-label="Workspace">
                     @foreach ($navigationSections as $section => $items)
                         <div>
                             @if ($section !== '')
-                                <p class="mb-1.5 px-3 text-xs font-semibold text-slate-muted lg:collapsed:sr-only">{{ $section }}</p>
-                                <span class="mx-3 mb-2 hidden border-t border-line lg:collapsed:block" aria-hidden="true"></span>
+                                {{-- Section names fold away in the rail (0fr row), sliding the icons up with them. --}}
+                                <div class="grid grid-rows-[1fr] transition-[grid-template-rows,opacity] duration-300 lg:collapsed:grid-rows-[0fr] lg:collapsed:opacity-0 motion-reduce:transition-none">
+                                    <p class="overflow-hidden whitespace-nowrap px-3 text-xs font-semibold text-slate-muted"><span class="mb-1.5 block">{{ $section }}</span></p>
+                                </div>
                             @endif
                             <ul class="space-y-0.5">
                                 @foreach ($items as $item)
                                     @php($isActive = request()->routeIs($item['active']))
                                     <li>
                                         <a href="{{ route($item['route']) }}" title="{{ $item['label'] }}" @class([
-                                            'relative flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors lg:collapsed:justify-center lg:collapsed:px-0 lg:collapsed:py-2.5',
-                                            'bg-emerald/10 text-emerald before:absolute before:inset-y-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-emerald' => $isActive,
+                                            'relative flex items-center gap-3 overflow-hidden rounded-[8px] px-3.5 py-2 text-sm font-medium transition-colors',
+                                            'text-emerald' => $isActive,
                                             'text-navy/75 hover:bg-mist hover:text-navy' => ! $isActive,
                                         ]) @if ($isActive) aria-current="page" @endif>
-                                            <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
-                                            <span class="lg:collapsed:sr-only">{{ $item['label'] }}</span>
+                                            @if ($isActive)
+                                                {{-- One highlight shared by every page, so it glides to the new item when the page changes. --}}
+                                                <span class="absolute inset-0 rounded-[8px] bg-emerald/10 [view-transition-name:nav-active]" aria-hidden="true"></span>
+                                            @endif
+                                            <svg viewBox="0 0 24 24" class="relative h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
+                                            <span class="relative whitespace-nowrap transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">{{ $item['label'] }}</span>
                                         </a>
                                     </li>
                                 @endforeach
@@ -111,14 +121,14 @@
                 </nav>
 
                 <div class="border-t border-line p-3">
-                    <a href="{{ route('account.edit') }}" title="{{ $user->name }}" class="flex items-center gap-3 rounded-[10px] p-2 hover:bg-mist lg:collapsed:justify-center">
+                    <a href="{{ route('account.edit') }}" title="{{ $user->name }}" class="flex items-center gap-3 rounded-[10px] p-2 hover:bg-mist">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
-                        <span class="min-w-0 leading-tight lg:collapsed:sr-only">
+                        <span class="min-w-0 whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
                             <span class="block truncate text-sm font-semibold">{{ $user->name }}</span>
                             <span class="block truncate text-xs text-slate-muted">{{ $roleLine }}</span>
                         </span>
                     </a>
-                    <p class="mt-2 px-2 text-xs text-slate-muted lg:collapsed:hidden">
+                    <p class="mt-2 whitespace-nowrap px-2 text-xs text-slate-muted transition-opacity duration-200 lg:collapsed:pointer-events-none lg:collapsed:opacity-0 motion-reduce:transition-none">
                         <a href="{{ route('home') }}" class="hover:text-emerald">Public site</a>
                         <span aria-hidden="true">·</span>
                         <a href="{{ route('privacy') }}" class="hover:text-emerald">Privacy</a>
@@ -127,7 +137,7 @@
             </aside>
 
             <div class="flex min-w-0 flex-col">
-                <header class="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
+                <header class="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur [view-transition-name:topbar]">
                     <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                         <div class="flex min-w-0 items-center gap-3">
                             <button type="button" data-sidebar-toggle aria-pressed="false" class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-line text-navy/80 hover:border-navy hover:text-navy lg:flex">
@@ -201,7 +211,7 @@
                     </div>
                 </header>
 
-                <main id="main" class="flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <main id="main" class="flex-1 px-4 py-8 [view-transition-name:page] sm:px-6 lg:px-8 lg:py-10">
                     @if (session('status'))
                         <div role="status" class="mb-6 flex items-start gap-3 rounded-[12px] border border-success/30 bg-success/10 p-4 text-sm">
                             <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0 text-success" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
