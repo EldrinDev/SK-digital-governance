@@ -78,7 +78,13 @@ class EventController extends Controller
     {
         abort_unless($event->barangay->is_participating, 404);
 
-        $escape = fn (string $text): string => str_replace(['\\', ';', ',', "\r\n", "\n"], ['\\\\', '\;', '\,', '\n', '\n'], $text);
+        // RFC 5545 text: escape \ ; , then turn every kind of line break into "\n" and drop other
+        // control characters, so officer-entered text can never start a new line in the file.
+        $escape = fn (string $text): string => preg_replace(
+            '/[\x00-\x08\x0B-\x1F\x7F]/',
+            '',
+            preg_replace('/\r\n|\r|\n/', '\\n', str_replace(['\\', ';', ','], ['\\\\', '\;', '\,'], $text)),
+        );
         $format = fn ($date): string => $date->copy()->utc()->format('Ymd\THis\Z');
 
         $lines = [

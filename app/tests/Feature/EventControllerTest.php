@@ -69,6 +69,18 @@ class EventControllerTest extends TestCase
         $this->assertStringContainsString('DTSTART:'.$event->starts_at->copy()->utc()->format('Ymd\\THis\\Z'), $response->getContent());
     }
 
+    public function test_calendar_file_cannot_be_broken_by_line_breaks_in_the_text(): void
+    {
+        $event = Event::factory()->create(['title' => "Clean-up\rEND:VEVENT\r\nX-EVIL:1", 'description' => "Line one\rLine two"]);
+
+        $content = $this->get(route('events.calendar', $event))->getContent();
+
+        $this->assertSame(1, substr_count($content, "\r\nEND:VEVENT\r\n"));
+        $this->assertStringContainsString('SUMMARY:Clean-up\nEND:VEVENT\nX-EVIL:1', $content);
+        $this->assertStringNotContainsString("\nX-EVIL", $content);
+        $this->assertStringNotContainsString("\rX-EVIL", $content);
+    }
+
     public function test_event_of_non_participating_barangay_is_not_found(): void
     {
         $event = Event::factory()->for(Barangay::factory()->state(['is_participating' => false]))->create();
