@@ -80,6 +80,18 @@ class SurveyControllerTest extends TestCase
             ->assertDontSeeText('Secret Respondent');
     }
 
+    public function test_question_of_another_survey_cannot_be_removed_through_this_one(): void
+    {
+        $survey = Survey::factory()->for($this->officer->barangay)->create();
+        $otherQuestion = SurveyQuestion::factory()->create();
+
+        $this->actingAs($this->officer)
+            ->delete(route('officer.surveys.questions.destroy', [$survey, $otherQuestion]))
+            ->assertNotFound();
+
+        $this->assertModelExists($otherQuestion);
+    }
+
     public function test_survey_of_another_barangay_is_not_found(): void
     {
         $this->actingAs($this->officer)->get(route('officer.surveys.show', Survey::factory()->create()))->assertNotFound();

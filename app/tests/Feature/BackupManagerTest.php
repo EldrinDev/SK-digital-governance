@@ -36,6 +36,10 @@ class BackupManagerTest extends TestCase
 
         DB::connection('backup_test')->statement('create table notes (id integer primary key, body text)');
         DB::connection('backup_test')->table('notes')->insert(['body' => 'original']);
+        DB::connection('backup_test')->statement('create table sessions (id text primary key, user_id integer)');
+        DB::connection('backup_test')->statement('create table users (id integer primary key, remember_token text)');
+        DB::connection('backup_test')->table('sessions')->insert(['id' => 'old-session', 'user_id' => 1]);
+        DB::connection('backup_test')->table('users')->insert(['id' => 1, 'remember_token' => 'old-token']);
         File::put($this->directory.'/files/evidence/photo.jpg', 'original photo');
 
         $this->manager = new BackupManager('backup_test', $this->directory.'/files');
@@ -63,6 +67,16 @@ class BackupManagerTest extends TestCase
         $this->assertSame('original photo', File::get($this->directory.'/files/evidence/photo.jpg'));
         $this->assertFileDoesNotExist($this->directory.'/files/evidence/new.jpg');
         $this->assertContains($safety, $this->manager->all()->pluck('name'));
+    }
+
+    public function test_restore_does_not_bring_back_sessions_or_remember_tokens(): void
+    {
+        $name = $this->manager->create();
+
+        $this->manager->restore($name);
+
+        $this->assertSame(0, DB::connection('backup_test')->table('sessions')->count());
+        $this->assertNull(DB::connection('backup_test')->table('users')->value('remember_token'));
     }
 
     public function test_archive_holds_database_and_files_but_not_other_backups(): void

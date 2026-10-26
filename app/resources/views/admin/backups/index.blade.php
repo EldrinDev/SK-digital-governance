@@ -44,7 +44,7 @@
                         <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="mt-3 space-y-3">
                             @csrf
                             <p class="text-sm leading-relaxed">
-                                Everything changed since this backup was made will be replaced: accounts, plans, PPAs, files, and the audit trail. A backup of the current data is taken first, and everyone is signed out.
+                                Everything changed since this backup was made will be replaced: accounts, plans, PPAs, files, and the audit trail. A backup of the current data is taken first, and everyone is signed out. Passwords and account status (active or deactivated) also go back to how they were, so check recent account changes afterwards.
                             </p>
                             <label for="confirm-{{ $loop->index }}" class="block text-sm font-medium">Type RESTORE to confirm</label>
                             <input id="confirm-{{ $loop->index }}" name="confirmation" autocomplete="off" class="block w-48 rounded-[8px] border border-line px-3 py-2 text-sm outline-none focus:border-error focus:ring-3 focus:ring-error/20">

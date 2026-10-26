@@ -184,6 +184,7 @@ class BackupManager
             DB::purge($this->connection);
             File::copy($workDir.DIRECTORY_SEPARATOR.'database.sqlite', $databasePath);
             DB::reconnect($this->connection);
+            $this->signEveryoneOut();
 
             foreach ($this->uploadedFiles() as $path) {
                 File::delete($path);
@@ -201,6 +202,24 @@ class BackupManager
         }
 
         return $safety;
+    }
+
+    /**
+     * Drop the sessions and remember-me tokens that came back with the restored database,
+     * so nobody is signed in by state from the past (e.g. an account deactivated since).
+     */
+    private function signEveryoneOut(): void
+    {
+        $schema = DB::connection($this->connection)->getSchemaBuilder();
+        $sessions = config('session.table', 'sessions');
+
+        if ($schema->hasTable($sessions)) {
+            DB::connection($this->connection)->table($sessions)->delete();
+        }
+
+        if ($schema->hasColumn('users', 'remember_token')) {
+            DB::connection($this->connection)->table('users')->update(['remember_token' => null]);
+        }
     }
 
     /**
