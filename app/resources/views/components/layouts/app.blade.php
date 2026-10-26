@@ -29,6 +29,7 @@
             ['label' => 'Resolutions', 'route' => 'officer.resolutions.index', 'active' => 'officer.resolutions.*', 'icon' => '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z"/><path d="M14 3v6h6"/><path d="m9 15 2 2 4-4"/>'],
             ['label' => 'Events', 'route' => 'officer.events.index', 'active' => 'officer.events.*', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>'],
             ['label' => 'Feedback', 'route' => 'officer.feedback.index', 'active' => 'officer.feedback.*', 'icon' => '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1 1 21 12Z"/>'],
+            ['label' => 'Surveys', 'route' => 'officer.surveys.index', 'active' => 'officer.surveys.*', 'icon' => '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>'],
             ['label' => 'Disclosure', 'route' => 'officer.disclosure.index', 'active' => 'officer.disclosure.*', 'icon' => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'],
         ],
         UserRole::Federation => [

@@ -49,6 +49,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/events/{event}/registration', [Youth\EventRegistrationController::class, 'store'])->name('events.registration.store');
         Route::delete('/events/{event}/registration', [Youth\EventRegistrationController::class, 'destroy'])->name('events.registration.destroy');
         Route::post('/feedback', [Youth\FeedbackController::class, 'store'])->name('feedback.store');
+        Route::get('/surveys/{survey}', [Youth\SurveyResponseController::class, 'create'])->name('surveys.answer');
+        Route::post('/surveys/{survey}', [Youth\SurveyResponseController::class, 'store'])->name('surveys.responses.store');
     });
 
     Route::middleware('role:officer')->prefix('officer')->name('officer.')->group(function () {
@@ -78,6 +80,12 @@ Route::middleware(['auth', 'active'])->group(function () {
             ->scopeBindings()
             ->name('events.registrations.update');
         Route::get('feedback', [Officer\FeedbackController::class, 'index'])->name('feedback.index');
+        Route::resource('surveys', Officer\SurveyController::class)->only(['index', 'store', 'show']);
+        Route::post('surveys/{survey}/questions', [Officer\SurveyQuestionController::class, 'store'])->name('surveys.questions.store');
+        Route::delete('surveys/{survey}/questions/{question}', [Officer\SurveyQuestionController::class, 'destroy'])
+            ->scopeBindings()
+            ->name('surveys.questions.destroy');
+        Route::patch('surveys/{survey}/status', [Officer\SurveyStatusController::class, 'update'])->name('surveys.status.update');
         Route::patch('feedback/{feedback}', [Officer\FeedbackController::class, 'update'])->name('feedback.update');
 
         Route::get('ppas', [Officer\PpaController::class, 'index'])->name('ppas.index');

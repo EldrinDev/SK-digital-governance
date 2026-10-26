@@ -29,6 +29,10 @@ class DashboardController extends Controller
                 ->orderBy('starts_at')
                 ->limit(5)
                 ->get(),
+            'openSurveys' => $user->barangay->surveys()->open()
+                ->whereDoesntHave('responses', fn ($query) => $query->where('user_id', $user->id))
+                ->latest('opened_at')
+                ->get(),
             'myFeedback' => $user->feedback()->with(['event:id,title', 'responder:id,name'])->latest()->limit(5)->get(),
         ]);
     }

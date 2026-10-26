@@ -71,6 +71,9 @@ class AuditLog extends Model
         'event.checked_in' => 'Recorded event check-in',
         'feedback.sent' => 'Sent feedback',
         'feedback.answered' => 'Replied to feedback',
+        'survey.created' => 'Started a survey',
+        'survey.opened' => 'Opened a survey',
+        'survey.closed' => 'Closed a survey',
     ];
 
     /**

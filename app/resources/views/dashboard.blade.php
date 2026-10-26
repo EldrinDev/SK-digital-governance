@@ -9,6 +9,20 @@
 
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div class="space-y-6">
+            @if ($openSurveys->isNotEmpty())
+                <section class="rounded-[12px] border border-gold/50 bg-gold/10 p-5" aria-labelledby="surveys-heading">
+                    <h2 id="surveys-heading" class="font-display text-lg font-semibold">Your SK wants to hear from you</h2>
+                    <ul class="mt-3 space-y-2">
+                        @foreach ($openSurveys as $survey)
+                            <li class="flex flex-wrap items-center justify-between gap-3 rounded-[8px] bg-white p-3">
+                                <span class="text-sm font-medium">{{ $survey->title }}</span>
+                                <a href="{{ route('surveys.answer', $survey) }}" class="rounded-[8px] bg-emerald px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-dark">Answer<span class="sr-only"> {{ $survey->title }}</span></a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
             @if ($toEvaluate->isNotEmpty())
                 <section class="rounded-[12px] border border-info/30 bg-info/5 p-5" aria-labelledby="evaluate-heading">
                     <h2 id="evaluate-heading" class="font-display text-lg font-semibold">How did it go?</h2>
