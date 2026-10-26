@@ -99,6 +99,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('abyips/{abyip}/ppas', [Officer\PpaController::class, 'store'])->name('ppas.store');
         Route::resource('ppas', Officer\PpaController::class)->only(['show', 'edit', 'update', 'destroy']);
         Route::patch('ppas/{ppa}/status', [Officer\PpaStatusController::class, 'update'])->name('ppas.status.update');
+        Route::patch('ppas/{ppa}/spending', [Officer\PpaSpendingController::class, 'update'])->name('ppas.spending.update');
         Route::post('ppas/{ppa}/milestones', [Officer\MilestoneController::class, 'store'])->name('ppas.milestones.store');
         Route::patch('ppas/{ppa}/milestones/{milestone}', [Officer\MilestoneController::class, 'update'])
             ->scopeBindings()
@@ -145,10 +146,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/reports/{report}/print', [ReportPrintController::class, 'show'])->middleware('role:officer,federation')->name('reports.print');
 
     Route::get('/account', [Account\ProfileController::class, 'edit'])->name('account.edit');
-    Route::patch('/account', [Account\ProfileController::class, 'update'])->name('account.update');
+    Route::patch('/account', [Account\ProfileController::class, 'update'])->middleware('throttle:6,1')->name('account.update');
     Route::put('/account/password', [Account\PasswordController::class, 'update'])->middleware('throttle:6,1')->name('account.password.update');
     Route::get('/account/data', Account\PersonalDataController::class)->middleware('role:youth')->name('account.data');
-    Route::delete('/account', [Account\ProfileController::class, 'destroy'])->middleware('role:youth')->name('account.destroy');
+    Route::delete('/account', [Account\ProfileController::class, 'destroy'])->middleware(['role:youth', 'throttle:6,1'])->name('account.destroy');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');

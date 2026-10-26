@@ -68,7 +68,7 @@
                             <p class="font-medium">{{ $user->name }}</p>
                             <p class="text-xs text-slate-muted">{{ $user->email }}</p>
                         </td>
-                        <td class="px-5 py-3">{{ $user->role->label() }}</td>
+                        <td class="px-5 py-3">{{ $user->role->label() }}@if ($user->position)<span class="block text-xs text-slate-muted">{{ $user->position->label() }}</span>@endif</td>
                         <td class="px-5 py-3 text-navy/80">{{ $user->barangay?->name ?? 'City-wide' }}</td>
                         <td class="px-5 py-3">
                             @if ($user->isActive())

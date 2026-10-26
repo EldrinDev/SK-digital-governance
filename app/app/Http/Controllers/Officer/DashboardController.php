@@ -30,7 +30,9 @@ class DashboardController extends Controller
             'completedPpas' => (clone $ppas)->where('status', PpaStatus::Completed)->count(),
             'completedWithEvidence' => (clone $ppas)->where('status', PpaStatus::Completed)->has('evidence')->count(),
             'delayedPpas' => (clone $ppas)->delayed()->count(),
-            'plannedBudget' => $currentAbyip?->ppas()->where('status', '!=', PpaStatus::Cancelled)->sum('budget') ?? 0,
+            'plannedBudget' => $plannedBudget = (float) ($currentAbyip?->ppas()->where('status', '!=', PpaStatus::Cancelled)->sum('budget') ?? 0),
+            'spentBudget' => $spentBudget = (float) ($currentAbyip?->ppas()->sum('amount_spent') ?? 0),
+            'budgetUsedPercent' => $plannedBudget > 0 ? (int) min(100, round($spentBudget / $plannedBudget * 100)) : 0,
             'activePpas' => (clone $ppas)
                 ->whereIn('status', [PpaStatus::Planned, PpaStatus::Ongoing])
                 ->with(['milestones', 'abyip:id,status'])

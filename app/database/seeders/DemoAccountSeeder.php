@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Barangay;
 use App\Models\User;
+use App\OfficerPosition;
 use App\UserRole;
 use Illuminate\Database\Seeder;
 use RuntimeException;
@@ -57,6 +58,7 @@ class DemoAccountSeeder extends Seeder
                 'password' => self::PASSWORD,
                 'role' => $role,
                 'barangay_id' => $role->belongsToBarangay() ? $barangay->id : null,
+                'position' => $role === UserRole::Officer ? OfficerPosition::Chairperson : null,
                 'email_verified_at' => now(),
                 'privacy_consented_at' => $role === UserRole::Youth ? now() : null,
                 'deactivated_at' => null,

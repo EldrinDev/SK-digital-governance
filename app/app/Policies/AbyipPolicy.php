@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Abyip;
 use App\Models\User;
+use App\OfficerPosition;
 use App\Policies\Concerns\ChecksWorkspace;
 use Illuminate\Auth\Access\Response;
 
@@ -81,9 +82,13 @@ class AbyipPolicy
             return $workspace;
         }
 
-        return $abyip->isApproved()
+        if (! $abyip->isApproved()) {
+            return Response::deny('Only an approved ABYIP can be published.');
+        }
+
+        return $user->holdsPosition(OfficerPosition::Chairperson)
             ? Response::allow()
-            : Response::deny('Only an approved ABYIP can be published.');
+            : Response::deny('Only the SK Chairperson approves items for public disclosure.');
     }
 
     /**
@@ -91,7 +96,15 @@ class AbyipPolicy
      */
     public function report(User $user, Abyip $abyip): Response
     {
-        return $this->publish($user, $abyip);
+        $workspace = $this->inOwnWorkspace($user, $abyip->barangay_id);
+
+        if ($workspace->denied()) {
+            return $workspace;
+        }
+
+        return $abyip->isApproved()
+            ? Response::allow()
+            : Response::deny('Only an approved ABYIP can be reported on.');
     }
 
     /**

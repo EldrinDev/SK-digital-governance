@@ -41,9 +41,31 @@ class Ppa extends Model
         return [
             'status' => PpaStatus::class,
             'budget' => 'decimal:2',
+            'amount_spent' => 'decimal:2',
+            'spending_recorded_at' => 'datetime',
             'starts_on' => 'date',
             'ends_on' => 'date',
         ];
+    }
+
+    /**
+     * Determine whether the recorded spending is above the PPA's budget.
+     */
+    public function isOverBudget(): bool
+    {
+        return $this->amount_spent !== null && (float) $this->amount_spent > (float) $this->budget;
+    }
+
+    /**
+     * Get the share of the budget spent so far, as a whole percentage.
+     */
+    public function budgetUsedPercent(): ?int
+    {
+        if ($this->amount_spent === null || (float) $this->budget <= 0) {
+            return null;
+        }
+
+        return (int) round((float) $this->amount_spent / (float) $this->budget * 100);
     }
 
     /**

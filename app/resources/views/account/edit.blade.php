@@ -20,7 +20,12 @@
                 @csrf
                 @method('PATCH')
                 <x-form.input name="name" label="Full name" :value="$user->name" autocomplete="name" required />
-                <x-form.input name="email" type="email" label="Email" :value="$user->email" autocomplete="email" required />
+                @if ($user->role->isStaff())
+                    <x-form.input name="email" type="email" label="Email" :value="$user->email" hint="Staff emails are managed by an administrator." readonly class="bg-mist text-slate-muted" />
+                @else
+                    <x-form.input name="email" type="email" label="Email" :value="$user->email" autocomplete="email" required />
+                    <x-form.input name="email_password" type="password" label="Current password" hint="Needed only when you change your email." autocomplete="current-password" />
+                @endif
                 <x-form.submit busy="Saving…" :block="false">Save details</x-form.submit>
             </form>
         </section>

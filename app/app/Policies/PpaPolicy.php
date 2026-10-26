@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Ppa;
 use App\Models\User;
+use App\OfficerPosition;
 use App\Policies\Concerns\ChecksWorkspace;
 use App\PpaStatus;
 use Illuminate\Auth\Access\Response;
@@ -81,5 +82,21 @@ class PpaPolicy
         return $ppa->abyip->isApproved()
             ? Response::allow()
             : Response::deny('Progress can be recorded once the council approves the ABYIP.');
+    }
+
+    /**
+     * Determine whether the user can record how much the PPA has spent, which the Treasurer encodes.
+     */
+    public function recordSpending(User $user, Ppa $ppa): Response
+    {
+        $track = $this->track($user, $ppa);
+
+        if ($track->denied()) {
+            return $track;
+        }
+
+        return $user->holdsPosition(OfficerPosition::Treasurer, OfficerPosition::Chairperson)
+            ? Response::allow()
+            : Response::deny('Only the SK Treasurer or Chairperson records spending.');
     }
 }

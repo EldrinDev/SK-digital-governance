@@ -59,6 +59,7 @@ class AuditLog extends Model
         'ppa.updated' => 'Updated a PPA',
         'ppa.deleted' => 'Removed a PPA',
         'ppa.status_changed' => 'Changed PPA status',
+        'ppa.spending_recorded' => 'Recorded PPA spending',
         'milestone.created' => 'Added a milestone',
         'milestone.completed' => 'Completed a milestone',
         'milestone.reopened' => 'Reopened a milestone',

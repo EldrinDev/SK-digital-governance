@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\OfficerPosition;
 use App\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -42,6 +43,7 @@ class User extends Authenticatable
             'deactivated_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'position' => OfficerPosition::class,
         ];
     }
 
@@ -110,5 +112,13 @@ class User extends Authenticatable
     public function isOfficer(): bool
     {
         return $this->hasRole(UserRole::Officer);
+    }
+
+    /**
+     * Determine whether the user is an officer holding one of the given positions.
+     */
+    public function holdsPosition(OfficerPosition ...$positions): bool
+    {
+        return $this->isOfficer() && in_array($this->position, $positions, true);
     }
 }

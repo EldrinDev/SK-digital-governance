@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -29,14 +30,23 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        $changesEmail = $request->input('email', $user->email) !== $user->email;
+
+        if ($changesEmail && $user->role->isStaff()) {
+            return back()->withErrors(['email' => 'Staff emails are managed by an administrator. Ask one to change it.']);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'email_password' => [Rule::requiredIf($changesEmail), 'nullable', 'current_password'],
         ], [
             'email.unique' => 'Another account already uses this email.',
+            'email_password.required' => 'Enter your password to change your email.',
+            'email_password.current_password' => 'That password isn’t right.',
         ]);
 
-        $user->fill($validated);
+        $user->fill(Arr::only($validated, ['name', 'email']));
         $changed = array_keys($user->getDirty());
 
         if ($changed === []) {

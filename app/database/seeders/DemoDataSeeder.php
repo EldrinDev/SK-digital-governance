@@ -16,6 +16,7 @@ use App\Models\Meeting;
 use App\Models\Ppa;
 use App\Models\Resolution;
 use App\Models\User;
+use App\OfficerPosition;
 use App\PlanStatus;
 use App\PpaStatus;
 use App\ResolutionOutcome;
@@ -24,6 +25,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -105,6 +107,10 @@ class DemoDataSeeder extends Seeder
 
         $forum = $this->ppa($abyip, $priorities[3], 'Youth assembly and budget forum', '150 youth attend', 25000, -120, -100, PpaStatus::Completed);
         $this->milestones($forum, [['Venue booked', -115, true]]);
+
+        foreach ([[$als, 52000], [$caravan, 41250.75], [$cleanup, 9800], [$forum, 26400]] as [$spentPpa, $amount]) {
+            $spentPpa->forceFill(['amount_spent' => $amount, 'spending_recorded_at' => now()->subDays(3)])->save();
+        }
 
         $this->ppa($abyip, $priorities[4], 'Job readiness bootcamp', '40 youth trained', 60000, 20, 50, PpaStatus::Planned);
         $this->ppa($abyip, $priorities[3], 'Youth leadership summit', '120 youth leaders trained', 65000, 40, 70, PpaStatus::Planned);
@@ -205,7 +211,13 @@ class DemoDataSeeder extends Seeder
     {
         return collect($people)->map(function (string $email, string $name) use ($barangay): User {
             $user = new User(['name' => $name, 'email' => $email, 'password' => DemoAccountSeeder::PASSWORD, 'barangay_id' => $barangay->id]);
-            $user->forceFill(['role' => UserRole::Officer, 'email_verified_at' => now()])->save();
+            $position = match (Str::before($email, '.')) {
+                'secretary' => OfficerPosition::Secretary,
+                'treasurer' => OfficerPosition::Treasurer,
+                'kagawad1', 'kagawad2' => OfficerPosition::Kagawad,
+                default => OfficerPosition::Chairperson,
+            };
+            $user->forceFill(['role' => UserRole::Officer, 'position' => $position, 'email_verified_at' => now()])->save();
 
             return $user;
         })->values();

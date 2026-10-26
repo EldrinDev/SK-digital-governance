@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Barangay;
 use App\Models\User;
+use App\OfficerPosition;
 use App\UserRole;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,11 +64,13 @@ class UserControllerTest extends TestCase
             'email' => 'carlo@example.com',
             'role' => 'officer',
             'barangay_id' => $barangay->id,
+            'position' => 'secretary',
         ])->assertRedirect(route('admin.users.index'));
 
         $officer = User::firstWhere('email', 'carlo@example.com');
 
         $this->assertSame(UserRole::Officer, $officer->role);
+        $this->assertSame(OfficerPosition::Secretary, $officer->position);
         $this->assertTrue($officer->barangay->is($barangay));
         Notification::assertSentTo($officer, ResetPassword::class);
         $this->assertDatabaseHas('audit_logs', [
@@ -112,13 +115,25 @@ class UserControllerTest extends TestCase
             'email' => $user->email,
             'role' => 'officer',
             'barangay_id' => $barangay->id,
+            'position' => 'treasurer',
             'is_active' => '1',
         ])->assertRedirect(route('admin.users.index'));
 
         $user->refresh();
         $this->assertSame(UserRole::Officer, $user->role);
+        $this->assertSame(OfficerPosition::Treasurer, $user->position);
         $this->assertTrue($user->barangay->is($barangay));
         $this->assertDatabaseHas('audit_logs', ['action' => 'user.updated', 'subject_id' => $user->id]);
+    }
+
+    public function test_officer_needs_a_position(): void
+    {
+        $this->actingAs($this->admin)->post(route('admin.users.store'), [
+            'name' => 'No Seat',
+            'email' => 'noseat@example.com',
+            'role' => 'officer',
+            'barangay_id' => Barangay::factory()->create()->id,
+        ])->assertSessionHasErrors(['position' => 'Choose the officer’s position on the council.']);
     }
 
     public function test_update_deactivates_account_and_records_it(): void

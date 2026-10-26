@@ -18,7 +18,7 @@ class MeetingMinutesController extends Controller
      */
     public function store(Request $request, Meeting $meeting): RedirectResponse
     {
-        Gate::authorize('update', $meeting);
+        Gate::authorize('recordMinutes', $meeting);
 
         $request->validate([
             'minutes' => ['required', 'file', 'mimes:pdf', 'max:10240'],

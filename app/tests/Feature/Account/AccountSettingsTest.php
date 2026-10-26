@@ -25,6 +25,10 @@ class AccountSettingsTest extends TestCase
 
         $this->actingAs($user)
             ->patch(route('account.update'), ['name' => 'Juana Dela Cruz', 'email' => 'juana@example.com'])
+            ->assertSessionHasErrors(['email_password' => 'Enter your password to change your email.']);
+
+        $this->actingAs($user)
+            ->patch(route('account.update'), ['name' => 'Juana Dela Cruz', 'email' => 'juana@example.com', 'email_password' => 'password'])
             ->assertSessionHas('status', 'Your details were saved.');
 
         $this->assertSame('juana@example.com', $user->fresh()->email);
@@ -38,6 +42,21 @@ class AccountSettingsTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->patch(route('account.update'), ['name' => 'Someone', 'email' => 'taken@example.com'])
             ->assertSessionHasErrors(['email' => 'Another account already uses this email.']);
+    }
+
+    public function test_staff_cannot_change_their_own_email(): void
+    {
+        $officer = User::factory()->officer()->create();
+
+        $this->actingAs($officer)
+            ->patch(route('account.update'), ['name' => 'Renamed Officer', 'email' => 'new@example.com', 'email_password' => 'password'])
+            ->assertSessionHasErrors(['email' => 'Staff emails are managed by an administrator. Ask one to change it.']);
+
+        $this->actingAs($officer)
+            ->patch(route('account.update'), ['name' => 'Renamed Officer', 'email' => $officer->email])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Renamed Officer', $officer->fresh()->name);
     }
 
     public function test_password_change_needs_the_current_password(): void

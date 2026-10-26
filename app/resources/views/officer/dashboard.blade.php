@@ -44,11 +44,16 @@
                 <p @class(['mt-2 font-display text-3xl font-semibold', 'text-[#b91c1c]' => $delayedPpas > 0])>{{ $delayedPpas }}</p>
             </a>
             <div class="rounded-[12px] border border-line bg-white p-5">
-                <p class="text-sm text-slate-muted">Budget in ABYIP {{ $year }}</p>
-                <p class="mt-2 font-display text-3xl font-semibold">₱{{ number_format($plannedBudget) }}</p>
-                @unless ($currentAbyip)
+                <p class="text-sm text-slate-muted">Budget used · ABYIP {{ $year }}</p>
+                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">₱{{ number_format($spentBudget) }}</p>
+                @if ($currentAbyip)
+                    <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-mist" role="progressbar" aria-valuenow="{{ $budgetUsedPercent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Budget used">
+                        <div class="h-full rounded-full bg-emerald" style="width: {{ $budgetUsedPercent }}%"></div>
+                    </div>
+                    <p class="mt-1 text-xs text-slate-muted tabular-nums">{{ $budgetUsedPercent }}% of ₱{{ number_format($plannedBudget) }} planned</p>
+                @else
                     <p class="mt-1 text-xs text-slate-muted">No ABYIP for {{ $year }} yet.</p>
-                @endunless
+                @endif
             </div>
         </div>
 

@@ -73,6 +73,7 @@ class UserController extends Controller
             'password' => Str::password(32),
         ]);
         $user->role = $request->selectedRole();
+        $user->position = $request->selectedPosition();
         $user->save();
 
         AuditLog::record('user.created', $request->user(), [
@@ -107,6 +108,7 @@ class UserController extends Controller
         $user->fill($request->safe()->only(['name', 'email']));
         $user->role = $request->selectedRole();
         $user->barangay_id = $request->barangayId();
+        $user->position = $request->selectedPosition();
         $user->deactivated_at = $request->boolean('is_active') ? null : ($user->deactivated_at ?? now());
 
         $changes = array_keys($user->getDirty());

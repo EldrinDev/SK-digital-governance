@@ -114,7 +114,7 @@
                 @else
                     <p class="mt-2 text-sm text-slate-muted">Not uploaded yet.</p>
                 @endif
-                @can('update', $meeting)
+                @can('recordMinutes', $meeting)
                     <form method="POST" action="{{ route('officer.meetings.minutes.store', $meeting) }}" enctype="multipart/form-data" class="mt-4 space-y-3" novalidate>
                         @csrf
                         <label for="minutes" class="sr-only">Minutes PDF</label>

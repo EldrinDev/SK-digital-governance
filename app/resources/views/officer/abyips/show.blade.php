@@ -199,6 +199,11 @@
                     </form>
                 </div>
             </section>
+        @elsecan('report', $abyip)
+            <p class="mt-6 rounded-[12px] border border-line bg-white p-5 text-sm text-slate-muted">
+                {{ $abyip->isPublished() ? 'This ABYIP is on the public transparency board.' : 'This ABYIP is not on the public transparency board yet.' }}
+                Only the SK Chairperson approves items for public disclosure.
+            </p>
         @endcan
     </div>
 </x-layouts.app>

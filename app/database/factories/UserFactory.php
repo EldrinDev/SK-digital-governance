@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Barangay;
 use App\Models\User;
+use App\OfficerPosition;
 use App\UserRole;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -44,6 +45,17 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => UserRole::Officer,
+            'position' => OfficerPosition::Chairperson,
+        ]);
+    }
+
+    /**
+     * Indicate the officer's seat on the council.
+     */
+    public function position(OfficerPosition $position): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'position' => $position,
         ]);
     }
 

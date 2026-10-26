@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Models\Barangay;
 use App\Models\User;
+use App\OfficerPosition;
 use App\UserRole;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,6 +37,11 @@ class StoreUserRequest extends FormRequest
                 'integer',
                 Rule::exists(Barangay::class, 'id'),
             ],
+            'position' => [
+                Rule::requiredIf(fn (): bool => $this->selectedRole() === UserRole::Officer),
+                'nullable',
+                Rule::enum(OfficerPosition::class),
+            ],
         ];
     }
 
@@ -49,6 +55,7 @@ class StoreUserRequest extends FormRequest
         return [
             'email.unique' => 'Another account already uses this email.',
             'barangay_id.required' => 'Youth and barangay SK officers need a barangay.',
+            'position.required' => 'Choose the officer’s position on the council.',
         ];
     }
 
@@ -58,6 +65,16 @@ class StoreUserRequest extends FormRequest
     public function selectedRole(): ?UserRole
     {
         return UserRole::tryFrom($this->string('role')->toString());
+    }
+
+    /**
+     * Get the council position to save: officers only.
+     */
+    public function selectedPosition(): ?OfficerPosition
+    {
+        return $this->selectedRole() === UserRole::Officer
+            ? OfficerPosition::tryFrom($this->string('position')->toString())
+            : null;
     }
 
     /**

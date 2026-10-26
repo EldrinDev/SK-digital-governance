@@ -25,8 +25,29 @@
             <section class="grid gap-4 rounded-[12px] border border-line bg-white p-5 text-sm sm:grid-cols-2">
                 <div><p class="text-slate-muted">CBYDP priority</p><p class="font-medium">{{ $ppa->priority->title }}</p><p class="text-xs text-slate-muted">{{ $ppa->priority->center->label() }}</p></div>
                 <div><p class="text-slate-muted">Target</p><p class="font-medium">{{ $ppa->target }}</p></div>
-                <div><p class="text-slate-muted">Budget</p><p class="font-medium tabular-nums">₱{{ number_format($ppa->budget, 2) }}</p></div>
+                <div>
+                    <p class="text-slate-muted">Budget</p>
+                    <p class="font-medium tabular-nums">₱{{ number_format($ppa->budget, 2) }}</p>
+                    @if ($ppa->amount_spent !== null)
+                        <p @class(['text-xs tabular-nums', 'font-semibold text-[#b91c1c]' => $ppa->isOverBudget(), 'text-slate-muted' => ! $ppa->isOverBudget()])>
+                            ₱{{ number_format($ppa->amount_spent, 2) }} spent ({{ $ppa->budgetUsedPercent() ?? 0 }}%){{ $ppa->isOverBudget() ? ' · over budget' : '' }}
+                        </p>
+                    @endif
+                </div>
                 <div><p class="text-slate-muted">Schedule</p><p class="font-medium">{{ $ppa->starts_on->format('M j') }} – {{ $ppa->ends_on->format('M j, Y') }}</p></div>
+                @can('recordSpending', $ppa)
+                    <form method="POST" action="{{ route('officer.ppas.spending.update', $ppa) }}" class="flex flex-wrap items-end gap-3 border-t border-line pt-4 sm:col-span-2">
+                        @csrf
+                        @method('PATCH')
+                        <div class="w-48">
+                            <x-form.input name="amount_spent" type="number" step="0.01" min="0" label="Amount spent so far (₱)" :value="$ppa->amount_spent" required />
+                        </div>
+                        <x-form.submit busy="Saving…" tone="navy" :block="false">Record spending</x-form.submit>
+                        @if ($ppa->spending_recorded_at)
+                            <p class="text-xs text-slate-muted">Last recorded {{ $ppa->spending_recorded_at->format('M j, Y') }}</p>
+                        @endif
+                    </form>
+                @endcan
             </section>
 
             <section class="rounded-[12px] border border-line bg-white">
