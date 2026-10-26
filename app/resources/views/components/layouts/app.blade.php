@@ -20,6 +20,7 @@
             ['label' => 'Users', 'route' => 'admin.users.index', 'active' => 'admin.users.*', 'icon' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
             ['label' => 'Barangays', 'route' => 'admin.barangays.index', 'active' => 'admin.barangays.*', 'icon' => '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>'],
             ['label' => 'Audit trail', 'route' => 'admin.audit-logs.index', 'active' => 'admin.audit-logs.*', 'icon' => '<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>'],
+            ['label' => 'Backups', 'route' => 'admin.backups.index', 'active' => 'admin.backups.*', 'icon' => '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>'],
         ],
         UserRole::Officer => [
             ['label' => 'Overview', 'route' => 'officer.dashboard', 'active' => 'officer.dashboard', 'icon' => '<path d="M3 12 12 4l9 8"/><path d="M5 10v10h14V10"/>'],

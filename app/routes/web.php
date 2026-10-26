@@ -132,6 +132,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('barangays', [Admin\BarangayController::class, 'index'])->name('barangays.index');
         Route::patch('barangays/{barangay}', [Admin\BarangayController::class, 'update'])->name('barangays.update');
         Route::get('audit-trail', [Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('backups', [Admin\BackupController::class, 'index'])->name('backups.index');
+        Route::post('backups', [Admin\BackupController::class, 'store'])->name('backups.store');
+        Route::get('backups/{backup}', [Admin\BackupController::class, 'show'])->name('backups.show');
+        Route::delete('backups/{backup}', [Admin\BackupController::class, 'destroy'])->name('backups.destroy');
+        Route::post('backups/{backup}/restore', [Admin\BackupController::class, 'restore'])->name('backups.restore');
         Route::get('audit-trail/export', [Admin\AuditLogController::class, 'export'])->name('audit-logs.export');
         Route::get('users-export', Admin\UserExportController::class)->name('users.export');
     });
