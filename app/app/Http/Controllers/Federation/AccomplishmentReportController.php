@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Federation;
 use App\Http\Controllers\Controller;
 use App\Models\AccomplishmentReport;
 use App\Models\AuditLog;
+use App\Notifications\ReportReviewed;
 use App\ReportStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class AccomplishmentReportController extends Controller
@@ -62,6 +64,8 @@ class AccomplishmentReportController extends Controller
         }
 
         AuditLog::record('report.reviewed', $request->user(), ['year' => $report->snapshot['year']], $report);
+
+        Notification::send($report->barangay->activeOfficers(), new ReportReviewed($report));
 
         return redirect()->route('federation.reports.index')->with('status', "{$report->barangay->name}’s report was marked reviewed.");
     }

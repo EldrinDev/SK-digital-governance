@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\Feedback;
+use App\Notifications\FeedbackReceived;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class FeedbackController extends Controller
 {
@@ -51,6 +53,8 @@ class FeedbackController extends Controller
         $user->feedback()->save($feedback);
 
         AuditLog::record('feedback.sent', $user, $event ? ['event' => $event->title] : [], $feedback);
+
+        Notification::send($user->barangay->activeOfficers(), new FeedbackReceived($feedback));
 
         return back()->with('status', $event ? 'Thanks for your evaluation.' : 'Your feedback was sent to your SK.');
     }

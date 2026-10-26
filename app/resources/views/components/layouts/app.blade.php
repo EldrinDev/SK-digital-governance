@@ -122,6 +122,13 @@
                         </div>
 
                         <div class="flex items-center gap-4">
+                            @php($unread = $user->unreadNotifications()->count())
+                            <a href="{{ route('notifications.index') }}" class="relative flex h-10 w-10 items-center justify-center rounded-[8px] border border-line hover:border-navy" aria-label="Notifications{{ $unread ? ', '.$unread.' unread' : '' }}">
+                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                                @if ($unread)
+                                    <span class="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[0.65rem] font-semibold text-white" aria-hidden="true">{{ $unread > 9 ? '9+' : $unread }}</span>
+                                @endif
+                            </a>
                             <p class="hidden text-sm text-navy/80 sm:block">{{ $user->name }}</p>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf

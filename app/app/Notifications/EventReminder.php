@@ -23,7 +23,7 @@ class EventReminder extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -38,5 +38,19 @@ class EventReminder extends Notification
             ->line('When: '.$this->event->starts_at->format('l, F j \a\t g:i A'))
             ->line("Where: {$this->event->venue}")
             ->action('See the event', route('events.show', $this->event));
+    }
+
+    /**
+     * Get the in-platform representation of the notification.
+     *
+     * @return array{title: string, body: string, url: string}
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'title' => "Tomorrow: {$this->event->title}",
+            'body' => $this->event->starts_at->format('g:i A').' · '.$this->event->venue,
+            'url' => route('events.show', $this->event),
+        ];
     }
 }

@@ -6,10 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Abyip;
 use App\Models\AccomplishmentReport;
 use App\Models\AuditLog;
+use App\Models\User;
+use App\Notifications\ReportSubmitted;
 use App\ReportStatus;
+use App\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class AccomplishmentReportController extends Controller
@@ -70,6 +74,11 @@ class AccomplishmentReportController extends Controller
         $abyip->reports()->save($report);
 
         AuditLog::record('report.submitted', $request->user(), ['year' => $abyip->year], $report);
+
+        Notification::send(
+            User::where('role', UserRole::Federation)->whereNull('deactivated_at')->get(),
+            new ReportSubmitted($report->setRelation('barangay', $abyip->barangay)),
+        );
 
         return redirect()->route('officer.abyips.report', $abyip)
             ->with('status', 'Report submitted to the SK Federation for review.');

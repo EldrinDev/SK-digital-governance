@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\StaffSessionController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\Federation;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Officer;
 use App\Http\Controllers\PublicEvidenceController;
 use App\Http\Controllers\ReportPrintController;
@@ -120,6 +121,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     Route::get('/reports/{report}/print', [ReportPrintController::class, 'show'])->middleware('role:officer,federation')->name('reports.print');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/read', [NotificationController::class, 'update'])->name('notifications.read');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });

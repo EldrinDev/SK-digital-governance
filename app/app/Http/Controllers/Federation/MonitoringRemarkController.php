@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Federation;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Barangay;
+use App\Notifications\RemarkReceived;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class MonitoringRemarkController extends Controller
 {
@@ -28,6 +30,8 @@ class MonitoringRemarkController extends Controller
         $remark->save();
 
         AuditLog::record('remark.created', $request->user(), [], $barangay);
+
+        Notification::send($barangay->activeOfficers(), new RemarkReceived($remark));
 
         return redirect()->route('federation.barangays.show', $barangay)
             ->with('status', "Remark sent to {$barangay->name}’s SK officers.");

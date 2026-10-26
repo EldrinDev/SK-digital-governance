@@ -23,7 +23,7 @@ class FeedbackAnswered extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -37,5 +37,19 @@ class FeedbackAnswered extends Notification
             ->line("The {$this->feedback->barangay->name} SK replied:")
             ->line("“{$this->feedback->response}”")
             ->action('Open your dashboard', route('dashboard'));
+    }
+
+    /**
+     * Get the in-platform representation of the notification.
+     *
+     * @return array{title: string, body: string, url: string}
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'title' => 'Your SK replied to your feedback',
+            'body' => str($this->feedback->response)->limit(120)->toString(),
+            'url' => route('dashboard'),
+        ];
     }
 }

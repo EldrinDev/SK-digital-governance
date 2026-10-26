@@ -23,7 +23,7 @@ class EventRegistrationConfirmed extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -39,5 +39,19 @@ class EventRegistrationConfirmed extends Notification
             ->line("Where: {$this->event->venue}")
             ->action('See the event', route('events.show', $this->event))
             ->line('We’ll send a reminder the day before. If you can’t go, cancel from your dashboard so someone else can take your place.');
+    }
+
+    /**
+     * Get the in-platform representation of the notification.
+     *
+     * @return array{title: string, body: string, url: string}
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'title' => "You’re registered: {$this->event->title}",
+            'body' => $this->event->starts_at->format('D, M j · g:i A').' · '.$this->event->venue,
+            'url' => route('events.show', $this->event),
+        ];
     }
 }
