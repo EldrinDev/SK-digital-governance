@@ -113,7 +113,16 @@ class AuditLog extends Model
         $forgotten = 0;
 
         self::query()
-            ->where('properties->youth_id', $youth->id)
+            ->where(fn ($query) => $query
+                ->where('properties->youth_id', $youth->id)
+                // Check-ins recorded before entries carried the account ID: only those for events
+                // this youth registered for, and only where the copied name is theirs.
+                ->orWhere(fn ($legacy) => $legacy
+                    ->where('action', 'event.checked_in')
+                    ->whereNull('properties->youth_id')
+                    ->where('properties->youth', $youth->name)
+                    ->where('subject_type', (new Event)->getMorphClass())
+                    ->whereIn('subject_id', $youth->eventRegistrations()->select('event_id'))))
             ->each(function (self $entry) use ($replacement, &$forgotten): void {
                 $entry->forceFill(['properties' => [...$entry->properties, 'youth' => $replacement]])->save();
                 $forgotten++;

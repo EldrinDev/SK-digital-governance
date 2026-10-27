@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Account;
 
+use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -121,6 +122,21 @@ class AccountSettingsTest extends TestCase
         $this->assertDatabaseMissing('audit_logs', ['properties->youth' => 'Leaving Youth']);
         $this->assertDatabaseHas('audit_logs', ['action' => 'event.checked_in', 'properties->youth' => 'Deleted account']);
         $this->assertDatabaseHas('audit_logs', ['action' => 'youth_id.verified', 'subject_id' => $youth->id, 'properties' => null]);
+    }
+
+    public function test_older_check_ins_without_an_account_id_are_also_cleared(): void
+    {
+        $youth = User::factory()->create(['name' => 'Legacy Youth']);
+        $event = Event::factory()->for($youth->barangay)->create();
+        $event->registrations()->create(['user_id' => $youth->id]);
+        $unrelated = Event::factory()->for($youth->barangay)->create();
+        AuditLog::record('event.checked_in', null, ['event' => $event->title, 'youth' => 'Legacy Youth', 'attended' => 'yes'], $event);
+        AuditLog::record('event.checked_in', null, ['event' => $unrelated->title, 'youth' => 'Legacy Youth', 'attended' => 'yes'], $unrelated);
+
+        $this->actingAs($youth)->delete(route('account.destroy'), ['confirm_password' => 'password']);
+
+        $this->assertDatabaseHas('audit_logs', ['subject_id' => $event->id, 'properties->youth' => 'Deleted account']);
+        $this->assertDatabaseHas('audit_logs', ['subject_id' => $unrelated->id, 'properties->youth' => 'Legacy Youth']);
     }
 
     public function test_closing_an_account_cannot_rewrite_entries_about_someone_else_with_the_same_name(): void
