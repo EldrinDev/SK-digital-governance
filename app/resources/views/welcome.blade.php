@@ -164,15 +164,17 @@
                     </div>
                 </div>
 
-                <figure class="relative h-72 sm:h-96 lg:absolute lg:inset-y-0 lg:right-0 lg:h-auto lg:w-[58%]">
+                <figure class="relative h-72 sm:h-96 lg:absolute lg:inset-0 lg:h-auto">
                     <img
                         src="{{ asset('images/ulo-ng-apo.jpg') }}"
                         alt="The Ulo ng Apo monument in Olongapo City"
                         width="1920"
                         height="1446"
                         fetchpriority="high"
-                        class="h-full w-full object-cover object-[50%_12%] brightness-[0.55] lg:object-[50%_30%] saturate-[0.75] [mask-image:linear-gradient(to_bottom,transparent,#000_18%)] lg:[mask-image:linear-gradient(to_right,transparent,#000_30%)]"
+                        class="h-full w-full object-cover object-[50%_12%] brightness-[0.55] saturate-[0.75] [mask-image:linear-gradient(to_bottom,transparent,#000_18%)] lg:object-[50%_32%] lg:[mask-image:none]"
                     >
+                    {{-- Full-width photo; a white wash on the left keeps the headline readable --}}
+                    <div class="absolute inset-0 hidden bg-[linear-gradient(90deg,#fff_0%,rgba(255,255,255,0.95)_36%,rgba(255,255,255,0.78)_48%,rgba(255,255,255,0.3)_62%,rgba(255,255,255,0)_78%)] lg:block" aria-hidden="true"></div>
                     <figcaption class="absolute bottom-20 right-4 text-[0.7rem] text-white/80 sm:bottom-28 lg:bottom-32 lg:right-8">Ulo ng Apo, Olongapo City</figcaption>
                 </figure>
 
