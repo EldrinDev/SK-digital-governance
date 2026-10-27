@@ -18,6 +18,7 @@ use App\Http\Controllers\PublicEvidenceController;
 use App\Http\Controllers\ReportPrintController;
 use App\Http\Controllers\TransparencyController;
 use App\Http\Controllers\Youth;
+use App\Http\Controllers\YouthIdController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -162,6 +163,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::patch('/account', [Account\ProfileController::class, 'update'])->middleware('throttle:6,1')->name('account.update');
     Route::put('/account/password', [Account\PasswordController::class, 'update'])->middleware('throttle:6,1')->name('account.password.update');
     Route::get('/account/data', Account\PersonalDataController::class)->middleware('role:youth')->name('account.data');
+    Route::get('/account/id', [Account\DigitalIdController::class, 'show'])->middleware('role:youth')->name('account.id');
+    Route::post('/account/id', [Account\DigitalIdController::class, 'update'])->middleware(['role:youth', 'throttle:6,1'])->name('account.id.renew');
+    Route::get('/id/{code}', YouthIdController::class)->middleware('role:officer,federation,administrator')->name('youth-id.verify');
     Route::delete('/account', [Account\ProfileController::class, 'destroy'])->middleware(['role:youth', 'throttle:6,1'])->name('account.destroy');
 
     Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');

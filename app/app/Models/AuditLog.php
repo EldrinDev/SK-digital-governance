@@ -39,6 +39,8 @@ class AuditLog extends Model
         'account.password_changed' => 'Changed own password',
         'account.data_exported' => 'Downloaded own data',
         'account.deleted' => 'Closed own account',
+        'account.id_renewed' => 'Replaced own digital ID',
+        'youth_id.verified' => 'Checked a youth’s digital ID',
         'user.created' => 'Created a user',
         'user.updated' => 'Updated a user',
         'user.role_changed' => 'Changed a role',

@@ -115,6 +115,41 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the code on the youth's digital Katipunan ng Kabataan ID, creating it the first time.
+     * It's random, so a QR code reveals nothing about the person by itself.
+     */
+    public function memberCode(): string
+    {
+        if ($this->member_code === null) {
+            $this->renewMemberCode();
+        }
+
+        return $this->member_code;
+    }
+
+    /**
+     * Give the youth a new ID code, which makes any old ID (screenshot or printout) stop working.
+     */
+    public function renewMemberCode(): void
+    {
+        $prefix = 'KK-'.str($this->barangay?->name ?? 'OLO')->upper()->replaceMatches('/[^A-Z]/', '')->substr(0, 3);
+
+        do {
+            $code = $prefix.'-'.collect(range(1, 6))->map(fn () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[random_int(0, 31)])->implode('');
+        } while (self::where('member_code', $code)->exists());
+
+        $this->forceFill(['member_code' => $code])->save();
+    }
+
+    /**
+     * Get the person's initials, for avatars.
+     */
+    public function initials(): string
+    {
+        return collect(explode(' ', $this->name))->filter()->map(fn (string $part): string => mb_substr($part, 0, 1))->take(2)->implode('');
+    }
+
+    /**
      * Determine whether the user is an officer holding one of the given positions.
      */
     public function holdsPosition(OfficerPosition ...$positions): bool

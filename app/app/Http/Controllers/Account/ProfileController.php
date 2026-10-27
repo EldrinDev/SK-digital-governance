@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Account;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -20,7 +21,20 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('account.edit', ['user' => $request->user()]);
+        $user = $request->user()->load('barangay');
+        $isYouth = $user->hasRole(UserRole::Youth);
+
+        return view('account.edit', [
+            'user' => $user,
+            'isYouth' => $isYouth,
+            'code' => $isYouth ? $user->memberCode() : null,
+            'stats' => $isYouth ? [
+                'Events attended' => $user->eventRegistrations()->whereNotNull('attended_at')->count(),
+                'Registered, coming up' => $user->eventRegistrations()->whereHas('event', fn ($event) => $event->upcoming())->count(),
+                'Surveys answered' => $user->surveyResponses()->count(),
+                'Messages to your SK' => $user->feedback()->whereNull('event_id')->count(),
+            ] : [],
+        ]);
     }
 
     /**

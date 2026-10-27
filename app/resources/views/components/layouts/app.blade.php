@@ -43,6 +43,7 @@
             ['label' => 'Announcements', 'route' => 'announcements.index', 'active' => 'announcements.*', 'icon' => '<path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'],
             ['label' => 'Events', 'route' => 'events.index', 'active' => 'events.*', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'],
             ['label' => 'Transparency', 'route' => 'transparency.index', 'active' => 'transparency.*', 'icon' => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'],
+            ['label' => 'My ID', 'route' => 'account.id', 'active' => 'account.id', 'icon' => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/>'],
         ],
     };
 
@@ -79,7 +80,7 @@
         --}}
         <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-300 lg:ease-[cubic-bezier(.2,.8,.2,1)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)] motion-reduce:transition-none">
             {{-- Side menu (desktop) --}}
-            <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden">
+            <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden">
                 <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-[1.125rem] py-5" title="SK Digital Governance">
                     <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0">
                     <span class="whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
@@ -137,7 +138,7 @@
             </aside>
 
             <div class="flex min-w-0 flex-col">
-                <header class="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur [view-transition-name:topbar]">
+                <header class="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur [view-transition-name:topbar] print:hidden">
                     <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                         <div class="flex min-w-0 items-center gap-3">
                             <button type="button" data-sidebar-toggle aria-pressed="false" class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-line text-navy/80 hover:border-navy hover:text-navy lg:flex">
@@ -158,7 +159,7 @@
                                             <li><a href="{{ route($item['route']) }}" @class(['flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm font-medium hover:bg-mist', 'bg-emerald/10 text-emerald' => request()->routeIs($item['active'])])><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>{{ $item['label'] }}</a></li>
                                         @endforeach
                                     @endforeach
-                                    <li class="mt-1 border-t border-line pt-1"><a href="{{ route('account.edit') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">Account settings</a></li>
+                                    <li class="mt-1 border-t border-line pt-1"><a href="{{ route('account.edit') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">{{ $user->hasRole(UserRole::Youth) ? 'My profile' : 'Account settings' }}</a></li>
                                     <li><a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm text-slate-muted hover:bg-mist">Public site</a></li>
                                 </ul>
                             </details>
@@ -192,7 +193,7 @@
                                         <p class="truncate text-xs text-slate-muted">{{ $user->email }}</p>
                                         <p class="mt-1 text-xs text-slate-muted">{{ $roleLine }}{{ $user->barangay ? ', '.$user->barangay->name : '' }}</p>
                                     </div>
-                                    <a href="{{ route('account.edit') }}" class="mt-1 block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">Account settings</a>
+                                    <a href="{{ route('account.edit') }}" class="mt-1 block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">{{ $user->hasRole(UserRole::Youth) ? 'My profile' : 'Account settings' }}</a>
                                     <a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">Public site</a>
                                     <form method="POST" action="{{ route('logout') }}" class="mt-1 border-t border-line pt-1">
                                         @csrf
