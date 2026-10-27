@@ -98,35 +98,74 @@
         </section>
     @endif
 
-    {{-- Where the plan is in its life cycle: a slim line of steps --}}
-    <ol class="mb-8 flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3" aria-label="Plan life cycle">
-        @foreach ($steps as $index => $step)
-            @php
-                $isCurrent = $index === $currentStep;
-            @endphp
-            <li class="flex items-center gap-3" @if ($isCurrent) aria-current="step" @endif>
-                @unless ($loop->first)
-                    <span @class(['hidden h-px w-10 sm:block', 'bg-emerald' => $step['done'] || $isCurrent, 'bg-line' => ! $step['done'] && ! $isCurrent]) aria-hidden="true"></span>
-                @endunless
-                <span class="flex items-center gap-2">
+    {{-- Where the plan is in its life cycle: a track that fills as each step is done --}}
+    @php
+        $closedCount = $abyip->ppas->filter(fn ($ppa) => $ppa->status->isClosed())->count();
+        $implementation = $abyip->ppas->isNotEmpty() ? (int) round($closedCount / $abyip->ppas->count() * 100) : 0;
+        $details = [
+            $abyip->cbydp->isApproved() ? 'CBYDP '.$abyip->cbydp->period() : 'Waiting for the CBYDP',
+            $abyip->ppas->isNotEmpty() ? trans_choice(':count PPA|:count PPAs', $abyip->ppas->count()).', '.$peso($totalBudget) : 'Add the PPAs',
+            $abyip->isApproved() ? ($abyip->approved_on?->format('M j, Y') ?? 'Recorded') : 'Record the resolution',
+            null,
+        ];
+    @endphp
+    <section class="mb-8 rounded-[14px] border border-line bg-white px-5 py-5 sm:px-6" aria-labelledby="lifecycle-heading">
+        <h2 id="lifecycle-heading" class="sr-only">Plan progress</h2>
+        <ol class="grid gap-0 sm:grid-cols-4">
+            @foreach ($steps as $index => $step)
+                @php
+                    $isCurrent = $index === $currentStep;
+                    $state = $step['done'] ? 'done' : ($isCurrent ? 'current' : 'upcoming');
+                @endphp
+                <li class="relative flex gap-4 pb-6 last:pb-0 sm:block sm:pb-0" @if ($isCurrent) aria-current="step" @endif>
+                    @unless ($loop->last)
+                        {{-- The track to the next step: down on phones, across on wider screens --}}
+                        <span @class([
+                            'absolute left-[0.9375rem] top-9 bottom-1 w-0.5 rounded-full sm:left-11 sm:right-3 sm:top-[0.9375rem] sm:bottom-auto sm:h-0.5 sm:w-auto',
+                            'bg-emerald' => $step['done'],
+                            'bg-line' => ! $step['done'],
+                        ]) aria-hidden="true"></span>
+                    @endunless
+
                     <span @class([
-                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
-                        'bg-emerald text-white' => $step['done'],
-                        'ring-2 ring-emerald ring-offset-2 ring-offset-mist bg-emerald/15' => ! $step['done'] && $isCurrent,
-                        'border border-line bg-white' => ! $step['done'] && ! $isCurrent,
-                    ])>
-                        @if ($step['done'])
-                            <svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
-                            <span class="sr-only">Done:</span>
+                        'relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
+                        'bg-emerald text-white' => $state === 'done',
+                        'border-2 border-emerald bg-white text-emerald shadow-[0_0_0_4px_rgba(22,132,91,0.12)]' => $state === 'current',
+                        'border-2 border-line bg-white text-slate-muted' => $state === 'upcoming',
+                    ]) aria-hidden="true">
+                        @if ($state === 'done')
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>
+                        @else
+                            {{ $index + 1 }}
                         @endif
                     </span>
-                    <span @class(['font-semibold text-navy' => $isCurrent, 'text-navy/70' => ! $isCurrent])>
-                        {{ $step['label'] }}@if ($isCurrent && $step['label'] === 'Implementation')<span class="font-normal text-slate-muted">, {{ $completed }} of {{ $abyip->ppas->count() }} done</span>@endif
-                    </span>
-                </span>
-            </li>
-        @endforeach
-    </ol>
+
+                    <div class="min-w-0 flex-1 pt-1 sm:mt-3 sm:pr-6 sm:pt-0">
+                        <p @class(['text-sm font-semibold', 'text-navy' => $state !== 'upcoming', 'text-slate-muted' => $state === 'upcoming'])>
+                            {{ $step['label'] }}
+                            <span class="sr-only">, {{ match ($state) { 'done' => 'done', 'current' => 'in progress', default => 'not started' } }}</span>
+                        </p>
+
+                        @if ($index === 3 && $abyip->isApproved())
+                            <div class="mt-1.5 w-full max-w-[16rem]">
+                                <div class="flex items-baseline justify-between text-xs">
+                                    <span @class(['font-semibold', 'text-emerald' => $step['done'], 'text-navy' => ! $step['done']])>{{ $step['done'] ? 'Done' : $closedCount.' of '.$abyip->ppas->count().' PPAs closed' }}</span>
+                                    <span class="tabular-nums text-slate-muted">{{ $implementation }}%</span>
+                                </div>
+                                <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-mist" role="progressbar" aria-valuenow="{{ $implementation }}" aria-valuemin="0" aria-valuemax="100" aria-label="PPAs closed">
+                                    <div class="h-full rounded-full bg-emerald" style="width: {{ max($implementation, 3) }}%"></div>
+                                </div>
+                            </div>
+                        @else
+                            <p @class(['mt-0.5 text-xs', 'text-slate-muted' => $state !== 'current', 'font-medium text-emerald' => $state === 'current'])>
+                                {{ $details[$index] ?? 'Starts once the council approves' }}
+                            </p>
+                        @endif
+                    </div>
+                </li>
+            @endforeach
+        </ol>
+    </section>
 
     @if ($abyip->ppas->isNotEmpty())
         <dl class="mb-8 grid grid-cols-2 gap-y-5 border-y border-line py-5 lg:grid-cols-4">
@@ -165,7 +204,7 @@
                 @endcan
             </div>
         @else
-            <div class="overflow-x-auto rounded-[14px] border border-line bg-white">
+            <div class="hidden overflow-x-auto rounded-[14px] border border-line bg-white md:block">
                 <table class="w-full min-w-[60rem] text-left text-sm">
                     <caption class="sr-only">PPAs of ABYIP {{ $abyip->year }} with their schedule across the year, budget and status</caption>
                     <thead class="border-b border-line text-xs text-slate-muted">
@@ -240,6 +279,66 @@
                     </tfoot>
                 </table>
             </div>
+            {{-- Phones: one card per PPA, each with its own strip of the year --}}
+            <ul class="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-white md:hidden">
+                @foreach ($abyip->ppas as $ppa)
+                    @php
+                        $tone = $statusTone($ppa);
+                        $left = $position($ppa->starts_on);
+                        $right = $position($ppa->ends_on->copy()->addDay());
+                        $runsPastYear = $ppa->ends_on->greaterThan($yearEnd);
+                    @endphp
+                    <li>
+                        <a href="{{ route('officer.ppas.show', $ppa) }}" class="block px-4 py-4 active:bg-mist/60">
+                            <div class="flex items-start justify-between gap-3">
+                                <p class="font-medium leading-snug text-navy">{{ $ppa->title }}</p>
+                                <p class="flex shrink-0 items-center gap-1.5 whitespace-nowrap pt-0.5 text-xs font-semibold {{ $tone['text'] }}">
+                                    <span class="h-2 w-2 rounded-full {{ $tone['bar'] }}" aria-hidden="true"></span>
+                                    {{ $tone['label'] }}
+                                </p>
+                            </div>
+                            <p class="mt-0.5 text-xs text-slate-muted">{{ $ppa->priority->center->label() }}. Target: {{ $ppa->target }}</p>
+
+                            <div class="relative mt-3 h-4" aria-hidden="true">
+                                <div class="absolute inset-0 grid grid-cols-12">
+                                    @foreach ($months as $month)
+                                        <span class="border-l border-line/60 first:border-l-0"></span>
+                                    @endforeach
+                                </div>
+                                @if ($todayAt !== null)
+                                    <span class="absolute -inset-y-1 w-0.5 -translate-x-1/2 bg-gold" style="left: {{ $todayAt }}%"></span>
+                                @endif
+                                <span @class(['absolute top-1/2 h-2.5 -translate-y-1/2 rounded-full', $tone['bar'], 'rounded-r-none' => $runsPastYear]) style="left: {{ $left }}%; width: {{ max(2.5, $right - $left) }}%"></span>
+                            </div>
+                            <div class="mt-1 grid grid-cols-12 text-[0.6rem] text-slate-muted" aria-hidden="true">
+                                @foreach ($months as $month)
+                                    <span class="text-center">{{ $month->format('M')[0] }}</span>
+                                @endforeach
+                            </div>
+
+                            <div class="mt-2.5 flex items-end justify-between gap-3 text-xs">
+                                <p class="tabular-nums text-slate-muted">
+                                    {{ $ppa->starts_on->format('M j') }} to {{ $ppa->ends_on->format($runsPastYear ? 'M j, Y' : 'M j') }}
+                                    @if ($ppa->milestones->isNotEmpty())
+                                        <span class="block">{{ $ppa->progress() }}% of milestones done</span>
+                                    @endif
+                                </p>
+                                <p class="text-right tabular-nums">
+                                    <span class="block text-sm font-semibold text-navy">{{ $peso((float) $ppa->budget) }}</span>
+                                    <span class="text-slate-muted">{{ $peso((float) ($ppa->amount_spent ?? 0)) }} spent</span>
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                @endforeach
+                <li class="flex items-baseline justify-between gap-3 bg-mist/40 px-4 py-3 text-sm">
+                    <span class="font-semibold text-navy">Total</span>
+                    <span class="text-right tabular-nums">
+                        <span class="block font-semibold text-navy">{{ $peso($totalBudget) }}</span>
+                        <span class="text-xs text-slate-muted">{{ $peso($spent) }} spent, not counting cancelled</span>
+                    </span>
+                </li>
+            </ul>
         @endif
     </section>
 
