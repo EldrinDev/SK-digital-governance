@@ -144,7 +144,7 @@
                                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="m15 10-2 2 2 2" class="collapsed:hidden"/><path d="m13 10 2 2-2 2" class="hidden collapsed:block"/></svg>
                                 <span class="sr-only" data-sidebar-label>Collapse menu</span>
                             </button>
-                            <details class="relative lg:hidden">
+                            <details class="relative lg:hidden" data-dropdown>
                                 <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-[8px] border border-line [&::-webkit-details-marker]:hidden">
                                     <span class="sr-only">Open menu</span>
                                     <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -178,14 +178,8 @@
                                     <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                                 </a>
                             @endif
-                            @php($unread = $user->unreadNotifications()->count())
-                            <a href="{{ route('notifications.index') }}" class="relative flex h-10 w-10 items-center justify-center rounded-[8px] border border-line hover:border-navy" aria-label="Notifications{{ $unread ? ', '.$unread.' unread' : '' }}">
-                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                                @if ($unread)
-                                    <span class="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[0.65rem] font-semibold text-white" aria-hidden="true">{{ $unread > 9 ? '9+' : $unread }}</span>
-                                @endif
-                            </a>
-                            <details class="relative">
+                            <x-notifications-menu :user="$user" />
+                            <details class="relative" data-dropdown>
                                 <summary class="flex cursor-pointer list-none items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 hover:border-navy [&::-webkit-details-marker]:hidden">
                                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
                                     <span class="hidden text-sm font-medium sm:inline">{{ str($user->name)->before(' ') }}</span>
@@ -199,7 +193,6 @@
                                         <p class="mt-1 text-xs text-slate-muted">{{ $roleLine }}{{ $user->barangay ? ', '.$user->barangay->name : '' }}</p>
                                     </div>
                                     <a href="{{ route('account.edit') }}" class="mt-1 block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">Account settings</a>
-                                    <a href="{{ route('notifications.index') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">Notifications</a>
                                     <a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">Public site</a>
                                     <form method="POST" action="{{ route('logout') }}" class="mt-1 border-t border-line pt-1">
                                         @csrf

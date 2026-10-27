@@ -69,4 +69,30 @@ class NotificationControllerTest extends TestCase
 
         $this->assertSame(0, $officer->unreadNotifications()->count());
     }
+
+    public function test_notifications_open_from_the_bell_on_any_page_instead_of_their_own_page(): void
+    {
+        $barangay = Barangay::factory()->create();
+        $officer = User::factory()->officer()->create(['barangay_id' => $barangay->id]);
+        $this->actingAs(User::factory()->federation()->create())
+            ->post(route('federation.barangays.remarks.store', $barangay), ['body' => 'Please upload the minutes.']);
+
+        $this->actingAs($officer)
+            ->get(route('officer.dashboard'))
+            ->assertSee('data-dropdown', false)
+            ->assertSee('aria-label="Notifications, 1 unread"', false)
+            ->assertSeeText('New remark from the SK Federation')
+            ->assertSeeText('Please upload the minutes.')
+            ->assertSeeText('Mark all as read');
+
+        $this->actingAs($officer)->get('/notifications')->assertNotFound();
+    }
+
+    public function test_empty_bell_says_all_caught_up(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('dashboard'))
+            ->assertSee('aria-label="Notifications"', false)
+            ->assertDontSeeText('Mark all as read');
+    }
 }

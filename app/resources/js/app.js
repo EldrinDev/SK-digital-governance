@@ -136,3 +136,26 @@ document.addEventListener('click', async (event) => {
         label.textContent = 'Share this post';
     }, 2500);
 });
+
+// Header dropdowns (notifications, account, mobile menu): one open at a time,
+// and they close on a click outside or the Escape key.
+const dropdowns = () => document.querySelectorAll('details[data-dropdown][open]');
+
+document.addEventListener('click', (event) => {
+    dropdowns().forEach((dropdown) => {
+        if (!dropdown.contains(event.target)) {
+            dropdown.open = false;
+        }
+    });
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') {
+        return;
+    }
+
+    dropdowns().forEach((dropdown) => {
+        dropdown.open = false;
+        dropdown.querySelector('summary')?.focus();
+    });
+});

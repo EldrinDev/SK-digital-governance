@@ -164,7 +164,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/account/data', Account\PersonalDataController::class)->middleware('role:youth')->name('account.data');
     Route::delete('/account', [Account\ProfileController::class, 'destroy'])->middleware(['role:youth', 'throttle:6,1'])->name('account.destroy');
 
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
     Route::post('/notifications/read', [NotificationController::class, 'update'])->name('notifications.read');
 
