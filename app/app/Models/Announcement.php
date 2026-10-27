@@ -126,6 +126,41 @@ class Announcement extends Model
     }
 
     /**
+     * Get when the announced activity happens, read from the caption's date and time lines
+     * ("🗓️ November 7, 2026 (Saturday)", "🕑 2:00 PM"). Null when there's no full date.
+     *
+     * @return array{start: Carbon, allDay: bool}|null
+     */
+    public function happensAt(): ?array
+    {
+        $details = collect($this->details());
+        $date = $details->firstWhere('kind', 'date')['text'] ?? '';
+        $time = $details->firstWhere('kind', 'time')['text'] ?? '';
+
+        if (preg_match('/([A-Z][a-z]+ \d{1,2}, \d{4})/', $date, $dateMatch) !== 1) {
+            return null;
+        }
+
+        $hasTime = preg_match('/(\d{1,2}:\d{2}\s*[AP]M)/i', $time, $timeMatch) === 1;
+
+        try {
+            $start = Carbon::parse($dateMatch[1].($hasTime ? ' '.$timeMatch[1] : ''));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return ['start' => $start, 'allDay' => ! $hasTime];
+    }
+
+    /**
+     * Get the place the caption names on its 📍 line, if any.
+     */
+    public function place(): ?string
+    {
+        return collect($this->details())->firstWhere('kind', 'place')['text'] ?? null;
+    }
+
+    /**
      * Get the caption as HTML with its hashtags highlighted. The text is escaped first,
      * so only the highlight markup is trusted. Detail lines can be left out where they
      * are already shown on their own.

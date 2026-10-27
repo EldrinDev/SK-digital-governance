@@ -101,3 +101,38 @@ if (sidebarToggle) {
         showSidebarState();
     });
 }
+
+// Share a page: the phone's share sheet where there is one, otherwise copy the link.
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-share]');
+
+    if (!button) {
+        return;
+    }
+
+    const label = button.querySelector('[data-share-label]');
+    const url = button.dataset.shareUrl;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: button.dataset.shareTitle, url });
+        } catch (error) {
+            // The person closed the share sheet; nothing to do.
+        }
+
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(url);
+        label.textContent = 'Link copied';
+    } catch (error) {
+        window.prompt('Copy this link:', url);
+
+        return;
+    }
+
+    setTimeout(() => {
+        label.textContent = 'Share this post';
+    }, 2500);
+});

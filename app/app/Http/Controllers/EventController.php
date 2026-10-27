@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\CalendarFile;
 use App\EventKind;
 use App\Models\Barangay;
 use App\Models\Event;
 use App\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -78,35 +78,14 @@ class EventController extends Controller
     {
         abort_unless($event->barangay->is_participating, 404);
 
-        // RFC 5545 text: escape \ ; , then turn every kind of line break into "\n" and drop other
-        // control characters, so officer-entered text can never start a new line in the file.
-        $escape = fn (string $text): string => preg_replace(
-            '/[\x00-\x08\x0B-\x1F\x7F]/',
-            '',
-            preg_replace('/\r\n|\r|\n/', '\\n', str_replace(['\\', ';', ','], ['\\\\', '\;', '\,'], $text)),
+        return CalendarFile::download(
+            uid: 'event-'.$event->id,
+            title: $event->title,
+            start: $event->starts_at,
+            allDay: false,
+            location: "{$event->venue}, {$event->barangay->name}, Olongapo City",
+            description: trim(($event->description ?? '')."\n\n".route('events.show', $event)),
+            url: route('events.show', $event),
         );
-        $format = fn ($date): string => $date->copy()->utc()->format('Ymd\THis\Z');
-
-        $lines = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:-//SK Digital Governance//Olongapo City//EN',
-            'BEGIN:VEVENT',
-            'UID:event-'.$event->id.'@'.parse_url(config('app.url'), PHP_URL_HOST),
-            'DTSTAMP:'.$format(now()),
-            'DTSTART:'.$format($event->starts_at),
-            'DTEND:'.$format($event->starts_at->copy()->addHours(3)),
-            'SUMMARY:'.$escape($event->title),
-            'LOCATION:'.$escape("{$event->venue}, {$event->barangay->name}, Olongapo City"),
-            'DESCRIPTION:'.$escape(trim(($event->description ?? '')."\n\n".route('events.show', $event))),
-            'URL:'.route('events.show', $event),
-            'END:VEVENT',
-            'END:VCALENDAR',
-        ];
-
-        return response(implode("\r\n", $lines)."\r\n", 200, [
-            'Content-Type' => 'text/calendar; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="'.Str::slug($event->title).'.ics"',
-        ]);
     }
 }

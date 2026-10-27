@@ -140,7 +140,7 @@ class AnnouncementControllerTest extends TestCase
 
         $this->get(route('announcements.index'))->assertSeeInOrder(['Posted here yesterday', 'Salamat sa Linggo ng Kabataan']);
         $this->get(route('announcements.show', $imported))
-            ->assertSeeText('Originally posted on Facebook')
+            ->assertSeeText('First posted on Facebook')
             ->assertSee('https://www.facebook.com/sk/posts/123', false);
     }
 

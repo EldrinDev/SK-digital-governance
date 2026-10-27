@@ -27,6 +27,7 @@ Route::get('/barangays/{barangay}/logo', BarangayLogoController::class)->name('b
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
 Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
 Route::get('/announcements/{announcement}/image', [AnnouncementController::class, 'image'])->name('announcements.image');
+Route::get('/announcements/{announcement}/calendar', [AnnouncementController::class, 'calendar'])->name('announcements.calendar');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 Route::get('/events/{event}/calendar', [EventController::class, 'calendar'])->name('events.calendar');

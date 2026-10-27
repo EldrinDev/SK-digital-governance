@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\CalendarFile;
 use App\Models\Announcement;
 use App\Models\Barangay;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -45,6 +47,27 @@ class AnnouncementController extends Controller
             'announcement' => $announcement,
             'more' => $announcement->barangay->announcements()->with('barangay:id,name,logo_path')->whereKeyNot($announcement->id)->newestFirst()->limit(3)->get(),
         ]);
+    }
+
+    /**
+     * Download the announced activity as a calendar file, when the caption gives its date.
+     */
+    public function calendar(Announcement $announcement): Response
+    {
+        abort_unless($announcement->barangay->is_participating, 404);
+
+        $when = $announcement->happensAt();
+        abort_if($when === null, 404);
+
+        return CalendarFile::download(
+            uid: 'announcement-'.$announcement->id,
+            title: $announcement->title,
+            start: $when['start'],
+            allDay: $when['allDay'],
+            location: trim(($announcement->place() ?? '').', '.$announcement->barangay->name.', Olongapo City', ', '),
+            description: "From SK {$announcement->barangay->name}.\n\n".route('announcements.show', $announcement),
+            url: route('announcements.show', $announcement),
+        );
     }
 
     /**
