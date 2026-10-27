@@ -3,7 +3,10 @@
 @endphp
 <x-layouts.app :title="$report->barangay->name.' report'" :heading="$report->barangay->name.' · ABYIP '.$report->snapshot['year']" :description="'Submitted '.$report->submitted_at->format('F j, Y').' by '.($report->submitter?->name ?? 'an officer').'. Figures are frozen as of submission.'">
     <x-slot:actions>
-        <a href="{{ route('reports.print', $report) }}" target="_blank" class="rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">Print or save as PDF</a>
+        <div class="flex flex-wrap items-start gap-2">
+            <a href="{{ route('reports.print', $report) }}" target="_blank" class="rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">Print</a>
+            <x-ui.export-menu route="federation.reports.export" :parameters="['report' => $report]" />
+        </div>
     </x-slot:actions>
 
     <p class="mb-6 text-sm"><a href="{{ route('federation.reports.index') }}" class="font-medium text-slate-muted hover:text-emerald">&larr; All reports</a></p>

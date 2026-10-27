@@ -1,4 +1,8 @@
 <x-layouts.app :title="$barangay->name" :heading="$barangay->name" description="Read-only view of this barangay’s plans, PPAs, and sessions. Leave a remark to flag anything the SK should act on.">
+    <x-slot:actions>
+        <x-ui.export-menu route="federation.barangays.export" :parameters="['barangay' => $barangay]" />
+    </x-slot:actions>
+
     <p class="mb-6 text-sm"><a href="{{ route('federation.dashboard') }}" class="font-medium text-slate-muted hover:text-emerald">&larr; All barangays</a></p>
 
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">

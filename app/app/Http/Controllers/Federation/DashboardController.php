@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Federation;
 
-use App\Http\Controllers\Concerns\StreamsCsv;
+use App\DocumentExporter;
+use App\ExportDocument;
+use App\ExportFormat;
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
 use App\Models\EventRegistration;
@@ -11,13 +13,13 @@ use App\PlanStatus;
 use App\PpaStatus;
 use App\UserRole;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class DashboardController extends Controller
 {
-    use StreamsCsv;
-
     /**
      * Compare the participating barangays: plans, PPA completion, delays, budget and sessions.
      */
@@ -50,15 +52,34 @@ class DashboardController extends Controller
     }
 
     /**
-     * Download the compliance table as a CSV file.
+     * Download the compliance table as Excel, PDF, Word or CSV.
      */
-    public function export(): StreamedResponse
+    public function export(Request $request): Response
     {
+        $format = ExportFormat::from($request->validate([
+            'format' => ['nullable', Rule::enum(ExportFormat::class)],
+        ])['format'] ?? ExportFormat::Csv->value);
         $year = (int) now()->format('Y');
+        $barangays = $this->barangays($year);
+        $peso = fn (float $amount): string => '₱'.number_format($amount, 2);
 
-        return $this->csv("compliance-{$year}.csv",
-            ['Barangay', 'CBYDP approved', "ABYIP {$year}", 'PPAs', 'Completed', 'Cancelled', 'Delayed', 'Budget', 'Sessions this year'],
-            $this->barangays($year)->map(fn (Barangay $barangay): array => [
+        $document = ExportDocument::make("Barangay compliance, {$year}", 'Plans, PPA progress, budget and sessions of the participating barangays.')
+            ->detail('Prepared for', 'SK Federation, Olongapo City')
+            ->detail('Barangays', (string) $barangays->count())
+            ->table("Compliance {$year}", [
+                'Barangay' => 'text',
+                'CBYDP approved' => 'text',
+                "ABYIP {$year}" => 'text',
+                'PPAs' => 'number',
+                'Completed' => 'number',
+                'Cancelled' => 'number',
+                'Delayed' => 'number',
+                'Budget' => 'money',
+                'Spent' => 'money',
+                'Sessions this year' => 'number',
+                'Youth accounts' => 'number',
+                'Youth who joined events' => 'number',
+            ], $barangays->map(fn (Barangay $barangay): array => [
                 $barangay->name,
                 $barangay->approved_cbydp_count > 0 ? 'Yes' : 'No',
                 match (true) {
@@ -70,10 +91,19 @@ class DashboardController extends Controller
                 $barangay->completed_count,
                 $barangay->cancelled_count,
                 $barangay->delayed_count,
-                $barangay->budget_this_year ?? 0,
+                (float) ($barangay->budget_this_year ?? 0),
+                (float) ($barangay->spent_this_year ?? 0),
                 $barangay->meetings_this_year_count,
-            ]),
-        );
+                $barangay->youth_count,
+                $barangay->participants_this_year,
+            ]), summary: [
+                'Total budget' => $peso((float) $barangays->sum('budget_this_year')),
+                'Total spent' => $peso((float) $barangays->sum('spent_this_year')),
+                'PPAs completed' => $barangays->sum('completed_count').' of '.$barangays->sum('ppas_count'),
+                'Delayed PPAs' => (string) $barangays->sum('delayed_count'),
+            ], empty: 'No participating barangays yet.');
+
+        return DocumentExporter::download($document, $format, "compliance-{$year}");
     }
 
     /**

@@ -137,9 +137,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/', Federation\DashboardController::class)->name('dashboard');
         Route::get('compliance-export', [Federation\DashboardController::class, 'export'])->name('compliance.export');
         Route::get('barangays/{barangay}', [Federation\BarangayController::class, 'show'])->name('barangays.show');
+        Route::get('barangays/{barangay}/export', [Federation\BarangayController::class, 'export'])->name('barangays.export');
         Route::post('barangays/{barangay}/remarks', [Federation\MonitoringRemarkController::class, 'store'])->name('barangays.remarks.store');
         Route::get('reports', [Federation\AccomplishmentReportController::class, 'index'])->name('reports.index');
         Route::get('reports/{report}', [Federation\AccomplishmentReportController::class, 'show'])->name('reports.show');
+        Route::get('reports/{report}/export', [Federation\AccomplishmentReportController::class, 'export'])->name('reports.export');
         Route::patch('reports/{report}', [Federation\AccomplishmentReportController::class, 'update'])->name('reports.update');
     });
 

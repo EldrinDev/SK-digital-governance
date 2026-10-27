@@ -1,9 +1,6 @@
 <x-layouts.app title="Federation console" heading="Participating barangays" :description="'Read-only progress and compliance across the pilot, for '.$year.'.'">
     <x-slot:actions>
-        <a href="{{ route('federation.compliance.export') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            Download CSV
-        </a>
+        <x-ui.export-menu route="federation.compliance.export" label="Export table" />
     </x-slot:actions>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
