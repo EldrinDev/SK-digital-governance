@@ -159,3 +159,23 @@ document.addEventListener('keydown', (event) => {
         dropdown.querySelector('summary')?.focus();
     });
 });
+
+// Notification tabs in the bell: show one kind at a time without leaving the page.
+document.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-notification-filter]');
+
+    if (!tab) {
+        return;
+    }
+
+    const panel = tab.closest('[data-notification-panel]');
+    const category = tab.dataset.notificationFilter;
+
+    panel.querySelectorAll('[data-notification-filter]').forEach((other) => {
+        other.setAttribute('aria-pressed', String(other === tab));
+    });
+
+    panel.querySelectorAll('li[data-category]').forEach((item) => {
+        item.hidden = category !== 'all' && item.dataset.category !== category;
+    });
+});

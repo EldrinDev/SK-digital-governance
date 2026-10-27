@@ -33,7 +33,7 @@ class AnnouncementPosted extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => "Announcement: {$this->announcement->title}",
+            'title' => $this->announcement->title,
             'body' => str($this->announcement->body)->limit(120)->toString(),
             'url' => route('announcements.show', $this->announcement),
         ];

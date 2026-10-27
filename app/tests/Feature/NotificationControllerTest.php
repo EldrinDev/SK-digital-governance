@@ -2,9 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Announcement;
 use App\Models\Barangay;
+use App\Models\Event;
 use App\Models\Feedback;
 use App\Models\User;
+use App\NotificationCategory;
+use App\Notifications\AnnouncementPosted;
+use App\Notifications\EventRegistrationConfirmed;
 use App\Notifications\FeedbackReceived;
 use App\Notifications\RemarkReceived;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -86,6 +91,28 @@ class NotificationControllerTest extends TestCase
             ->assertSeeText('Mark all as read');
 
         $this->actingAs($officer)->get('/notifications')->assertNotFound();
+    }
+
+    public function test_bell_labels_each_notification_and_offers_tabs_per_kind(): void
+    {
+        $youth = User::factory()->create();
+        $youth->barangay->update(['is_participating' => true]);
+        $event = Event::factory()->for($youth->barangay)->create(['title' => 'Liga opening']);
+        $announcement = Announcement::factory()->for($youth->barangay)->create(['title' => 'KK Assembly']);
+        $youth->notify(new EventRegistrationConfirmed($event));
+        $youth->notify(new AnnouncementPosted($announcement));
+
+        $this->assertSame(NotificationCategory::Event, NotificationCategory::forType(EventRegistrationConfirmed::class));
+        $this->assertSame(NotificationCategory::Review, NotificationCategory::forType(RemarkReceived::class));
+        $this->assertSame('KK Assembly', $youth->notifications()->where('type', AnnouncementPosted::class)->sole()->data['title']);
+
+        $this->actingAs($youth)
+            ->get(route('dashboard'))
+            ->assertSee('data-notification-filter="event"', false)
+            ->assertSee('data-notification-filter="announcement"', false)
+            ->assertDontSee('data-notification-filter="review"', false)
+            ->assertSee('data-category="event"', false)
+            ->assertSeeText('You’re registered: Liga opening');
     }
 
     public function test_empty_bell_says_all_caught_up(): void
