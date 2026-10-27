@@ -109,3 +109,19 @@ body {
         navigation: none;
     }
 }
+
+/*
+ * Event pass on the youth dashboard: two half-circle notches where the stub tears off,
+ * cut with a mask so whatever is behind the pass (the photo) shows through them.
+ * Each mask layer covers one half of the pass, so no mask compositing is needed.
+ */
+.ticket-notched {
+    --notch: 0.6rem;
+    --stub: 7.5rem;
+    -webkit-mask:
+        radial-gradient(circle at calc(100% - var(--stub)) 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) top / 100% 51% no-repeat,
+        radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) bottom / 100% 51% no-repeat;
+    mask:
+        radial-gradient(circle at calc(100% - var(--stub)) 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) top / 100% 51% no-repeat,
+        radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) bottom / 100% 51% no-repeat;
+}

@@ -233,7 +233,12 @@ class DemoDataSeeder extends Seeder
         }
 
         $answered = $this->feedback($youth[1], null, null, 'Could we have a study hub with Wi-Fi at the barangay hall?');
-        $answered->forceFill(['response' => 'Yes! It is in next year’s ABYIP draft. Join the consultation to add your ideas.', 'responded_by' => $chair->id, 'responded_at' => now()->subDays(2)])->save();
+        $answered->forceFill([
+            'created_at' => now()->subDays(5),
+            'response' => 'Yes! It is in next year’s ABYIP draft. Join the consultation to add your ideas.',
+            'responded_by' => $chair->id,
+            'responded_at' => now()->subDays(2),
+        ])->save();
         $this->feedback($youth[2], null, null, 'The court lights are broken in the evening.');
 
         $this->seedSantaRitaAnnouncements($barangay, $chair, $officers[1], $year);

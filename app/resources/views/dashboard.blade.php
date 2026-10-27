@@ -1,10 +1,15 @@
 @php
     use App\EventKind;
+    use App\QrCode;
 
     $hour = (int) now()->format('G');
     $greeting = $hour < 12 ? 'Magandang umaga' : ($hour < 18 ? 'Magandang hapon' : 'Magandang gabi');
     $todoCount = $openSurveys->count() + $toEvaluate->count();
     $inDays = fn ($date): string => $date->isToday() ? 'today' : ($date->isTomorrow() ? 'tomorrow' : 'in '.(int) ceil(now()->diffInDays($date)).' days');
+    $laterEvents = $myUpcoming->slice(1);
+    $sectionTitle = 'font-display text-base font-semibold text-navy';
+    $sectionLink = 'text-sm font-medium text-emerald hover:underline';
+    $sheet = 'overflow-hidden rounded-[14px] border border-line bg-white';
 @endphp
 <x-layouts.app title="Dashboard">
     @if ($errors->any())
@@ -15,49 +20,53 @@
         </div>
     @endif
 
-    {{-- Greeting, their numbers, and the one thing coming up next, in the landing page's hero style --}}
-    <section class="relative mb-6 overflow-hidden rounded-[20px] border border-line bg-white" aria-labelledby="hello-heading">
+    {{--
+        The greeting, in the landing page's hero style. Its one bold element is the pass for the
+        next event: the same QR as the digital ID, ready to show at the check-in table.
+    --}}
+    <section class="relative mb-10 overflow-hidden rounded-[20px] border border-line bg-white" aria-labelledby="hello-heading">
         <figure class="absolute inset-y-0 right-0 hidden w-[55%] lg:block" aria-hidden="true">
             <img src="{{ asset('images/ulo-ng-apo.jpg') }}" alt="" class="h-full w-full object-cover object-[50%_35%] brightness-[0.55] saturate-[0.75] [mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.35)_30%,#000_62%)]">
         </figure>
 
-        <div class="relative z-10 grid gap-6 px-6 pb-10 pt-7 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-center lg:pb-11">
+        <div class="relative z-10 grid gap-7 px-6 pb-11 pt-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:items-center">
             <div class="min-w-0">
-                <p class="text-xs font-semibold tracking-[0.2em] text-navy/70">{{ str($greeting)->upper() }}, KA-SK {{ str($barangay->name)->upper() }}</p>
-                <h1 id="hello-heading" class="mt-2 font-display text-[2rem] font-bold leading-tight tracking-tight text-navy sm:text-[2.4rem]">Hi, {{ str(auth()->user()->name)->before(' ') }}.</h1>
-                <p class="font-display text-base font-semibold text-emerald sm:text-lg">{{ $todoCount > 0 ? 'Your SK is waiting on you.' : 'Ready for what’s next?' }}</p>
-
-                <dl class="mt-5 flex flex-wrap gap-x-7 gap-y-3">
-                    @foreach ([
-                        ['Attended', $attendedCount, '<path d="m5 12 5 5 9-10"/>', false],
-                        ['Coming up', $myUpcoming->count(), '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', false],
-                        ['To do', $todoCount, '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/>', $todoCount > 0],
-                    ] as [$label, $value, $icon, $needsAttention])
-                        <div class="flex items-center gap-2.5">
-                            <span @class(['flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]', 'bg-gold/25 text-[#92400e]' => $needsAttention, 'bg-emerald/10 text-emerald' => ! $needsAttention]) aria-hidden="true">
-                                <svg viewBox="0 0 24 24" class="h-[1.1rem] w-[1.1rem]" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">{!! $icon !!}</svg>
-                            </span>
-                            <div class="leading-tight">
-                                <dd class="font-display text-lg font-semibold tabular-nums text-navy">{{ $value }}</dd>
-                                <dt class="text-xs text-slate-muted">{{ $label }}</dt>
-                            </div>
-                        </div>
-                    @endforeach
-                </dl>
+                <p class="text-sm font-semibold text-emerald">{{ $greeting }}, ka-SK {{ $barangay->name }}</p>
+                <h1 id="hello-heading" class="mt-1 font-display text-[2rem] font-bold leading-tight tracking-tight text-navy sm:text-[2.5rem]">Hi, {{ str(auth()->user()->name)->before(' ') }}.</h1>
+                <p class="mt-2 max-w-md text-[0.95rem] leading-relaxed text-navy/75">
+                    @if ($todoCount > 0)
+                        <a href="#todo" class="font-semibold text-navy underline decoration-gold decoration-2 underline-offset-4 hover:decoration-emerald">{{ trans_choice('{1}1 thing needs you|[2,*]:count things need you', $todoCount) }}</a>{{ $nextUp ? ', and your next event is '.$inDays($nextUp->starts_at).'.' : '. Nothing is on your calendar yet.' }}
+                    @elseif ($nextUp)
+                        You’re all caught up. Your next event is {{ $inDays($nextUp->starts_at) }}.
+                    @else
+                        You’re all caught up. Pick an event to join below.
+                    @endif
+                </p>
             </div>
 
-            {{-- The next event, floating over the photo --}}
             @if ($nextUp)
-                <a href="{{ route('events.show', $nextUp) }}" class="group relative flex min-w-0 items-center gap-4 rounded-[16px] border border-white/60 bg-white/95 p-4 shadow-xl shadow-navy/20 backdrop-blur transition-transform hover:-translate-y-0.5">
-                    <x-event.date-block :event="$nextUp" />
-                    <span class="min-w-0">
-                        <span class="text-xs font-semibold text-emerald">Your next event, {{ $inDays($nextUp->starts_at) }}</span>
-                        <span class="mt-0.5 line-clamp-2 block font-display font-semibold leading-snug text-navy group-hover:text-emerald">{{ $nextUp->title }}</span>
-                        <span class="mt-0.5 block truncate text-sm text-slate-muted">{{ $nextUp->starts_at->format('g:i A') }}, {{ $nextUp->venue }}</span>
-                    </span>
-                </a>
+                <div class="drop-shadow-[0_18px_28px_rgba(13,31,56,0.28)]">
+                    <div class="ticket-notched flex min-w-0 rounded-[14px] bg-mist lg:bg-white">
+                        <a href="{{ route('events.show', $nextUp) }}" class="group min-w-0 flex-1 px-5 py-4">
+                            <span class="flex items-center justify-between gap-3 text-xs font-semibold">
+                                <span class="text-slate-muted">Your next event</span>
+                                <span class="text-emerald">{{ ucfirst($inDays($nextUp->starts_at)) }}</span>
+                            </span>
+                            <span class="mt-2 line-clamp-2 block font-display text-[1.05rem] font-semibold leading-snug text-navy group-hover:text-emerald">{{ $nextUp->title }}</span>
+                            <span class="mt-2 block text-sm font-medium text-navy/80">{{ $nextUp->starts_at->format('D, M j') }} at {{ $nextUp->starts_at->format('g:i A') }}</span>
+                            <span class="block truncate text-sm text-slate-muted">{{ $nextUp->venue }}</span>
+                        </a>
+                        <div class="flex w-[7.5rem] shrink-0 flex-col items-center justify-center gap-1.5 border-l-2 border-dashed border-line px-3 py-4">
+                            <a href="{{ route('account.id') }}" class="block w-[4.6rem] rounded-[6px] bg-white p-1 [&_svg]:h-auto [&_svg]:w-full" title="Open my digital ID">
+                                {{ QrCode::svg(route('youth-id.verify', $memberCode), 160) }}
+                                <span class="sr-only">Open my digital ID to show at check-in</span>
+                            </a>
+                            <span class="text-center text-[0.65rem] font-medium leading-tight text-slate-muted">Show at check-in</span>
+                        </div>
+                    </div>
+                </div>
             @else
-                <div class="relative rounded-[16px] border border-white/60 bg-white/95 p-4 shadow-xl shadow-navy/20 backdrop-blur">
+                <div class="rounded-[14px] border border-dashed border-line bg-white/95 px-5 py-4 lg:border-white/40">
                     <p class="font-display font-semibold text-navy">No events lined up yet</p>
                     <p class="mt-0.5 text-sm text-slate-muted">See what your SK has planned and save your spot.</p>
                     <a href="{{ route('events.index', ['barangay' => $barangay->id]) }}" class="mt-3 inline-flex rounded-[8px] bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">Browse events</a>
@@ -73,158 +82,145 @@
         </svg>
     </section>
 
-    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div class="min-w-0 space-y-6">
-            {{-- Everything that needs the youth's action, in one list --}}
-            <section class="rounded-[14px] border border-line bg-white" aria-labelledby="todo-heading">
-                <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
-                    <h2 id="todo-heading" class="font-display text-lg font-semibold">To do</h2>
-                    @if ($todoCount > 0)
-                        <span class="rounded-full bg-gold/25 px-2.5 py-0.5 text-xs font-semibold">{{ $todoCount }} waiting</span>
-                    @endif
-                </div>
-                <ul class="divide-y divide-line">
-                    @foreach ($openSurveys as $survey)
-                        <li class="flex flex-wrap items-center gap-4 px-5 py-4">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-gold/20 text-navy" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="text-xs font-semibold text-slate-muted">Survey from your SK</p>
-                                <p class="font-medium">{{ $survey->title }}</p>
-                            </div>
-                            <a href="{{ route('surveys.answer', $survey) }}" class="rounded-[8px] bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">Answer<span class="sr-only"> {{ $survey->title }}</span></a>
-                        </li>
-                    @endforeach
+    <div class="grid items-start gap-x-8 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <div class="min-w-0 space-y-10">
+            {{-- Only what needs the youth's action; the section disappears when there's nothing --}}
+            @if ($todoCount > 0)
+                <section id="todo" class="scroll-mt-24" aria-labelledby="todo-heading">
+                    <h2 id="todo-heading" class="mb-3 {{ $sectionTitle }}">Needs you <span class="ml-1 font-sans text-sm font-medium text-slate-muted">{{ $todoCount }}</span></h2>
+                    <ul class="{{ $sheet }} divide-y divide-line">
+                        @foreach ($openSurveys as $survey)
+                            <li class="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4">
+                                <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-gold" aria-hidden="true"></span>
+                                <div class="min-w-[12rem] flex-1">
+                                    <p class="text-xs font-medium text-slate-muted">Survey from your SK</p>
+                                    <p class="font-medium text-navy">{{ $survey->title }}</p>
+                                </div>
+                                <a href="{{ route('surveys.answer', $survey) }}" class="ml-[1.625rem] rounded-[8px] bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-dark sm:ml-0">Answer survey<span class="sr-only">: {{ $survey->title }}</span></a>
+                            </li>
+                        @endforeach
 
-                    @foreach ($toEvaluate as $registration)
-                        <li class="px-5 py-4">
-                            <details class="group" @if ($errors->any() && (string) old('event_id') === (string) $registration->event_id) open @endif>
-                                <summary class="flex cursor-pointer list-none flex-wrap items-center gap-4 [&::-webkit-details-marker]:hidden">
-                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-info/10 text-info" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
-                                    </span>
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block text-xs font-semibold text-slate-muted">How did it go?</span>
-                                        <span class="block font-medium">{{ $registration->event->title }}</span>
-                                    </span>
-                                    <span class="rounded-[8px] border border-line px-4 py-2 text-sm font-semibold group-open:hidden">Rate it</span>
-                                    <span class="hidden text-sm font-semibold text-slate-muted group-open:inline">Close</span>
-                                </summary>
-                                <form method="POST" action="{{ route('feedback.store') }}" class="mt-4 space-y-3 rounded-[12px] bg-mist p-4 sm:ml-14" novalidate>
-                                    @csrf
-                                    <input type="hidden" name="event_id" value="{{ $registration->event_id }}">
-                                    <fieldset>
-                                        <legend class="text-sm font-medium">Your rating</legend>
-                                        <div class="mt-1.5 flex flex-wrap gap-1.5">
-                                            @foreach (range(1, 5) as $score)
-                                                <label class="cursor-pointer rounded-[8px] border border-line bg-white px-3 py-1.5 text-sm font-semibold has-[:checked]:border-gold has-[:checked]:bg-gold/25">
-                                                    <input type="radio" name="rating" value="{{ $score }}" class="sr-only" required>
-                                                    {{ $score }}<span aria-hidden="true">★</span><span class="sr-only"> out of 5</span>
-                                                </label>
-                                            @endforeach
+                        @foreach ($toEvaluate as $registration)
+                            <li class="px-5 py-4">
+                                <details class="group" @if ($errors->any() && (string) old('event_id') === (string) $registration->event_id) open @endif>
+                                    <summary class="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-3 [&::-webkit-details-marker]:hidden">
+                                        <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-gold" aria-hidden="true"></span>
+                                        <span class="min-w-[12rem] flex-1">
+                                            <span class="block text-xs font-medium text-slate-muted">How did it go?</span>
+                                            <span class="block font-medium text-navy">{{ $registration->event->title }}</span>
+                                        </span>
+                                        <span class="ml-[1.625rem] rounded-[8px] bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-dark group-open:hidden sm:ml-0">Rate event</span>
+                                        <span class="hidden text-sm font-medium text-slate-muted group-open:inline">Close</span>
+                                    </summary>
+                                    <form method="POST" action="{{ route('feedback.store') }}" class="mt-4 space-y-4 border-t border-line pt-4 sm:ml-6" novalidate>
+                                        @csrf
+                                        <input type="hidden" name="event_id" value="{{ $registration->event_id }}">
+                                        <fieldset>
+                                            <legend class="text-sm font-medium text-navy">Your rating</legend>
+                                            <div class="mt-2 inline-flex overflow-hidden rounded-[8px] border border-line bg-white">
+                                                @foreach (range(1, 5) as $score)
+                                                    <label class="cursor-pointer border-l border-line px-3.5 py-2 text-sm font-semibold text-navy/70 first:border-l-0 hover:bg-mist has-[:checked]:bg-gold/25 has-[:checked]:text-navy has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-emerald">
+                                                        <input type="radio" name="rating" value="{{ $score }}" class="sr-only" required>
+                                                        {{ $score }}<span aria-hidden="true" class="ml-0.5 text-gold">★</span><span class="sr-only"> out of 5</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </fieldset>
+                                        <div>
+                                            <label for="eval-{{ $registration->id }}" class="block text-sm font-medium text-navy">What should they keep or change?</label>
+                                            <textarea id="eval-{{ $registration->id }}" name="message" rows="2" required class="mt-1.5 block w-full rounded-[8px] border border-line px-3.5 py-2.5 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20"></textarea>
                                         </div>
-                                    </fieldset>
-                                    <label for="eval-{{ $registration->id }}" class="block text-sm font-medium">What should they keep or change?</label>
-                                    <textarea id="eval-{{ $registration->id }}" name="message" rows="2" required class="block w-full rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20"></textarea>
-                                    <x-form.submit busy="Sending…" :block="false" class="py-2">Send rating</x-form.submit>
-                                </form>
-                            </details>
-                        </li>
-                    @endforeach
+                                        <x-form.submit busy="Sending…" :block="false">Send rating</x-form.submit>
+                                    </form>
+                                </details>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
 
-                    @if ($todoCount === 0)
-                        <li class="flex items-center gap-4 px-5 py-5">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-emerald/10 text-emerald" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>
-                            </span>
-                            <div>
-                                <p class="font-medium">You’re all caught up</p>
-                                <p class="text-sm text-slate-muted">Surveys from your SK and events to rate show up here.</p>
-                            </div>
-                        </li>
-                    @endif
-                </ul>
-            </section>
-
-            {{-- The SK's latest posts --}}
+            {{-- The SK's latest post up front, the next two as headlines --}}
             <section aria-labelledby="news-heading">
                 <div class="mb-3 flex items-end justify-between gap-3">
-                    <h2 id="news-heading" class="font-display text-lg font-semibold">From SK {{ $barangay->name }}</h2>
-                    <a href="{{ route('announcements.index', ['barangay' => $barangay->id]) }}" class="text-sm font-semibold text-emerald hover:underline">All announcements</a>
+                    <h2 id="news-heading" class="{{ $sectionTitle }}">News from SK {{ $barangay->name }}</h2>
+                    <a href="{{ route('announcements.index', ['barangay' => $barangay->id]) }}" class="{{ $sectionLink }}">All announcements</a>
                 </div>
                 @if ($announcements->isEmpty())
-                    <p class="rounded-[12px] border border-dashed border-line bg-white p-6 text-sm text-slate-muted">Your SK hasn’t posted anything yet. Announcements show up here as soon as they do.</p>
+                    <p class="rounded-[14px] border border-dashed border-line bg-white px-5 py-6 text-sm text-slate-muted">Your SK hasn’t posted anything yet. Announcements show up here as soon as they do.</p>
                 @else
-                    @php($latest = $announcements->first())
-                    <article class="grid overflow-hidden rounded-[14px] border border-line bg-white sm:grid-cols-[14rem_minmax(0,1fr)]">
-                        <a href="{{ route('announcements.show', $latest) }}" class="block aspect-[4/3] bg-mist sm:aspect-auto sm:min-h-52">
-                            <x-announcement.cover :announcement="$latest" />
-                            <span class="sr-only">{{ $latest->title }}</span>
-                        </a>
-                        <div class="flex flex-col p-5">
-                            <p class="flex flex-wrap items-center gap-2 text-xs text-slate-muted">
-                                <span class="rounded-full bg-mist px-2 py-0.5 font-semibold text-navy">{{ $latest->category->label() }}</span>
-                                @if ($latest->isPinned())
-                                    <span class="rounded-full bg-gold/20 px-2 py-0.5 font-semibold text-navy">Pinned</span>
+                    @php
+                        $latest = $announcements->first();
+                        $when = $latest->happensAt();
+                    @endphp
+                    <div class="{{ $sheet }}">
+                        <article class="grid gap-5 px-5 py-4 sm:grid-cols-[14rem_minmax(0,1fr)] sm:p-5">
+                            <a href="{{ route('announcements.show', $latest) }}" class="hidden aspect-[4/3] overflow-hidden rounded-[10px] bg-mist sm:block" tabindex="-1">
+                                <x-announcement.cover :announcement="$latest" size="compact" />
+                                <span class="sr-only">{{ $latest->title }}</span>
+                            </a>
+                            <div class="min-w-0 sm:py-1">
+                                <p class="text-xs font-semibold text-emerald">{{ $latest->category->label() }}{{ $latest->isPinned() ? ', pinned by your SK' : '' }}</p>
+                                <h3 class="mt-1 font-display text-lg font-semibold leading-snug text-navy">
+                                    <a href="{{ route('announcements.show', $latest) }}" class="hover:text-emerald">{{ $latest->title }}</a>
+                                </h3>
+                                @if ($when)
+                                    <p class="mt-2 flex items-start gap-2 text-sm font-medium text-navy/80">
+                                        <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-emerald" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                        <span>{{ $when['start']->format($when['allDay'] ? 'l, F j' : 'l, F j, g:i A') }}{{ $latest->place() ? ', '.$latest->place() : '' }}</span>
+                                    </p>
                                 @endif
-                                <time datetime="{{ $latest->postedAt()->toIso8601String() }}">{{ $latest->postedAt()->diffForHumans() }}</time>
-                            </p>
-                            <h3 class="mt-2 font-display text-lg font-semibold leading-snug">
-                                <a href="{{ route('announcements.show', $latest) }}" class="hover:text-emerald">{{ $latest->title }}</a>
-                            </h3>
-                            <x-announcement.details :announcement="$latest" class="mt-3" />
-                            <p class="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy/75">{{ $latest->captionHtml(160, withoutDetails: true) }}</p>
-                            <a href="{{ route('announcements.show', $latest) }}" class="mt-auto pt-3 text-sm font-semibold text-emerald hover:underline">Read the full post</a>
-                        </div>
-                    </article>
-
-                    @if ($announcements->count() > 1)
-                        <ul class="mt-3 grid gap-3 sm:grid-cols-2">
-                            @foreach ($announcements->skip(1) as $announcement)
-                                <li>
-                                    <a href="{{ route('announcements.show', $announcement) }}" class="flex h-full items-center gap-3 rounded-[12px] border border-line bg-white p-2.5 hover:border-emerald/50">
-                                        <span class="block h-14 w-14 shrink-0 overflow-hidden rounded-[8px]">
-                                            <x-announcement.cover :announcement="$announcement" size="thumb" />
-                                        </span>
-                                        <span class="min-w-0">
-                                            <span class="line-clamp-2 text-sm font-semibold leading-snug">{{ $announcement->title }}</span>
-                                            <span class="block text-xs text-slate-muted">{{ $announcement->postedAt()->diffForHumans() }}</span>
-                                        </span>
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
+                                <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-navy/70">{{ $latest->captionHtml(170, withoutDetails: true) }}</p>
+                                <p class="mt-3 text-xs text-slate-muted">Posted {{ $latest->postedAt()->diffForHumans() }}</p>
+                            </div>
+                        </article>
+                        @if ($announcements->count() > 1)
+                            <ul class="divide-y divide-line border-t border-line">
+                                @foreach ($announcements->skip(1) as $announcement)
+                                    <li>
+                                        <a href="{{ route('announcements.show', $announcement) }}" class="flex items-center justify-between gap-4 px-5 py-3 hover:bg-mist/60">
+                                            <span class="min-w-0">
+                                                <span class="block text-xs font-semibold text-emerald">{{ $announcement->category->label() }}</span>
+                                                <span class="block truncate text-sm font-medium text-navy">{{ $announcement->title }}</span>
+                                            </span>
+                                            <span class="shrink-0 text-xs text-slate-muted">{{ $announcement->postedAt()->format('M j') }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
                 @endif
             </section>
 
-            {{-- Events they can still join --}}
-            <section aria-labelledby="open-heading">
+            {{-- Events they can still join, as an agenda --}}
+            <section aria-labelledby="join-heading">
                 <div class="mb-3 flex items-end justify-between gap-3">
-                    <h2 id="open-heading" class="font-display text-lg font-semibold">Join an event</h2>
-                    <a href="{{ route('events.index', ['barangay' => $barangay->id]) }}" class="text-sm font-semibold text-emerald hover:underline">All events</a>
+                    <h2 id="join-heading" class="{{ $sectionTitle }}">Events you can join</h2>
+                    <a href="{{ route('events.index', ['barangay' => $barangay->id]) }}" class="{{ $sectionLink }}">All events</a>
                 </div>
                 @if ($openEvents->isEmpty())
-                    <p class="rounded-[12px] border border-dashed border-line bg-white p-6 text-sm text-slate-muted">Nothing new to join right now. Your SK’s next events will show up here.</p>
+                    <p class="rounded-[14px] border border-dashed border-line bg-white px-5 py-6 text-sm text-slate-muted">Nothing new to join right now. Your SK’s next events show up here.</p>
                 @else
-                    <ul class="grid gap-3 sm:grid-cols-2">
+                    <ul class="{{ $sheet }} divide-y divide-line">
                         @foreach ($openEvents as $event)
-                            <li class="flex flex-col rounded-[14px] border border-line bg-white p-4">
-                                <a href="{{ route('events.show', $event) }}" class="group flex gap-3">
-                                    <x-event.date-block :event="$event" size="sm" />
-                                    <span class="min-w-0">
-                                        <span class="block text-xs font-semibold text-emerald">{{ $event->kind === EventKind::Consultation ? 'Youth consultation' : 'Event' }}, {{ $inDays($event->starts_at) }}</span>
-                                        <span class="line-clamp-2 block font-semibold leading-snug group-hover:text-emerald">{{ $event->title }}</span>
-                                        <span class="block truncate text-xs text-slate-muted">{{ $event->starts_at->format('g:i A') }}, {{ $event->venue }}</span>
-                                    </span>
-                                </a>
-                                <div class="mt-auto flex items-end gap-3 pt-4">
-                                    <x-event.capacity :event="$event" class="min-w-0 flex-1" />
+                            @php($isConsultation = $event->kind === EventKind::Consultation)
+                            <li class="flex flex-wrap items-center gap-x-5 gap-y-3 px-5 py-4">
+                                <time datetime="{{ $event->starts_at->toIso8601String() }}" class="w-11 shrink-0 text-center leading-none">
+                                    <span class="block text-[0.7rem] font-semibold text-slate-muted">{{ $event->starts_at->format('M') }}</span>
+                                    <span class="mt-1 block font-display text-2xl font-semibold text-navy">{{ $event->starts_at->format('j') }}</span>
+                                    <span class="mt-1 block text-[0.7rem] text-slate-muted">{{ $event->starts_at->format('D') }}</span>
+                                </time>
+                                <div class="min-w-0 flex-1 border-l border-line pl-5">
+                                    <p @class(['text-xs font-semibold', 'text-[#92400e]' => $isConsultation, 'text-emerald' => ! $isConsultation])>{{ $isConsultation ? 'Youth consultation' : 'Event' }}, {{ $inDays($event->starts_at) }}</p>
+                                    <a href="{{ route('events.show', $event) }}" class="mt-0.5 block font-medium leading-snug text-navy hover:text-emerald">{{ $event->title }}</a>
+                                    <p class="mt-0.5 truncate text-sm text-slate-muted">{{ $event->starts_at->format('g:i A') }}, {{ $event->venue }}</p>
+                                </div>
+                                <div class="flex w-full items-center justify-between gap-4 pl-16 sm:w-auto sm:justify-end sm:pl-0">
+                                    <span class="text-xs text-slate-muted">{{ $event->capacity === null ? 'Open to all' : ($event->isFull() ? 'No places left' : $event->spotsLeft().' places left') }}</span>
                                     @unless ($event->isFull())
                                         <form method="POST" action="{{ route('events.registration.store', $event) }}">
                                             @csrf
-                                            <button type="submit" class="rounded-[8px] bg-emerald px-3.5 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">Register<span class="sr-only"> for {{ $event->title }}</span></button>
+                                            <button type="submit" class="rounded-[8px] border border-emerald px-3.5 py-1.5 text-sm font-semibold text-emerald hover:bg-emerald hover:text-white">Register<span class="sr-only"> for {{ $event->title }}</span></button>
                                         </form>
                                     @endunless
                                 </div>
@@ -234,112 +230,130 @@
                 @endif
             </section>
 
-            {{-- Their own events: what's coming, and what they went to --}}
-            <section class="rounded-[14px] border border-line bg-white" aria-labelledby="mine-heading">
-                <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
-                    <h2 id="mine-heading" class="font-display text-lg font-semibold">My events</h2>
-                    <a href="{{ route('account.activity') }}" class="text-sm font-semibold text-emerald hover:underline">Full history</a>
-                </div>
-                <ul class="divide-y divide-line">
-                    @foreach ($myUpcoming as $registration)
-                        <li class="flex items-center gap-4 px-5 py-3.5">
-                            <x-event.date-block :event="$registration->event" size="sm" />
-                            <div class="min-w-0 flex-1">
-                                <a href="{{ route('events.show', $registration->event) }}" class="block truncate font-medium hover:text-emerald">{{ $registration->event->title }}</a>
-                                <p class="truncate text-xs text-slate-muted">{{ $registration->event->starts_at->format('g:i A') }}, {{ $registration->event->venue }}</p>
-                            </div>
-                            <span class="hidden rounded-full bg-emerald/10 px-2.5 py-0.5 text-xs font-semibold text-emerald sm:inline">Registered</span>
-                            <form method="POST" action="{{ route('events.registration.destroy', $registration->event) }}" onsubmit="return confirm('Cancel your registration? Your place goes to someone else.')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-xs font-semibold text-slate-muted hover:text-error">Cancel<span class="sr-only"> registration for {{ $registration->event->title }}</span></button>
-                            </form>
-                        </li>
-                    @endforeach
+            {{-- Their other registrations and what they went to --}}
+            @if ($laterEvents->isNotEmpty() || $pastAttended->isNotEmpty())
+                <section aria-labelledby="mine-heading">
+                    <div class="mb-3 flex items-end justify-between gap-3">
+                        <h2 id="mine-heading" class="{{ $sectionTitle }}">Your events</h2>
+                        <a href="{{ route('account.activity') }}" class="{{ $sectionLink }}">Full history</a>
+                    </div>
+                    <ul class="{{ $sheet }} divide-y divide-line">
+                        @foreach ($laterEvents as $registration)
+                            <li class="flex items-center gap-5 px-5 py-4">
+                                <time datetime="{{ $registration->event->starts_at->toIso8601String() }}" class="w-11 shrink-0 text-center leading-none">
+                                    <span class="block text-[0.7rem] font-semibold text-slate-muted">{{ $registration->event->starts_at->format('M') }}</span>
+                                    <span class="mt-1 block font-display text-2xl font-semibold text-navy">{{ $registration->event->starts_at->format('j') }}</span>
+                                </time>
+                                <div class="min-w-0 flex-1 border-l border-line pl-5">
+                                    <p class="text-xs font-semibold text-emerald">You’re registered</p>
+                                    <a href="{{ route('events.show', $registration->event) }}" class="block truncate font-medium text-navy hover:text-emerald">{{ $registration->event->title }}</a>
+                                </div>
+                                <form method="POST" action="{{ route('events.registration.destroy', $registration->event) }}" onsubmit="return confirm('Cancel your registration? Your place goes to someone else.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-sm font-medium text-slate-muted hover:text-[#b91c1c]">Cancel<span class="sr-only"> registration for {{ $registration->event->title }}</span></button>
+                                </form>
+                            </li>
+                        @endforeach
 
-                    @foreach ($pastAttended as $registration)
-                        <li class="flex items-center gap-4 px-5 py-3.5">
-                            <x-event.date-block :event="$registration->event" size="sm" class="opacity-60 grayscale" />
-                            <div class="min-w-0 flex-1">
-                                <a href="{{ route('events.show', $registration->event) }}" class="block truncate font-medium text-navy/80 hover:text-emerald">{{ $registration->event->title }}</a>
-                                <p class="text-xs text-slate-muted">Attended {{ $registration->event->starts_at->format('M j, Y') }}</p>
-                            </div>
-                            @if ($ratings->has($registration->event_id))
-                                <span class="text-sm font-semibold text-[#b45309]" title="Your rating">{{ str_repeat('★', (int) $ratings[$registration->event_id]) }}<span class="text-line">{{ str_repeat('★', 5 - (int) $ratings[$registration->event_id]) }}</span><span class="sr-only">You rated it {{ $ratings[$registration->event_id] }} out of 5</span></span>
-                            @else
-                                <span class="rounded-full bg-info/10 px-2.5 py-0.5 text-xs font-semibold text-info">Not rated yet</span>
-                            @endif
-                        </li>
-                    @endforeach
-
-                    @if ($myUpcoming->isEmpty() && $pastAttended->isEmpty())
-                        <li class="px-5 py-6 text-sm text-slate-muted">You haven’t registered for anything yet. Pick one under “Join an event”.</li>
-                    @endif
-                </ul>
-            </section>
+                        @foreach ($pastAttended as $registration)
+                            <li class="flex items-center gap-5 px-5 py-4">
+                                <time datetime="{{ $registration->event->starts_at->toIso8601String() }}" class="w-11 shrink-0 text-center leading-none text-slate-muted">
+                                    <span class="block text-[0.7rem] font-semibold">{{ $registration->event->starts_at->format('M') }}</span>
+                                    <span class="mt-1 block font-display text-2xl font-semibold">{{ $registration->event->starts_at->format('j') }}</span>
+                                </time>
+                                <div class="min-w-0 flex-1 border-l border-line pl-5">
+                                    <p class="text-xs font-semibold text-slate-muted">You attended</p>
+                                    <a href="{{ route('events.show', $registration->event) }}" class="block truncate font-medium text-navy/80 hover:text-emerald">{{ $registration->event->title }}</a>
+                                </div>
+                                @if ($ratings->has($registration->event_id))
+                                    <span class="shrink-0 text-sm tracking-wide text-gold" title="Your rating">{{ str_repeat('★', (int) $ratings[$registration->event_id]) }}<span class="text-line">{{ str_repeat('★', 5 - (int) $ratings[$registration->event_id]) }}</span><span class="sr-only">You rated it {{ $ratings[$registration->event_id] }} out of 5</span></span>
+                                @else
+                                    <a href="#todo" class="shrink-0 text-sm font-medium text-emerald hover:underline">Rate it</a>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
         </div>
 
-        <div class="min-w-0 space-y-6">
+        <aside class="min-w-0 space-y-10">
             {{-- Their SK: who leads it and how the SK fund is being used --}}
-            <section class="rounded-[14px] border border-line bg-white p-5" aria-labelledby="sk-heading">
+            <section aria-labelledby="sk-heading">
+                <h2 id="sk-heading" class="mb-3 {{ $sectionTitle }}">Your SK</h2>
+                <div class="rounded-[14px] border border-line bg-white p-5">
                 <div class="flex items-center gap-3">
-                    <img src="{{ $barangay->logoUrl() }}" alt="" class="h-12 w-12 rounded-full border border-line bg-white object-contain p-0.5">
+                    <img src="{{ $barangay->logoUrl() }}" alt="" class="h-11 w-11 rounded-full border border-line bg-white object-contain p-0.5">
                     <div class="min-w-0 leading-tight">
-                        <h2 id="sk-heading" class="font-display text-lg font-semibold">Your SK</h2>
-                        <p class="truncate text-sm text-slate-muted">Sangguniang Kabataan ng {{ $barangay->name }}</p>
+                        <p class="font-display text-[0.95rem] font-semibold text-navy">SK {{ $barangay->name }}</p>
+                        <p class="truncate text-xs text-slate-muted">Your barangay’s youth council</p>
                     </div>
                 </div>
                 @if ($chairperson)
-                    <p class="mt-4 text-sm"><span class="text-slate-muted">SK Chairperson:</span> <span class="font-medium">{{ $chairperson }}</span></p>
+                    <p class="mt-4 text-sm"><span class="text-slate-muted">SK Chairperson:</span> <span class="font-medium text-navy">{{ $chairperson }}</span></p>
                 @endif
 
-                <div class="mt-4 rounded-[12px] bg-mist p-4">
-                    <p class="text-sm font-semibold">Where the SK fund goes</p>
+                <div class="mt-4 border-t border-line pt-4">
+                    <p class="text-xs font-medium text-slate-muted">SK fund this year</p>
                     @if ($fund['projects'] > 0)
                         @php($usedPercent = $fund['budget'] > 0 ? (int) min(100, round($fund['spent'] / $fund['budget'] * 100)) : 0)
-                        <p class="mt-2 font-display text-2xl font-semibold tabular-nums">₱{{ number_format($fund['budget']) }}</p>
+                        <p class="mt-1 font-display text-2xl font-semibold tabular-nums text-navy">₱{{ number_format($fund['budget']) }}</p>
                         <p class="text-xs text-slate-muted">for {{ trans_choice(':count project|:count projects', $fund['projects']) }}, {{ $fund['completed'] }} done</p>
-                        <div class="mt-3 flex justify-between text-xs"><span class="text-slate-muted">Spent so far</span><span class="font-semibold tabular-nums">{{ $usedPercent }}%</span></div>
-                        <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white" aria-hidden="true"><div class="h-full rounded-full bg-navy" style="width: {{ $usedPercent }}%"></div></div>
-                        <a href="{{ route('transparency.show', $barangay) }}" class="mt-3 inline-block text-sm font-semibold text-emerald hover:underline">See every project</a>
+                        <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-mist" role="progressbar" aria-valuenow="{{ $usedPercent }}" aria-valuemin="0" aria-valuemax="100" aria-label="SK fund spent">
+                            <div class="h-full rounded-full bg-navy" style="width: {{ $usedPercent }}%"></div>
+                        </div>
+                        <p class="mt-1.5 text-xs text-slate-muted">{{ $usedPercent }}% spent so far</p>
+                        <a href="{{ route('transparency.show', $barangay) }}" class="mt-3 inline-block text-sm font-medium text-emerald hover:underline">See where it goes</a>
                     @else
-                        <p class="mt-1 text-sm text-slate-muted">Your SK hasn’t published its program yet. It shows here once the council approves it.</p>
+                        <p class="mt-1 text-sm text-slate-muted">Your SK hasn’t published this year’s program yet. It shows here once the council approves it.</p>
                     @endif
                 </div>
 
                 <x-barangay.facebook-link :barangay="$barangay" class="mt-4 flex w-full justify-center" />
+                </div>
             </section>
 
-            <section class="rounded-[14px] border border-line bg-white p-5" aria-labelledby="feedback-heading">
-                <h2 id="feedback-heading" class="font-display text-lg font-semibold">Tell your SK something</h2>
-                <p class="mt-1 text-sm text-slate-muted">Ideas, concerns or questions. Your SK officers read and reply here.</p>
-                <form method="POST" action="{{ route('feedback.store') }}" class="mt-3 space-y-3" novalidate>
-                    @csrf
-                    <label for="message" class="sr-only">Your message</label>
-                    <textarea id="message" name="message" rows="4" placeholder="e.g. Puwede po bang magkaroon ng study hub sa barangay hall?" class="block w-full rounded-[8px] border border-line px-3.5 py-2.5 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">{{ old('event_id') ? '' : old('message') }}</textarea>
-                    <x-form.submit busy="Sending…">Send to my SK</x-form.submit>
-                </form>
-            </section>
-
-            <section class="rounded-[14px] border border-line bg-white p-5" aria-labelledby="replies-heading">
-                <h2 id="replies-heading" class="font-display text-lg font-semibold">My messages</h2>
-                <ul class="mt-3 space-y-4 text-sm">
-                    @forelse ($myFeedback as $item)
-                        <li class="border-l-2 pl-3 {{ $item->isAnswered() ? 'border-emerald' : 'border-line' }}">
-                            <p class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-muted">
-                                <span>{{ $item->created_at->format('M j') }}{{ $item->event ? ', about '.$item->event->title : '' }}</span>
-                                <span @class(['rounded-full px-2 py-0.5 font-semibold', 'bg-emerald/10 text-emerald' => $item->isAnswered(), 'bg-mist text-slate-muted' => ! $item->isAnswered()])>{{ $item->isAnswered() ? 'Replied' : 'Waiting' }}</span>
+            {{-- One conversation with the SK: what they sent, the replies, and a box to write more --}}
+            <section aria-labelledby="messages-heading">
+                <div class="mb-3 flex items-end justify-between gap-3">
+                    <h2 id="messages-heading" class="{{ $sectionTitle }}">Messages</h2>
+                    <a href="{{ route('account.activity', ['type' => 'messages']) }}" class="{{ $sectionLink }}">All messages</a>
+                </div>
+                <div class="{{ $sheet }}">
+                <div class="space-y-4 bg-mist/50 px-4 py-4">
+                    @forelse ($thread as $item)
+                        <div class="flex flex-col items-end">
+                            <p class="max-w-[88%] rounded-[14px] rounded-br-[4px] bg-navy px-3.5 py-2.5 text-sm leading-relaxed text-white">{{ $item->message }}</p>
+                            <p class="mt-1 max-w-[88%] text-right text-[0.7rem] text-slate-muted">
+                                {{ $item->event ? 'About '.$item->event->title.', ' : '' }}{{ $item->created_at->format('M j') }}{{ $item->isAnswered() ? '' : ', waiting for a reply' }}
                             </p>
-                            <p class="mt-1">{{ $item->message }}</p>
-                            @if ($item->isAnswered())
-                                <p class="mt-2 rounded-[8px] bg-mist p-2.5"><span class="font-semibold">{{ $item->responder?->name ?? 'SK' }}:</span> {{ $item->response }}</p>
-                            @endif
-                        </li>
+                        </div>
+                        @if ($item->isAnswered())
+                            <div class="flex items-end gap-2">
+                                <img src="{{ $barangay->logoUrl() }}" alt="" class="h-6 w-6 shrink-0 rounded-full border border-line bg-white object-contain">
+                                <div class="max-w-[85%]">
+                                    <p class="rounded-[14px] rounded-bl-[4px] border border-line bg-white px-3.5 py-2.5 text-sm leading-relaxed text-navy">{{ $item->response }}</p>
+                                    <p class="mt-1 text-[0.7rem] text-slate-muted">{{ $item->responder?->name ?? 'SK '.$barangay->name }}, {{ $item->responded_at?->format('M j') }}</p>
+                                </div>
+                            </div>
+                        @endif
                     @empty
-                        <li class="text-slate-muted">No messages yet. Anything you send your SK shows up here with their reply.</li>
+                        <p class="text-sm leading-relaxed text-slate-muted">Have an idea, a concern or a question for SK {{ $barangay->name }}? Send it below. Their reply shows up right here.</p>
                     @endforelse
-                </ul>
+                </div>
+
+                <form method="POST" action="{{ route('feedback.store') }}" class="border-t border-line p-3" novalidate>
+                    @csrf
+                    <label for="message" class="sr-only">Message to SK {{ $barangay->name }}</label>
+                    <textarea id="message" name="message" rows="2" placeholder="Write to SK {{ $barangay->name }}…" class="block w-full resize-none rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">{{ old('event_id') ? '' : old('message') }}</textarea>
+                    <div class="mt-2 flex items-center justify-between gap-3">
+                        <p class="text-xs text-slate-muted">SK officers read and reply here.</p>
+                        <button type="submit" class="rounded-[8px] bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">Send</button>
+                    </div>
+                </form>
+                </div>
             </section>
-        </div>
+        </aside>
     </div>
 </x-layouts.app>

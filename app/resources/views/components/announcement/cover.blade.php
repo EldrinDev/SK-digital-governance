@@ -31,22 +31,24 @@
         <span class="max-w-full truncate px-0.5 text-[0.55rem] font-semibold leading-none">{{ $announcement->category->label() }}</span>
     </span>
 @else
-    <div {{ $attributes->class(['relative flex h-full w-full flex-col justify-between overflow-hidden', $tone['bg'], $tone['text'], 'p-7 sm:p-8' => $size === 'feature', 'p-5' => $size !== 'feature']) }} aria-hidden="true">
+    <div {{ $attributes->class(['relative flex h-full w-full flex-col justify-between overflow-hidden', $tone['bg'], $tone['text'], 'p-7 sm:p-8' => $size === 'feature', 'p-5' => $size === 'card', 'p-4' => $size === 'compact']) }} aria-hidden="true">
         <img src="{{ $announcement->barangay->logoUrl() }}" alt="" @class([
             'pointer-events-none absolute opacity-[0.14]',
             '-right-16 -top-12 h-80 w-80' => $size === 'feature',
-            '-right-10 -top-8 h-48 w-48' => $size !== 'feature',
+            '-right-10 -top-8 h-48 w-48' => $size === 'card',
+            '-right-8 -top-6 h-32 w-32' => $size === 'compact',
         ])>
-        <img src="{{ $announcement->barangay->logoUrl() }}" alt="" @class(['relative rounded-full bg-white object-contain p-0.5', 'h-11 w-11' => $size === 'feature', 'h-9 w-9' => $size !== 'feature'])>
+        <img src="{{ $announcement->barangay->logoUrl() }}" alt="" @class(['relative rounded-full bg-white object-contain p-0.5', 'h-11 w-11' => $size === 'feature', 'h-9 w-9' => $size === 'card', 'h-7 w-7' => $size === 'compact'])>
         <div class="relative">
-            <span @class(['block h-1.5 rounded-full', $tone['rule'], 'mb-4 w-14' => $size === 'feature', 'mb-3 w-10' => $size !== 'feature'])></span>
+            <span @class(['block h-1.5 rounded-full', $tone['rule'], 'mb-4 w-14' => $size === 'feature', 'mb-3 w-10' => $size === 'card', 'mb-2 w-8' => $size === 'compact'])></span>
             <p @class([
                 'font-display font-semibold leading-none tracking-tight',
                 'text-6xl sm:text-7xl' => $size === 'feature',
-                'text-4xl' => $size !== 'feature',
+                'text-4xl' => $size === 'card',
+                'text-2xl' => $size === 'compact',
             ])>{{ $announcement->category->label() }}</p>
             @if ($date)
-                <p @class(['mt-3 font-semibold', 'text-lg' => $size === 'feature', 'text-sm' => $size !== 'feature'])>{{ $date }}</p>
+                <p @class(['font-semibold', 'mt-3 text-lg' => $size === 'feature', 'mt-3 text-sm' => $size === 'card', 'mt-1.5 text-xs' => $size === 'compact'])>{{ $date }}</p>
             @endif
         </div>
     </div>

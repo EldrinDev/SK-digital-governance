@@ -33,7 +33,7 @@ class DashboardController extends Controller
             'nextUp' => $upcoming->first()?->event,
             'attendedCount' => $registrations->filter->attended()->count(),
             'myUpcoming' => $upcoming,
-            'pastAttended' => $registrations->filter->attended()->sortByDesc('event.starts_at')->take(4)->values(),
+            'pastAttended' => $registrations->filter->attended()->sortByDesc('event.starts_at')->take(3)->values(),
             'ratings' => $ratings,
             'toEvaluate' => $registrations->filter(fn ($registration) => $registration->attended() && ! $ratings->has($registration->event_id))
                 ->values(),
@@ -48,7 +48,9 @@ class DashboardController extends Controller
                 ->latest('opened_at')
                 ->get(),
             'announcements' => $barangay->announcements()->with('barangay:id,name,logo_path')->pinnedFirst()->limit(3)->get(),
-            'myFeedback' => $user->feedback()->with(['event:id,title', 'responder:id,name'])->latest()->limit(4)->get(),
+            // The latest exchanges with the SK, oldest first so they read like a conversation.
+            'thread' => $user->feedback()->with(['event:id,title', 'responder:id,name'])->latest()->limit(3)->get()->reverse()->values(),
+            'memberCode' => $user->memberCode(),
             'chairperson' => $barangay->users()
                 ->where('role', UserRole::Officer)
                 ->where('position', OfficerPosition::Chairperson)
