@@ -111,7 +111,7 @@
     @endphp
     <section class="mb-8 rounded-[14px] border border-line bg-white px-5 py-5 sm:px-6" aria-labelledby="lifecycle-heading">
         <h2 id="lifecycle-heading" class="sr-only">Plan progress</h2>
-        <ol class="grid gap-0 sm:grid-cols-4">
+        <ol class="grid gap-0 sm:grid-cols-4" aria-label="Plan life cycle">
             @foreach ($steps as $index => $step)
                 @php
                     $isCurrent = $index === $currentStep;
