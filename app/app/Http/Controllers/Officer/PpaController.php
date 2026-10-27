@@ -137,6 +137,6 @@ class PpaController extends Controller
 
         AuditLog::record('ppa.deleted', $request->user(), ['title' => $ppa->title], $abyip);
 
-        return redirect()->route('officer.abyips.show', $abyip)->with('status', "“{$ppa->title}” was removed.");
+        return redirect()->route('officer.abyips.show', $abyip)->toast("“{$ppa->title}” was removed.", 'warning');
     }
 }

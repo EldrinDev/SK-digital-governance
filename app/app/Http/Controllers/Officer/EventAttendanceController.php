@@ -46,6 +46,9 @@ class EventAttendanceController extends Controller
             'method' => $method?->label(),
         ], $event);
 
-        return back()->with('status', $attended ? "{$registration->user->name} checked in." : "Check-in undone for {$registration->user->name}.");
+        return back()->toast(
+            $attended ? "{$registration->user->name} checked in." : "Check-in undone for {$registration->user->name}.",
+            $attended ? 'success' : 'info',
+        );
     }
 }

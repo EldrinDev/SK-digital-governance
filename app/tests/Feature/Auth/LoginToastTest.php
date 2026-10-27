@@ -37,7 +37,26 @@ class LoginToastTest extends TestCase
             ->followingRedirects()
             ->post(route('logout'))
             ->assertOk()
-            ->assertSeeText('You are logged out.');
+            ->assertSeeInOrder(['data-toaster', 'data-kind="info"', 'You are logged out.', 'data-toast-template'], false);
+    }
+
+    public function test_logging_in_is_a_success_toast(): void
+    {
+        $user = User::factory()->create();
+
+        $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])
+            ->assertSessionHas('status', 'You are logged in.')
+            ->assertSessionMissing('status_kind');
+    }
+
+    public function test_a_failed_action_shows_an_error_toast(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->from(route('dashboard'))
+            ->followingRedirects()
+            ->post(route('feedback.store'), ['message' => ''])
+            ->assertOk()
+            ->assertSeeInOrder(['data-toaster', 'data-kind="error"', 'data-toast-template'], false);
     }
 
     public function test_action_confirmations_show_as_toasts_not_banners(): void

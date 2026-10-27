@@ -149,3 +149,23 @@ body {
         animation: none;
     }
 }
+
+/* The line at the bottom of a toast shrinks as its time runs out, and stops while it's paused. */
+@keyframes toast-timer {
+    to { transform: scaleX(0); }
+}
+
+.toast-timer {
+    animation: toast-timer var(--toast-duration, 5000ms) linear forwards;
+}
+
+.toast-paused .toast-timer {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast-timer {
+        animation: none;
+        opacity: 0;
+    }
+}

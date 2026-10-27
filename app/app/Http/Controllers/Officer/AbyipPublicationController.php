@@ -38,6 +38,6 @@ class AbyipPublicationController extends Controller
         AuditLog::record('abyip.unpublished', $request->user(), ['year' => $abyip->year], $abyip);
 
         return redirect()->route('officer.abyips.show', $abyip)
-            ->with('status', "ABYIP {$abyip->year} was taken off the public board.");
+            ->toast("ABYIP {$abyip->year} was taken off the public board.", 'info');
     }
 }

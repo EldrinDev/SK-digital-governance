@@ -64,7 +64,7 @@ class ProfileController extends Controller
         $changed = array_keys($user->getDirty());
 
         if ($changed === []) {
-            return back()->with('status', 'Nothing to change.');
+            return back()->toast('Nothing to change.', 'info');
         }
 
         $user->save();
@@ -105,6 +105,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home')->with('status', 'Your account and personal details were deleted.');
+        return redirect()->route('home')->toast('Your account and personal details were deleted.', 'warning');
     }
 }

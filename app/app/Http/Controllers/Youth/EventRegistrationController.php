@@ -75,6 +75,6 @@ class EventRegistrationController extends Controller
             AuditLog::record('event.unregistered', $request->user(), ['event' => $event->title], $event);
         }
 
-        return back()->with('status', 'Your registration was cancelled.');
+        return back()->toast('Your registration was cancelled.', 'warning');
     }
 }

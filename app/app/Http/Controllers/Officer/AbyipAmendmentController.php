@@ -34,7 +34,7 @@ class AbyipAmendmentController extends Controller
 
         AuditLog::record('abyip.amendment_opened', $request->user(), ['year' => $abyip->year, 'reason' => $amendment->reason], $abyip);
 
-        return redirect()->route('officer.abyips.show', $abyip)->with('status', 'Amendment started. You can now change the PPAs. Record the council’s resolution to lock them again.');
+        return redirect()->route('officer.abyips.show', $abyip)->toast('Amendment started. You can now change the PPAs. Record the council’s resolution to lock them again.', 'warning');
     }
 
     /**

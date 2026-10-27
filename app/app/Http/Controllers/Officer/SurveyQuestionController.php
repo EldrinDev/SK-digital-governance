@@ -58,6 +58,6 @@ class SurveyQuestionController extends Controller
 
         $question->delete();
 
-        return redirect()->route('officer.surveys.show', $survey)->with('status', 'Question removed.');
+        return redirect()->route('officer.surveys.show', $survey)->toast('Question removed.', 'warning');
     }
 }

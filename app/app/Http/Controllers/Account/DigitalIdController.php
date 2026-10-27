@@ -32,6 +32,6 @@ class DigitalIdController extends Controller
 
         AuditLog::record('account.id_renewed', $request->user());
 
-        return back()->with('status', 'Your digital ID was replaced. The old QR code no longer works.');
+        return back()->toast('Your digital ID was replaced. The old QR code no longer works.', 'warning');
     }
 }

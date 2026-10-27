@@ -78,7 +78,10 @@ class EvidenceController extends Controller
         AuditLog::record('evidence.visibility_changed', $request->user(), ['file' => $evidence->title, 'public' => $evidence->is_public ? 'yes' : 'no'], $ppa);
 
         return redirect()->route('officer.ppas.show', $ppa)
-            ->with('status', $evidence->is_public ? 'The file will show on the public portal once the ABYIP is published.' : 'The file is now internal only.');
+            ->toast(
+                $evidence->is_public ? 'The file will show on the public portal once the ABYIP is published.' : 'The file is now internal only.',
+                $evidence->is_public ? 'success' : 'info',
+            );
     }
 
     /**
@@ -93,6 +96,6 @@ class EvidenceController extends Controller
 
         AuditLog::record('evidence.deleted', $request->user(), ['file' => $evidence->title], $ppa);
 
-        return redirect()->route('officer.ppas.show', $ppa)->with('status', 'Evidence removed.');
+        return redirect()->route('officer.ppas.show', $ppa)->toast('Evidence removed.', 'warning');
     }
 }

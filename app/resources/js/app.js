@@ -129,7 +129,7 @@ document.addEventListener('click', async (event) => {
     try {
         await navigator.clipboard.writeText(url);
         label.textContent = 'Link copied';
-        window.toast?.('Link copied. Paste it anywhere to share.');
+        window.toast?.('Link copied. Paste it anywhere to share.', 'info');
     } catch (error) {
         window.prompt('Copy this link:', url);
 
@@ -184,18 +184,22 @@ document.addEventListener('click', (event) => {
     });
 });
 
-// Toasts: confirmations that slide in at the corner and leave on their own after a few
-// seconds. Hovering or focusing one keeps it open; the close button dismisses it.
-const TOAST_DURATION = 5000;
-
+// Toasts: messages that swipe in at the top right and leave on their own. Each kind
+// (success, info, warning, error) stays up for its own time; hovering or focusing a toast
+// pauses it, along with the line at its bottom that shows the time left.
 const dismissToast = (toast) => {
-    if (toast.dataset.leaving) {
+    if (!toast || toast.dataset.leaving) {
         return;
     }
 
     toast.dataset.leaving = 'true';
     clearTimeout(toast.toastTimer);
-    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    toast.addEventListener('animationend', (event) => {
+        // Only the toast's own exit, not the time-left line inside it.
+        if (event.target === toast) {
+            toast.remove();
+        }
+    });
     toast.classList.add('toast-leaving');
 
     // No animation (reduced motion): remove straight away.
@@ -204,17 +208,25 @@ const dismissToast = (toast) => {
     }
 };
 
-const scheduleToast = (toast) => {
+const runToast = (toast) => {
+    toast.toastStartedAt = Date.now();
+    toast.toastTimer = setTimeout(() => dismissToast(toast), toast.toastRemaining);
+    toast.classList.remove('toast-paused');
+};
+
+const pauseToast = (toast) => {
     clearTimeout(toast.toastTimer);
-    toast.toastTimer = setTimeout(() => dismissToast(toast), TOAST_DURATION);
+    toast.toastRemaining -= Date.now() - toast.toastStartedAt;
+    toast.classList.add('toast-paused');
 };
 
 const watchToast = (toast) => {
-    scheduleToast(toast);
-    toast.addEventListener('mouseenter', () => clearTimeout(toast.toastTimer));
-    toast.addEventListener('mouseleave', () => scheduleToast(toast));
-    toast.addEventListener('focusin', () => clearTimeout(toast.toastTimer));
-    toast.addEventListener('focusout', () => scheduleToast(toast));
+    toast.toastRemaining = Number(toast.dataset.duration) || 5000;
+    runToast(toast);
+    toast.addEventListener('mouseenter', () => pauseToast(toast));
+    toast.addEventListener('mouseleave', () => runToast(toast));
+    toast.addEventListener('focusin', () => pauseToast(toast));
+    toast.addEventListener('focusout', () => runToast(toast));
 };
 
 document.querySelectorAll('[data-toaster] [data-toast]').forEach(watchToast);
@@ -227,9 +239,9 @@ document.addEventListener('click', (event) => {
     }
 });
 
-window.toast = (message) => {
+window.toast = (message, kind = 'success') => {
     const toaster = document.querySelector('[data-toaster]');
-    const template = document.querySelector('[data-toast-template]');
+    const template = document.querySelector(`[data-toast-template="${kind}"]`) ?? document.querySelector('[data-toast-template="success"]');
 
     if (!toaster || !template) {
         return;

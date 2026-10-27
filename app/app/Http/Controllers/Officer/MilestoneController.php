@@ -39,6 +39,6 @@ class MilestoneController extends Controller
 
         AuditLog::record($completed ? 'milestone.completed' : 'milestone.reopened', $request->user(), ['milestone' => $milestone->title], $ppa);
 
-        return redirect()->route('officer.ppas.show', $ppa)->with('status', $completed ? 'Milestone marked done.' : 'Milestone reopened.');
+        return redirect()->route('officer.ppas.show', $ppa)->toast($completed ? 'Milestone marked done.' : 'Milestone reopened.', $completed ? 'success' : 'info');
     }
 }

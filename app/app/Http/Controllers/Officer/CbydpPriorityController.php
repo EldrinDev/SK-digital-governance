@@ -36,6 +36,6 @@ class CbydpPriorityController extends Controller
 
         AuditLog::record('cbydp.updated', $request->user(), ['removed_priority' => $priority->title], $cbydp);
 
-        return redirect()->route('officer.cbydps.show', $cbydp)->with('status', 'Priority removed.');
+        return redirect()->route('officer.cbydps.show', $cbydp)->toast('Priority removed.', 'warning');
     }
 }

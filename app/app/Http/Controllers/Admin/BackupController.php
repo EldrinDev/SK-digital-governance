@@ -68,7 +68,7 @@ class BackupController extends Controller
 
         AuditLog::record('backup.deleted', $request->user(), ['file' => $backup]);
 
-        return back()->with('status', "Backup {$backup} deleted.");
+        return back()->toast("Backup {$backup} deleted.", 'warning');
     }
 
     /**
@@ -97,6 +97,6 @@ class BackupController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('staff.login')->with('status', "Restored from {$backup}. A copy of the data before the restore was saved as {$safety}. Please log in again.");
+        return redirect()->route('staff.login')->toast("Restored from {$backup}. A copy of the data before the restore was saved as {$safety}. Please log in again.", 'warning');
     }
 }

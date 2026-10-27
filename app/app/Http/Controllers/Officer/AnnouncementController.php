@@ -78,7 +78,7 @@ class AnnouncementController extends Controller
             return redirect()->route('officer.announcements.index')->with('status', 'Announcement posted. Youth of your barangay were notified.');
         }
 
-        return redirect()->route('officer.announcements.index')->with('status', 'Announcement added with its original date. It’s older than three days, so youth weren’t notified.');
+        return redirect()->route('officer.announcements.index')->toast('Announcement added with its original date. It’s older than three days, so youth weren’t notified.', 'warning');
     }
 
     /**
@@ -131,7 +131,7 @@ class AnnouncementController extends Controller
         $this->deleteImage($announcement);
         $announcement->delete();
 
-        return redirect()->route('officer.announcements.index')->with('status', 'Announcement taken down.');
+        return redirect()->route('officer.announcements.index')->toast('Announcement taken down.', 'warning');
     }
 
     /**
