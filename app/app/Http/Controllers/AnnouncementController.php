@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\AnnouncementCategory;
 use App\CalendarFile;
 use App\Models\Announcement;
 use App\Models\Barangay;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -21,18 +23,35 @@ class AnnouncementController extends Controller
      */
     public function index(Request $request): View
     {
-        $barangayId = $request->integer('barangay') ?: null;
+        $filters = $request->validate([
+            'barangay' => ['nullable', 'integer'],
+            'category' => ['nullable', Rule::enum(AnnouncementCategory::class)],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+        $barangayId = (int) ($filters['barangay'] ?? 0) ?: null;
+        $category = AnnouncementCategory::tryFrom($filters['category'] ?? '');
+        $search = trim($filters['q'] ?? '');
+
+        $matching = Announcement::query()
+            ->visibleToPublic()
+            ->when($barangayId, fn ($query) => $query->where('barangay_id', $barangayId))
+            ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner
+                ->where('title', 'like', "%{$search}%")
+                ->orWhere('body', 'like', "%{$search}%")));
 
         return view('announcements.index', [
-            'announcements' => Announcement::query()
-                ->visibleToPublic()
-                ->when($barangayId, fn ($query) => $query->where('barangay_id', $barangayId))
+            'announcements' => (clone $matching)
+                ->when($category, fn ($query) => $query->where('category', $category))
                 ->with('barangay:id,name,logo_path')
                 ->pinnedFirst()
                 ->paginate(9)
                 ->withQueryString(),
+            'categoryCounts' => (clone $matching)->selectRaw('category, count(*) as total')->groupBy('category')->pluck('total', 'category'),
             'barangays' => Barangay::participating()->orderBy('name')->get(['id', 'name']),
             'selectedBarangay' => $barangayId,
+            'selectedCategory' => $category,
+            'search' => $search,
+            'categories' => AnnouncementCategory::cases(),
         ]);
     }
 

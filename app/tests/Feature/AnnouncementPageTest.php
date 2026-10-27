@@ -63,6 +63,40 @@ class AnnouncementPageTest extends TestCase
         $this->get(route('announcements.calendar', Announcement::factory()->for(Barangay::factory()->state(['is_participating' => true]))->create(['body' => 'No date.'])))->assertNotFound();
     }
 
+    public function test_list_filters_by_kind_and_search_with_counts(): void
+    {
+        $barangay = Barangay::factory()->create(['is_participating' => true]);
+        Announcement::factory()->for($barangay)->create(['title' => 'Coastal clean-up', 'category' => 'event']);
+        Announcement::factory()->for($barangay)->create(['title' => 'Liga registration', 'category' => 'event']);
+        Announcement::factory()->for($barangay)->create(['title' => 'Clean-up thank you', 'category' => 'recognition']);
+
+        $this->get(route('announcements.index', ['category' => 'event', 'q' => 'clean']))
+            ->assertOk()
+            ->assertSeeText('Coastal clean-up')
+            ->assertDontSeeText('Liga registration')
+            ->assertDontSeeText('Clean-up thank you')
+            ->assertSeeText('1 post')
+            ->assertSeeText('Clear filters')
+            ->assertViewHas('categoryCounts', fn ($counts) => $counts['event'] === 1 && $counts['recognition'] === 1);
+
+        $this->get(route('announcements.index', ['q' => 'nothing like this']))
+            ->assertSeeText('Nothing matches these filters');
+    }
+
+    public function test_long_lists_use_the_platform_page_links(): void
+    {
+        Announcement::factory()->count(12)->for(Barangay::factory()->state(['is_participating' => true]))->create();
+
+        $this->get(route('announcements.index'))
+            ->assertSee('aria-label="Pages"', false)
+            ->assertSeeText('Showing')
+            ->assertSee('rel="next"', false);
+
+        $this->get(route('announcements.index', ['page' => 2]))
+            ->assertSee('rel="prev"', false)
+            ->assertSee('aria-current="page"', false);
+    }
+
     public function test_youth_of_the_barangay_can_ask_about_the_post(): void
     {
         $post = $this->assemblyPost();
