@@ -92,6 +92,20 @@ class Ppa extends Model
     }
 
     /**
+     * Programs the public may see: not cancelled, in an ABYIP the SK published,
+     * of a barangay taking part in the platform.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function publiclyVisible(Builder $query): void
+    {
+        $query->where('status', '!=', PpaStatus::Cancelled)
+            ->whereHas('abyip', fn (Builder $abyip) => $abyip->published())
+            ->whereHas('barangay', fn (Builder $barangay) => $barangay->participating());
+    }
+
+    /**
      * Get the share of milestones completed, from 0 to 100.
      */
     public function progress(): int
@@ -135,6 +149,16 @@ class Ppa extends Model
     public function evidence(): HasMany
     {
         return $this->hasMany(Evidence::class)->latest();
+    }
+
+    /**
+     * Events held as part of this program.
+     *
+     * @return HasMany<Event, $this>
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
     }
 
     /**

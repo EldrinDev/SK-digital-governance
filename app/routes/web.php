@@ -14,6 +14,7 @@ use App\Http\Controllers\Federation;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Officer;
+use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\PublicEvidenceController;
 use App\Http\Controllers\ReportPrintController;
 use App\Http\Controllers\TransparencyController;
@@ -29,6 +30,8 @@ Route::get('/announcements', [AnnouncementController::class, 'index'])->name('an
 Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
 Route::get('/announcements/{announcement}/image', [AnnouncementController::class, 'image'])->name('announcements.image');
 Route::get('/announcements/{announcement}/calendar', [AnnouncementController::class, 'calendar'])->name('announcements.calendar');
+Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
+Route::get('/programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 Route::get('/events/{event}/calendar', [EventController::class, 'calendar'])->name('events.calendar');

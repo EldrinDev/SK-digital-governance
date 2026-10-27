@@ -41,6 +41,7 @@
                 </a>
                 <div class="flex items-center gap-5 text-sm font-medium">
                     <a href="{{ route('announcements.index') }}" @class(['hidden sm:inline', 'text-emerald' => request()->routeIs('announcements.*'), 'text-navy/80 hover:text-emerald' => ! request()->routeIs('announcements.*')])>News</a>
+                    <a href="{{ route('programs.index') }}" @class(['hidden sm:inline', 'text-emerald' => request()->routeIs('programs.*'), 'text-navy/80 hover:text-emerald' => ! request()->routeIs('programs.*')])>Programs</a>
                     <a href="{{ route('events.index') }}" @class(['hidden sm:inline', 'text-emerald' => request()->routeIs('events.*'), 'text-navy/80 hover:text-emerald' => ! request()->routeIs('events.*')])>Events</a>
                     <a href="{{ route('transparency.index') }}" @class(['hidden sm:inline', 'text-emerald' => request()->routeIs('transparency.*'), 'text-navy/80 hover:text-emerald' => ! request()->routeIs('transparency.*')])>Transparency</a>
                     @auth
