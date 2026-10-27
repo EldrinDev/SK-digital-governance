@@ -214,7 +214,7 @@
                                 <span class="sr-only">Schedule in {{ $abyip->year }}</span>
                                 <span class="grid grid-cols-12" aria-hidden="true">
                                     @foreach ($months as $month)
-                                        <span class="border-l border-line/70 pl-1 first:border-l-0">{{ $month->format('M')[0] }}</span>
+                                        <span class="border-l border-line/70 pl-1 first:border-l-0">{{ $month->format('M') }}</span>
                                     @endforeach
                                 </span>
                             </th>
@@ -310,9 +310,9 @@
                                 @endif
                                 <span @class(['absolute top-1/2 h-2.5 -translate-y-1/2 rounded-full', $tone['bar'], 'rounded-r-none' => $runsPastYear]) style="left: {{ $left }}%; width: {{ max(2.5, $right - $left) }}%"></span>
                             </div>
-                            <div class="mt-1 grid grid-cols-12 text-[0.6rem] text-slate-muted" aria-hidden="true">
+                            <div class="mt-1 grid grid-cols-12 text-[0.625rem] tracking-tight text-slate-muted" aria-hidden="true">
                                 @foreach ($months as $month)
-                                    <span class="text-center">{{ $month->format('M')[0] }}</span>
+                                    <span class="text-center">{{ $month->format('M') }}</span>
                                 @endforeach
                             </div>
 
