@@ -31,6 +31,7 @@ class EventAttendanceController extends Controller
         AuditLog::record('event.checked_in', $request->user(), [
             'event' => $event->title,
             'youth' => $registration->user->name,
+            'youth_id' => $registration->user_id,
             'attended' => $attended ? 'yes' : 'no',
         ], $event);
 

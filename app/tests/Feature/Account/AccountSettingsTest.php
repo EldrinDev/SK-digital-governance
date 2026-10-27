@@ -123,6 +123,20 @@ class AccountSettingsTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'youth_id.verified', 'subject_id' => $youth->id, 'properties' => null]);
     }
 
+    public function test_closing_an_account_cannot_rewrite_entries_about_someone_else_with_the_same_name(): void
+    {
+        $other = User::factory()->create(['name' => 'Same Name']);
+        $officer = User::factory()->officer()->create(['barangay_id' => $other->barangay_id]);
+        $event = Event::factory()->for($other->barangay)->create(['starts_at' => now()->addHour()]);
+        $registration = $event->registrations()->create(['user_id' => $other->id]);
+        $this->actingAs($officer)->patch(route('officer.events.registrations.update', [$event, $registration]), ['attended' => 1]);
+
+        $impostor = User::factory()->create(['name' => 'Same Name']);
+        $this->actingAs($impostor)->delete(route('account.destroy'), ['confirm_password' => 'password']);
+
+        $this->assertDatabaseHas('audit_logs', ['action' => 'event.checked_in', 'properties->youth' => 'Same Name']);
+    }
+
     public function test_staff_cannot_close_their_own_account_or_download_youth_data(): void
     {
         $officer = User::factory()->officer()->create();

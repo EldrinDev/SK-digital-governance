@@ -104,29 +104,19 @@ class AuditLog extends Model
     }
 
     /**
-     * Replace a closed account's name wherever older entries copied it (e.g. event check-ins),
-     * so the trail keeps what happened without keeping who it was.
+     * Drop a closed youth account's name from entries that copied it (event check-ins).
+     * Only entries tied to this exact account by its ID are touched, so nothing else in the
+     * trail can be rewritten, whatever name the account had.
      */
-    public static function forgetName(string $name, string $replacement = 'Deleted account'): int
+    public static function forgetYouth(User $youth, string $replacement = 'Deleted account'): int
     {
-        $encoded = trim(json_encode($name), '"');
         $forgotten = 0;
 
         self::query()
-            ->whereNotNull('properties')
-            ->where(fn ($query) => $query->where('properties', 'like', '%'.$name.'%')->orWhere('properties', 'like', '%'.$encoded.'%'))
-            ->each(function (self $entry) use ($name, $replacement, &$forgotten): void {
-                $properties = $entry->properties;
-                array_walk_recursive($properties, function (&$value) use ($name, $replacement): void {
-                    if ($value === $name) {
-                        $value = $replacement;
-                    }
-                });
-
-                if ($properties !== $entry->properties) {
-                    $entry->forceFill(['properties' => $properties])->save();
-                    $forgotten++;
-                }
+            ->where('properties->youth_id', $youth->id)
+            ->each(function (self $entry) use ($replacement, &$forgotten): void {
+                $entry->forceFill(['properties' => [...$entry->properties, 'youth' => $replacement]])->save();
+                $forgotten++;
             });
 
         return $forgotten;

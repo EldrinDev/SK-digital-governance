@@ -89,7 +89,7 @@ class ProfileController extends Controller
         ]);
 
         AuditLog::record('account.deleted', $user);
-        AuditLog::forgetName($user->name);
+        AuditLog::forgetYouth($user);
 
         $user->forceFill([
             'name' => 'Deleted account',
