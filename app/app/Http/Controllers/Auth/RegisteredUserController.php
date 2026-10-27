@@ -39,6 +39,6 @@ class RegisteredUserController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard')->with('status', 'Your account is ready. You are logged in.');
     }
 }

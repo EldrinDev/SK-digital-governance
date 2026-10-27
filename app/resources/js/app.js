@@ -129,6 +129,7 @@ document.addEventListener('click', async (event) => {
     try {
         await navigator.clipboard.writeText(url);
         label.textContent = 'Link copied';
+        window.toast?.('Link copied. Paste it anywhere to share.');
     } catch (error) {
         window.prompt('Copy this link:', url);
 
@@ -182,3 +183,63 @@ document.addEventListener('click', (event) => {
         item.hidden = category !== 'all' && item.dataset.category !== category;
     });
 });
+
+// Toasts: confirmations that slide in at the corner and leave on their own after a few
+// seconds. Hovering or focusing one keeps it open; the close button dismisses it.
+const TOAST_DURATION = 5000;
+
+const dismissToast = (toast) => {
+    if (toast.dataset.leaving) {
+        return;
+    }
+
+    toast.dataset.leaving = 'true';
+    clearTimeout(toast.toastTimer);
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    toast.classList.add('toast-leaving');
+
+    // No animation (reduced motion): remove straight away.
+    if (getComputedStyle(toast).animationName === 'none') {
+        toast.remove();
+    }
+};
+
+const scheduleToast = (toast) => {
+    clearTimeout(toast.toastTimer);
+    toast.toastTimer = setTimeout(() => dismissToast(toast), TOAST_DURATION);
+};
+
+const watchToast = (toast) => {
+    scheduleToast(toast);
+    toast.addEventListener('mouseenter', () => clearTimeout(toast.toastTimer));
+    toast.addEventListener('mouseleave', () => scheduleToast(toast));
+    toast.addEventListener('focusin', () => clearTimeout(toast.toastTimer));
+    toast.addEventListener('focusout', () => scheduleToast(toast));
+};
+
+document.querySelectorAll('[data-toaster] [data-toast]').forEach(watchToast);
+
+document.addEventListener('click', (event) => {
+    const close = event.target.closest('[data-toast-close]');
+
+    if (close) {
+        dismissToast(close.closest('[data-toast]'));
+    }
+});
+
+window.toast = (message) => {
+    const toaster = document.querySelector('[data-toaster]');
+    const template = document.querySelector('[data-toast-template]');
+
+    if (!toaster || !template) {
+        return;
+    }
+
+    const toast = template.content.firstElementChild.cloneNode(true);
+    toast.querySelector('[data-toast-message]').textContent = message;
+    toaster.append(toast);
+
+    // Keep at most three on screen.
+    [...toaster.querySelectorAll('[data-toast]:not([data-leaving])')].slice(0, -3).forEach(dismissToast);
+    watchToast(toast);
+};

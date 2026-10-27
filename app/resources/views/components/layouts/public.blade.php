@@ -66,6 +66,7 @@
                 </p>
             </div>
         </footer>
+        <x-ui.toaster />
     </body>
 </html>
 @endauth

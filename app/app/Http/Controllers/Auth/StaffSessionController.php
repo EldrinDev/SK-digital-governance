@@ -29,6 +29,6 @@ class StaffSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route($request->user()->role->homeRoute(), absolute: false));
+        return redirect()->intended(route($request->user()->role->homeRoute(), absolute: false))->with('status', 'You are logged in.');
     }
 }

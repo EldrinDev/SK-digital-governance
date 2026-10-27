@@ -125,3 +125,27 @@ body {
         radial-gradient(circle at calc(100% - var(--stub)) 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) top / 100% 51% no-repeat,
         radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) bottom / 100% 51% no-repeat;
 }
+
+/* Toasts slide up into the corner and fade away when they leave. */
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(0.75rem) scale(0.98); }
+}
+
+@keyframes toast-out {
+    to { opacity: 0; transform: translateY(0.5rem) scale(0.98); }
+}
+
+.toast {
+    animation: toast-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.toast.toast-leaving {
+    animation: toast-out 0.2s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast,
+    .toast.toast-leaving {
+        animation: none;
+    }
+}

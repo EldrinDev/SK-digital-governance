@@ -105,6 +105,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home');
+        return redirect()->route('home')->with('status', 'Your account and personal details were deleted.');
     }
 }
