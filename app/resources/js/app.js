@@ -123,6 +123,9 @@ document.addEventListener('click', async (event) => {
         return;
     }
 
+    const original = label.dataset.idle ?? label.textContent;
+    label.dataset.idle = original;
+
     try {
         await navigator.clipboard.writeText(url);
         label.textContent = 'Link copied';
@@ -133,7 +136,7 @@ document.addEventListener('click', async (event) => {
     }
 
     setTimeout(() => {
-        label.textContent = 'Share this post';
+        label.textContent = original;
     }, 2500);
 });
 

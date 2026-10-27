@@ -1,6 +1,5 @@
 @php
     use App\EventKind;
-    use App\QrCode;
 
     $hour = (int) now()->format('G');
     $greeting = $hour < 12 ? 'Magandang umaga' : ($hour < 18 ? 'Magandang hapon' : 'Magandang gabi');
@@ -45,26 +44,7 @@
             </div>
 
             @if ($nextUp)
-                <div class="drop-shadow-[0_18px_28px_rgba(13,31,56,0.28)]">
-                    <div class="ticket-notched flex min-w-0 rounded-[14px] bg-mist lg:bg-white">
-                        <a href="{{ route('events.show', $nextUp) }}" class="group min-w-0 flex-1 px-5 py-4">
-                            <span class="flex items-center justify-between gap-3 text-xs font-semibold">
-                                <span class="text-slate-muted">Your next event</span>
-                                <span class="text-emerald">{{ ucfirst($inDays($nextUp->starts_at)) }}</span>
-                            </span>
-                            <span class="mt-2 line-clamp-2 block font-display text-[1.05rem] font-semibold leading-snug text-navy group-hover:text-emerald">{{ $nextUp->title }}</span>
-                            <span class="mt-2 block text-sm font-medium text-navy/80">{{ $nextUp->starts_at->format('D, M j') }} at {{ $nextUp->starts_at->format('g:i A') }}</span>
-                            <span class="block truncate text-sm text-slate-muted">{{ $nextUp->venue }}</span>
-                        </a>
-                        <div class="flex w-[7.5rem] shrink-0 flex-col items-center justify-center gap-1.5 border-l-2 border-dashed border-line px-3 py-4">
-                            <a href="{{ route('account.id') }}" class="block w-[4.6rem] rounded-[6px] bg-white p-1 [&_svg]:h-auto [&_svg]:w-full" title="Open my digital ID">
-                                {{ QrCode::svg(route('youth-id.verify', $memberCode), 160) }}
-                                <span class="sr-only">Open my digital ID to show at check-in</span>
-                            </a>
-                            <span class="text-center text-[0.65rem] font-medium leading-tight text-slate-muted">Show at check-in</span>
-                        </div>
-                    </div>
-                </div>
+                <x-event.pass :event="$nextUp" :member-code="$memberCode" surface="bg-mist lg:bg-white" />
             @else
                 <div class="rounded-[14px] border border-dashed border-line bg-white/95 px-5 py-4 lg:border-white/40">
                     <p class="font-display font-semibold text-navy">No events lined up yet</p>

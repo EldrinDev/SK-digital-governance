@@ -6,9 +6,12 @@ use App\CalendarFile;
 use App\EventKind;
 use App\Models\Barangay;
 use App\Models\Event;
+use App\Models\Ppa;
 use App\UserRole;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -18,39 +21,74 @@ use Illuminate\View\View;
 class EventController extends Controller
 {
     /**
-     * List upcoming events as an agenda, optionally for one barangay or one kind.
+     * List upcoming events as an agenda with a month calendar. Youth start on their own
+     * barangay's events ("For you") and can switch to every barangay; anyone can narrow
+     * the list by kind, barangay or a day picked on the calendar.
      */
     public function index(Request $request): View
     {
         $filters = $request->validate([
+            'scope' => ['nullable', Rule::in(['mine', 'all'])],
             'barangay' => ['nullable', 'integer'],
             'kind' => ['nullable', Rule::enum(EventKind::class)],
+            'date' => ['nullable', 'date_format:Y-m-d'],
+            'month' => ['nullable', 'date_format:Y-m'],
         ]);
-        $barangayId = (int) ($filters['barangay'] ?? 0) ?: null;
-        $kind = EventKind::tryFrom($filters['kind'] ?? '');
         $user = $request->user();
+        $youth = $user?->hasRole(UserRole::Youth) ? $user : null;
+        $scope = $youth ? ($filters['scope'] ?? 'mine') : 'all';
+        $barangayId = $scope === 'mine' ? $youth->barangay_id : ((int) ($filters['barangay'] ?? 0) ?: null);
+        $kind = EventKind::tryFrom($filters['kind'] ?? '');
+        $date = isset($filters['date']) ? Carbon::parse($filters['date'])->startOfDay() : null;
+        $thisMonth = today()->startOfMonth();
+        $month = $date?->copy()->startOfMonth()
+            ?? (isset($filters['month']) ? Carbon::parse($filters['month'].'-01')->startOfMonth() : $thisMonth);
+        $month = $month->lessThan($thisMonth) ? $thisMonth : $month;
 
-        $events = Event::query()
+        $matching = Event::query()
             ->upcoming()
             ->whereHas('barangay', fn ($query) => $query->participating())
             ->when($barangayId, fn ($query) => $query->where('barangay_id', $barangayId))
-            ->when($kind, fn ($query) => $query->where('kind', $kind))
+            ->when($kind, fn ($query) => $query->where('kind', $kind));
+
+        $events = (clone $matching)
+            ->when($date, fn ($query) => $query->whereDate('starts_at', $date))
             ->with('barangay:id,name,logo_path')
             ->withCount('registrations')
             ->orderBy('starts_at')
             ->paginate(20)
             ->withQueryString();
 
+        // Which days of the shown month have events, and whether any of them is a consultation.
+        $eventDays = (clone $matching)
+            ->whereBetween('starts_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+            ->get(['starts_at', 'kind'])
+            ->groupBy(fn (Event $event): string => $event->starts_at->format('Y-m-d'))
+            ->map(fn ($day): array => ['count' => $day->count(), 'consultation' => $day->contains('kind', EventKind::Consultation)]);
+
         return view('events.index', [
             'events' => $events,
             'months' => $events->getCollection()->groupBy(fn (Event $event): string => $event->starts_at->format('F Y')),
             'barangays' => Barangay::participating()->orderBy('name')->get(['id', 'name']),
-            'selectedBarangay' => $barangayId,
+            'youth' => $youth,
+            'scope' => $scope,
+            'selectedBarangay' => $scope === 'all' ? $barangayId : null,
             'selectedKind' => $kind,
+            'selectedDate' => $date,
             'kinds' => EventKind::cases(),
-            'registeredEventIds' => $user?->hasRole(UserRole::Youth)
-                ? $user->eventRegistrations()->whereIn('event_id', $events->pluck('id'))->pluck('event_id')->all()
+            'calendar' => [
+                'month' => $month,
+                'weeks' => collect(CarbonPeriod::create($month->copy()->startOfWeek(Carbon::SUNDAY), $month->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY)))->chunk(7),
+                'days' => $eventDays,
+                'previous' => $month->greaterThan($thisMonth) ? $month->copy()->subMonth()->format('Y-m') : null,
+                'next' => $month->copy()->addMonth()->format('Y-m'),
+            ],
+            'registeredEventIds' => $youth
+                ? $youth->eventRegistrations()->whereIn('event_id', $events->pluck('id'))->pluck('event_id')->all()
                 : [],
+            'myRegistrations' => $youth
+                ? $youth->eventRegistrations()->whereHas('event', fn ($event) => $event->upcoming())->with('event')->get()->sortBy('event.starts_at')->take(4)->values()
+                : collect(),
         ]);
     }
 
@@ -64,9 +102,14 @@ class EventController extends Controller
         $event->loadCount('registrations');
         $user = $request->user();
 
+        $registration = $user ? $event->registrations()->with('checkedInBy:id,name')->where('user_id', $user->id)->first() : null;
+
         return view('events.show', [
             'event' => $event,
-            'registration' => $user ? $event->registrations()->where('user_id', $user->id)->first() : null,
+            'registration' => $registration,
+            'memberCode' => $registration ? $user->memberCode() : null,
+            // The program this event belongs to, when the public can see that program.
+            'program' => $event->ppa_id ? Ppa::query()->publiclyVisible()->with('priority:id,center')->find($event->ppa_id) : null,
             'moreEvents' => $event->barangay->events()->upcoming()->whereKeyNot($event->id)->orderBy('starts_at')->limit(3)->get(),
         ]);
     }
