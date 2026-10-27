@@ -43,8 +43,8 @@ php artisan key:generate
 # 4. Create the database file
 touch database/database.sqlite   # Windows PowerShell: New-Item database/database.sqlite
 
-# 5. Create the tables and fill them with demo data
-php artisan migrate:fresh --seeder=DemoDataSeeder
+# 5. Create the tables and fill them with the barangays and demo data
+php artisan migrate:fresh --seed
 
 # 6. Build the CSS and JavaScript
 npm run build
@@ -103,10 +103,16 @@ Youth log in at `/login`. Staff log in at `/sk-access` and pick their workspace 
 To start over with fresh demo data (this **erases everything** in your local database):
 
 ```bash
-php artisan migrate:fresh --seeder=DemoDataSeeder
+php artisan migrate:fresh --seed
 ```
 
-The demo seeder refuses to run in production.
+What `--seed` does depends on the database, so it is safe on any branch:
+
+- **Empty database:** adds the 17 barangays and all the demo data.
+- **Database that already has accounts:** only adds any missing barangays. Your data is left alone.
+- **Production:** only adds the barangays, never demo accounts. Create the first admin with `php artisan app:create-administrator`.
+
+> **The SK access dropdown is empty or shows odd barangays?** The database was reset without the demo data. Run `php artisan migrate:fresh --seed`.
 
 ---
 
@@ -191,7 +197,8 @@ Run the tests and Pint before you push.
 | `Unable to locate file in Vite manifest` | Run `npm run build`, or keep `npm run dev` running |
 | `could not find driver` | Turn on the `pdo_sqlite` and `sqlite3` PHP extensions |
 | `Database file at path [...] does not exist` | Create it: `touch database/database.sqlite` |
-| `The database already has plans` when seeding | Use `migrate:fresh`, not `db:seed`: `php artisan migrate:fresh --seeder=DemoDataSeeder` |
+| `The database already has plans` when seeding | Use `migrate:fresh`, not `db:seed`: `php artisan migrate:fresh --seed` |
+| SK access dropdown has no barangays | Run `php artisan migrate:fresh --seed` |
 | Composer says your PHP version is too low | Your terminal is using an older PHP. Check `php -v` and see section 1 |
 | Excel or Word export fails | Turn on the `zip`, `xml` and `gd` PHP extensions |
 | `No application encryption key` | Run `php artisan key:generate` |
@@ -205,5 +212,5 @@ Run the tests and Pint before you push.
 
 - Pull before you start: `git pull`
 - After pulling, if `composer.json` or `package.json` changed: `composer install` and `npm install`
-- If new migrations came in: `php artisan migrate` (or `migrate:fresh --seeder=DemoDataSeeder` to reset the demo)
+- If new migrations came in: `php artisan migrate` (or `php artisan migrate:fresh --seed` to reset the demo)
 - Work on a branch and open a pull request into `main`

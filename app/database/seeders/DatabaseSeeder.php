@@ -12,14 +12,26 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * The 17 barangays are always made sure of, so the SK access login always has its
+     * workspaces. Outside production, an empty database also gets the demo data, so
+     * `php artisan migrate:fresh --seed` gives every branch the same working setup.
+     * A database that already has accounts is never touched beyond the barangays.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(BarangaySeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        if (app()->isProduction()) {
+            return;
+        }
+
+        if (User::query()->exists()) {
+            $this->command?->warn('Skipped the demo data because the database already has accounts. To start over: php artisan migrate:fresh --seed');
+
+            return;
+        }
+
+        $this->call(DemoDataSeeder::class);
     }
 }
