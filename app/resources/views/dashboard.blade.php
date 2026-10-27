@@ -15,46 +15,93 @@
         </div>
     @endif
 
-    {{-- Greeting, their numbers, and the one thing coming up next --}}
-    <section class="mb-6 overflow-hidden rounded-[16px] bg-navy text-white" aria-labelledby="hello-heading">
-        <div class="relative grid grid-cols-1 gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-center">
-            <img src="{{ $barangay->logoUrl() }}" alt="" class="pointer-events-none absolute -right-14 -top-14 h-64 w-64 opacity-[0.08]">
-            <div class="relative">
-                <p class="text-sm text-white/70">{{ $greeting }}, ka-SK {{ $barangay->name }}!</p>
-                <h1 id="hello-heading" class="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Hi, {{ str(auth()->user()->name)->before(' ') }}</h1>
-                <dl class="mt-6 flex flex-wrap gap-x-8 gap-y-3">
-                    <div>
-                        <dt class="text-xs text-white/60">Events attended</dt>
-                        <dd class="font-display text-2xl font-semibold tabular-nums">{{ $attendedCount }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs text-white/60">Coming up for you</dt>
-                        <dd class="font-display text-2xl font-semibold tabular-nums">{{ $myUpcoming->count() }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs text-white/60">To do</dt>
-                        <dd @class(['font-display text-2xl font-semibold tabular-nums', 'text-gold' => $todoCount > 0])>{{ $todoCount }}</dd>
-                    </div>
+    {{-- Greeting, their numbers, and the one thing coming up next: the landing page's hero, made personal --}}
+    <section class="relative mb-6 overflow-hidden rounded-[20px] border border-line bg-white" aria-labelledby="hello-heading">
+        <figure class="absolute inset-y-0 right-0 hidden w-[60%] lg:block" aria-hidden="true">
+            <img src="{{ asset('images/ulo-ng-apo.jpg') }}" alt="" class="h-full w-full object-cover object-[50%_30%] brightness-[0.55] saturate-[0.75] [mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.35)_30%,#000_62%)]">
+        </figure>
+
+        <div class="relative z-10 grid gap-8 px-6 pb-16 pt-8 sm:px-8 sm:pb-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,21rem)] lg:items-center lg:px-10 lg:pb-24 lg:pt-10">
+            <div class="max-w-xl">
+                <p class="text-xs font-semibold tracking-[0.2em] text-navy/70">{{ str($greeting)->upper() }}, KA-SK {{ str($barangay->name)->upper() }}</p>
+                <h1 id="hello-heading" class="mt-3 font-display text-[2.1rem] font-bold leading-[1.1] tracking-tight sm:text-[2.6rem]">
+                    <span class="block text-navy">Hi, {{ str(auth()->user()->name)->before(' ') }}.</span>
+                    <span class="block text-emerald">{{ $todoCount > 0 ? 'Your SK is waiting on you.' : 'Ready for what’s next?' }}</span>
+                </h1>
+                <p class="mt-4 max-w-md leading-relaxed text-navy/70">
+                    @if ($todoCount > 0)
+                        You have {{ trans_choice('{1}1 thing|[2,*]:count things', $todoCount) }} to do below: a quick survey or a rating helps your SK plan better programs.
+                    @else
+                        Join a program, keep track of your events, and see where the SK fund goes, all in one place.
+                    @endif
+                </p>
+
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <a href="{{ route('events.index', ['barangay' => $barangay->id]) }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald/30 hover:bg-emerald-dark">
+                        Find an event
+                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                    <a href="{{ route('account.id') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-navy/80 bg-white px-5 py-2.5 text-sm font-semibold text-navy hover:bg-navy hover:text-white">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
+                        My digital ID
+                    </a>
+                </div>
+
+                <dl class="mt-8 grid max-w-md grid-cols-3 gap-4">
+                    @foreach ([
+                        ['Attended', $attendedCount, '<path d="m5 12 5 5 9-10"/>', false],
+                        ['Coming up', $myUpcoming->count(), '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', false],
+                        ['To do', $todoCount, '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/>', $todoCount > 0],
+                    ] as [$label, $value, $icon, $needsAttention])
+                        <div class="flex items-center gap-3">
+                            <span @class(['flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px]', 'bg-gold/25 text-[#92400e]' => $needsAttention, 'bg-emerald/10 text-emerald' => ! $needsAttention]) aria-hidden="true">
+                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">{!! $icon !!}</svg>
+                            </span>
+                            <div class="leading-tight">
+                                <dd class="font-display text-xl font-semibold tabular-nums text-navy">{{ $value }}</dd>
+                                <dt class="text-xs text-slate-muted">{{ $label }}</dt>
+                            </div>
+                        </div>
+                    @endforeach
                 </dl>
             </div>
 
+            {{-- The next event, set over the photo like the landing page's caption --}}
             @if ($nextUp)
-                <a href="{{ route('events.show', $nextUp) }}" class="relative flex min-w-0 items-center gap-4 rounded-[14px] bg-white p-4 text-navy transition-transform hover:-translate-y-0.5">
-                    <x-event.date-block :event="$nextUp" />
-                    <span class="min-w-0">
-                        <span class="text-xs font-semibold text-emerald">Your next event, {{ $inDays($nextUp->starts_at) }}</span>
-                        <span class="mt-0.5 line-clamp-2 block font-display font-semibold leading-snug">{{ $nextUp->title }}</span>
-                        <span class="mt-0.5 block truncate text-sm text-slate-muted">{{ $nextUp->starts_at->format('g:i A') }}, {{ $nextUp->venue }}</span>
+                <a href="{{ route('events.show', $nextUp) }}" class="group flex min-w-0 flex-col gap-4 rounded-[16px] border border-white/60 bg-white/95 p-5 shadow-xl shadow-navy/20 backdrop-blur transition-transform hover:-translate-y-0.5">
+                    <span class="flex items-center justify-between gap-3 text-xs font-semibold">
+                        <span class="text-emerald">Your next event</span>
+                        <span class="rounded-full bg-emerald/10 px-2.5 py-0.5 text-emerald">{{ ucfirst($inDays($nextUp->starts_at)) }}</span>
+                    </span>
+                    <span class="flex items-center gap-4">
+                        <x-event.date-block :event="$nextUp" />
+                        <span class="min-w-0">
+                            <span class="line-clamp-2 block font-display text-lg font-semibold leading-snug text-navy group-hover:text-emerald">{{ $nextUp->title }}</span>
+                            <span class="mt-1 block truncate text-sm text-slate-muted">{{ $nextUp->starts_at->format('g:i A') }}, {{ $nextUp->venue }}</span>
+                        </span>
+                    </span>
+                    <span class="flex items-center justify-between border-t border-line pt-3 text-sm">
+                        <span class="text-slate-muted">Show your ID at the table to check in</span>
+                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </span>
                 </a>
             @else
-                <div class="relative rounded-[14px] bg-white/10 p-5">
-                    <p class="font-semibold">No events lined up yet</p>
-                    <p class="mt-1 text-sm text-white/75">See what your SK has planned and save your spot.</p>
-                    <a href="{{ route('events.index', ['barangay' => $barangay->id]) }}" class="mt-4 inline-flex rounded-[8px] bg-gold px-4 py-2 text-sm font-semibold text-navy hover:bg-white">Browse events</a>
+                <div class="rounded-[16px] border border-white/60 bg-white/95 p-5 shadow-xl shadow-navy/20 backdrop-blur">
+                    <p class="font-display text-lg font-semibold text-navy">No events lined up yet</p>
+                    <p class="mt-1 text-sm text-slate-muted">See what your SK has planned and save your spot.</p>
+                    <a href="{{ route('events.index', ['barangay' => $barangay->id]) }}" class="mt-4 inline-flex rounded-[8px] bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">Browse events</a>
                 </div>
             @endif
         </div>
+
+        <p class="absolute bottom-14 right-5 z-10 hidden text-[0.7rem] text-white/80 lg:block">Ulo ng Apo, Olongapo City</p>
+
+        {{-- The same flag-colored ribbon that closes the landing page's hero --}}
+        <svg viewBox="0 0 1440 140" preserveAspectRatio="none" class="absolute inset-x-0 -bottom-px z-20 h-10 w-full sm:h-14 lg:h-16" aria-hidden="true">
+            <path d="M0 140V96C420 150 860 132 1140 86c120-20 220-50 300-84v138Z" fill="#E5B64B"/>
+            <path d="M0 140v-34c430 50 870 34 1150-6 120-17 215-42 290-72v112Z" fill="#16845B"/>
+            <path d="M0 140v-26c440 44 880 30 1160 0 120-13 210-32 280-54v80Z" fill="#F5F7FA"/>
+        </svg>
     </section>
 
     <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
