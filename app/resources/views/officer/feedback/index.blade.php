@@ -3,7 +3,7 @@
     $initials = fn (string $name): string => collect(explode(' ', $name))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('');
 @endphp
 <x-layouts.app title="Feedback" heading="Feedback from youth" :description="$unansweredCount > 0 ? trans_choice(':count message is waiting for a reply. Youth get your reply by email and on their dashboard.|:count messages are waiting for a reply. Youth get your reply by email and on their dashboard.', $unansweredCount) : 'Everything has a reply. Youth see your replies by email and on their dashboard.'">
-    <div class="max-w-4xl">
+    <div>
         <nav class="mb-5 inline-flex flex-wrap rounded-[10px] border border-line bg-white p-1" aria-label="Filter feedback">
             @foreach ($tabs as $value => $label)
                 @php
@@ -33,7 +33,7 @@
         @else
             <ul class="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-white">
                 @foreach ($feedback as $item)
-                    <li class="px-5 py-5">
+                    <li class="px-5 py-4">
                         <article class="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-4" aria-labelledby="feedback-{{ $item->id }}">
                             <span class="relative flex h-10 w-10 items-center justify-center rounded-full bg-navy/5 text-sm font-semibold text-navy" aria-hidden="true">
                                 {{ $initials($item->author->name) }}
@@ -59,17 +59,17 @@
                                     @endunless
                                 </p>
 
-                                <p class="mt-2 whitespace-pre-line leading-relaxed text-navy/90">{{ $item->message }}</p>
+                                <p class="mt-1.5 max-w-[75ch] whitespace-pre-line leading-relaxed text-navy/90">{{ $item->message }}</p>
 
                                 @if ($item->isAnswered())
-                                    <div class="mt-4 border-l-2 border-emerald/40 pl-4">
+                                    <div class="mt-3 max-w-[75ch] border-l-2 border-emerald/40 pl-4">
                                         <p class="text-xs font-semibold text-emerald">Your SK replied</p>
                                         <p class="mt-1 whitespace-pre-line text-sm leading-relaxed text-navy/85">{{ $item->response }}</p>
                                         <p class="mt-1 text-xs text-slate-muted">{{ $item->responder?->name ?? 'An officer' }}, {{ $item->responded_at->format('M j, Y') }}</p>
                                     </div>
                                 @else
-                                    <details class="group mt-3" @if ($errors->has('response') && old('feedback_id') == $item->id) open @endif>
-                                        <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-[8px] bg-emerald px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-emerald-dark group-open:hidden [&::-webkit-details-marker]:hidden">
+                                    <details class="group mt-2.5" @if ($errors->has('response') && old('feedback_id') == $item->id) open @endif>
+                                        <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-[8px] bg-emerald px-3 py-1 text-sm font-semibold text-white hover:bg-emerald-dark group-open:hidden [&::-webkit-details-marker]:hidden">
                                             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v6"/></svg>
                                             Reply<span class="sr-only"> to {{ $item->author->name }}</span>
                                         </summary>

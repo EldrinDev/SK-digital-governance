@@ -6,7 +6,7 @@
         </a>
     </x-slot:actions>
 
-    <div class="max-w-5xl">
+    <div>
         <div class="mb-3 flex items-end justify-between gap-3">
             <h2 class="font-display text-base font-semibold text-navy">{{ trans_choice('{0}No posts yet|{1}1 post|[2,*]:count posts', $announcements->total()) }}</h2>
             <p class="text-xs text-slate-muted">Pinned posts stay on top of your public page.</p>

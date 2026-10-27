@@ -216,7 +216,7 @@
                     @endif
 
                     @if ($heading)
-                        <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+                        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
                             <div>
                                 <h1 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{{ $heading }}</h1>
                                 @if ($description)

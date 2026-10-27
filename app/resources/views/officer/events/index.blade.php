@@ -20,7 +20,7 @@
         </a>
     </x-slot:actions>
 
-    <dl class="mb-10 grid grid-cols-2 gap-y-5 border-y border-line py-5 sm:grid-cols-4">
+    <dl class="mb-8 grid grid-cols-2 gap-y-5 border-y border-line py-5 sm:grid-cols-4">
         @foreach ($summary as $figure)
             <div @class(['px-1 sm:px-5', 'sm:border-l sm:border-line' => ! $loop->first])>
                 <dt class="sr-only">{{ $figure['label'] }}</dt>
