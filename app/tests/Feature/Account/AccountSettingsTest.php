@@ -106,6 +106,23 @@ class AccountSettingsTest extends TestCase
         $this->assertFalse($youth->isActive());
     }
 
+    public function test_closing_an_account_also_erases_the_name_from_older_audit_entries(): void
+    {
+        $youth = User::factory()->create(['name' => 'Leaving Youth']);
+        $officer = User::factory()->officer()->create(['barangay_id' => $youth->barangay_id]);
+        $event = Event::factory()->for($youth->barangay)->create(['starts_at' => now()->addHour()]);
+        $registration = $event->registrations()->create(['user_id' => $youth->id]);
+        $this->actingAs($officer)->patch(route('officer.events.registrations.update', [$event, $registration]), ['attended' => 1]);
+        $this->actingAs($officer)->get(route('youth-id.verify', $youth->memberCode()));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'event.checked_in', 'properties->youth' => 'Leaving Youth']);
+
+        $this->actingAs($youth)->delete(route('account.destroy'), ['confirm_password' => 'password']);
+
+        $this->assertDatabaseMissing('audit_logs', ['properties->youth' => 'Leaving Youth']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'event.checked_in', 'properties->youth' => 'Deleted account']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'youth_id.verified', 'subject_id' => $youth->id, 'properties' => null]);
+    }
+
     public function test_staff_cannot_close_their_own_account_or_download_youth_data(): void
     {
         $officer = User::factory()->officer()->create();

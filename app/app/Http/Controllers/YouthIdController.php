@@ -29,7 +29,8 @@ class YouthIdController extends Controller
         $viewer = $request->user();
         $sameBarangay = $viewer->isOfficer() && $viewer->barangay_id === $youth->barangay_id;
 
-        AuditLog::record('youth_id.verified', $viewer, ['youth' => $youth->name], $youth);
+        // The entry points at the youth's account rather than copying their name, so closing the account erases it.
+        AuditLog::record('youth_id.verified', $viewer, [], $youth);
 
         return view('youth-id.verify', [
             'youth' => $youth,

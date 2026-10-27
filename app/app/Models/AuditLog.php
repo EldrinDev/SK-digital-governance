@@ -104,6 +104,35 @@ class AuditLog extends Model
     }
 
     /**
+     * Replace a closed account's name wherever older entries copied it (e.g. event check-ins),
+     * so the trail keeps what happened without keeping who it was.
+     */
+    public static function forgetName(string $name, string $replacement = 'Deleted account'): int
+    {
+        $encoded = trim(json_encode($name), '"');
+        $forgotten = 0;
+
+        self::query()
+            ->whereNotNull('properties')
+            ->where(fn ($query) => $query->where('properties', 'like', '%'.$name.'%')->orWhere('properties', 'like', '%'.$encoded.'%'))
+            ->each(function (self $entry) use ($name, $replacement, &$forgotten): void {
+                $properties = $entry->properties;
+                array_walk_recursive($properties, function (&$value) use ($name, $replacement): void {
+                    if ($value === $name) {
+                        $value = $replacement;
+                    }
+                });
+
+                if ($properties !== $entry->properties) {
+                    $entry->forceFill(['properties' => $properties])->save();
+                    $forgotten++;
+                }
+            });
+
+        return $forgotten;
+    }
+
+    /**
      * Add an entry to the audit trail for the current request.
      *
      * The barangay comes from the record that was acted on when it has one,
