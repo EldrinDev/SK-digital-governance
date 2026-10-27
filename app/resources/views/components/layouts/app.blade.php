@@ -82,7 +82,7 @@
         --}}
         <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-300 lg:ease-[cubic-bezier(.2,.8,.2,1)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)] motion-reduce:transition-none">
             {{-- Side menu (desktop) --}}
-            <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden">
+            <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-[1.125rem] py-5" title="SK Digital Governance">
                     <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0">
                     <span class="whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
