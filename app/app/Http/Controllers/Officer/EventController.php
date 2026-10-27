@@ -78,7 +78,7 @@ class EventController extends Controller
         Gate::authorize('update', $event);
 
         $event->load([
-            'registrations' => fn ($query) => $query->with('user:id,name,email')->oldest(),
+            'registrations' => fn ($query) => $query->with(['user:id,name,email', 'checkedInBy:id,name'])->oldest(),
             'feedback' => fn ($query) => $query->with('author:id,name')->latest(),
             'ppa:id,title',
         ]);

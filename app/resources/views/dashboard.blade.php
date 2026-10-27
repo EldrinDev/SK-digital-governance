@@ -220,7 +220,10 @@
 
             {{-- Their own events: what's coming, and what they went to --}}
             <section class="rounded-[14px] border border-line bg-white" aria-labelledby="mine-heading">
-                <h2 id="mine-heading" class="border-b border-line px-5 py-4 font-display text-lg font-semibold">My events</h2>
+                <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+                    <h2 id="mine-heading" class="font-display text-lg font-semibold">My events</h2>
+                    <a href="{{ route('account.activity') }}" class="text-sm font-semibold text-emerald hover:underline">Full history</a>
+                </div>
                 <ul class="divide-y divide-line">
                     @foreach ($myUpcoming as $registration)
                         <li class="flex items-center gap-4 px-5 py-3.5">

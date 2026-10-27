@@ -23,7 +23,10 @@
         <section class="rounded-[12px] border border-line bg-white" aria-labelledby="registrants-heading">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
                 <h2 id="registrants-heading" class="font-display text-lg font-semibold">Registrants</h2>
-                <p class="text-sm text-slate-muted">{{ $attended }} of {{ $event->registrations->count() }} checked in{{ $event->capacity ? ' · '.$event->capacity.' places' : '' }}</p>
+                @php
+                    $byQr = $event->registrations->where('check_in_method', \App\CheckInMethod::Qr)->count();
+                @endphp
+                <p class="text-sm text-slate-muted">{{ $attended }} of {{ $event->registrations->count() }} checked in{{ $byQr ? ', '.$byQr.' by QR scan' : '' }}{{ $event->capacity ? ' · '.$event->capacity.' places' : '' }}</p>
             </div>
             @if ($event->registrations->isEmpty())
                 <p class="px-5 py-6 text-sm text-slate-muted">No one has registered yet.</p>
@@ -33,7 +36,12 @@
                         <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                             <div>
                                 <p class="text-sm font-medium">{{ $registration->user->name }}</p>
-                                <p class="text-xs text-slate-muted">Registered {{ $registration->created_at->format('M j') }}</p>
+                                <p class="text-xs text-slate-muted">
+                                    Registered {{ $registration->created_at->format('M j') }}
+                                    @if ($registration->attended())
+                                        · checked in {{ $registration->attended_at->format('g:i A') }}{{ $registration->check_in_method ? ' by '.$registration->check_in_method->label() : '' }}{{ $registration->checkedInBy ? ', '.$registration->checkedInBy->name : '' }}
+                                    @endif
+                                </p>
                             </div>
                             @if ($checkInOpen)
                                 <form method="POST" action="{{ route('officer.events.registrations.update', [$event, $registration]) }}">

@@ -167,6 +167,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::put('/account/password', [Account\PasswordController::class, 'update'])->middleware('throttle:6,1')->name('account.password.update');
     Route::get('/account/data', Account\PersonalDataController::class)->middleware('role:youth')->name('account.data');
     Route::get('/account/id', [Account\DigitalIdController::class, 'show'])->middleware('role:youth')->name('account.id');
+    Route::get('/account/activity', Account\ActivityController::class)->middleware('role:youth')->name('account.activity');
     Route::post('/account/id', [Account\DigitalIdController::class, 'update'])->middleware(['role:youth', 'throttle:6,1'])->name('account.id.renew');
     Route::get('/id/{code}', YouthIdController::class)->middleware('role:officer,federation,administrator')->name('youth-id.verify');
     Route::delete('/account', [Account\ProfileController::class, 'destroy'])->middleware(['role:youth', 'throttle:6,1'])->name('account.destroy');

@@ -54,6 +54,7 @@
                                         @csrf
                                         @method('PATCH')
                                         <input type="hidden" name="attended" value="1">
+                                        <input type="hidden" name="method" value="qr">
                                         <x-form.submit busy="Checking in…" :block="false" class="py-2">Check in</x-form.submit>
                                     </form>
                                 @endif

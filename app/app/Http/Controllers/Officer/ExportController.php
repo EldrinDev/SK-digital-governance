@@ -55,12 +55,14 @@ class ExportController extends Controller
         Gate::authorize('update', $event);
 
         return $this->csv(str($event->title)->slug().'-registrants.csv',
-            ['Name', 'Email', 'Registered', 'Checked in'],
-            $event->registrations()->with('user:id,name,email')->oldest()->lazy()->map(fn (EventRegistration $registration): array => [
+            ['Name', 'Email', 'Registered', 'Checked in', 'Checked in via', 'Checked in by'],
+            $event->registrations()->with(['user:id,name,email', 'checkedInBy:id,name'])->oldest()->lazy()->map(fn (EventRegistration $registration): array => [
                 $registration->user->name,
                 $registration->user->email,
                 $registration->created_at->toDateTimeString(),
                 $registration->attended_at?->toDateTimeString() ?? 'No',
+                $registration->check_in_method?->label() ?? '',
+                $registration->checkedInBy?->name ?? '',
             ]),
         );
     }

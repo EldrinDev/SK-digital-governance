@@ -41,6 +41,7 @@ class PersonalDataController extends Controller
                 'venue' => $registration->event->venue,
                 'registered_at' => $registration->created_at->toIso8601String(),
                 'attended_at' => $registration->attended_at?->toIso8601String(),
+                'checked_in_via' => $registration->check_in_method?->label(),
             ])->all(),
             'feedback' => $user->feedback->map(fn ($feedback): array => [
                 'event' => $feedback->event?->title,

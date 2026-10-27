@@ -44,6 +44,7 @@
             ['label' => 'Programs', 'route' => 'programs.index', 'active' => 'programs.*', 'icon' => '<path d="M12 2 3 7l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>'],
             ['label' => 'Events', 'route' => 'events.index', 'active' => 'events.*', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'],
             ['label' => 'Transparency', 'route' => 'transparency.index', 'active' => 'transparency.*', 'icon' => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'],
+            ['label' => 'My activity', 'route' => 'account.activity', 'active' => 'account.activity', 'icon' => '<path d="M3 12h4l3 8 4-16 3 8h4"/>'],
             ['label' => 'My ID', 'route' => 'account.id', 'active' => 'account.id', 'icon' => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/>'],
         ],
     };

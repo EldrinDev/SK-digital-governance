@@ -29,6 +29,10 @@
         </div>
 
         @if ($stats !== [])
+            <div class="flex items-center justify-between gap-3 border-t border-line px-5 py-2.5 sm:px-7">
+                <p class="text-xs font-semibold text-slate-muted">Your participation</p>
+                <a href="{{ route('account.activity') }}" class="text-xs font-semibold text-emerald hover:underline">See full history</a>
+            </div>
             <dl class="grid grid-cols-2 border-t border-line sm:grid-cols-4">
                 @foreach ($stats as $label => $value)
                     <div @class(['px-5 py-4 sm:px-7', 'border-l border-line' => ! $loop->first && $loop->index !== 2, 'sm:border-l' => $loop->index === 2, 'border-t border-line sm:border-t-0' => $loop->index >= 2])>

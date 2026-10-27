@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\AnnouncementCategory;
 use App\AttendanceStatus;
 use App\CenterOfParticipation;
+use App\CheckInMethod;
 use App\EventKind;
 use App\Models\Abyip;
 use App\Models\Announcement;
@@ -194,7 +195,12 @@ class DemoDataSeeder extends Seeder
 
         $pastEvent = $this->event($barangay, EventKind::Event, 'Teen mental health caravan', -140, 'Santa Rita covered court', 80, $caravan);
         foreach ($youth->take(6) as $index => $member) {
-            $pastEvent->registrations()->create(['user_id' => $member->id])->forceFill(['attended_at' => $pastEvent->starts_at])->save();
+            // Most were checked in by scanning their digital ID; a couple by hand at the table.
+            $pastEvent->registrations()->create(['user_id' => $member->id])->forceFill([
+                'attended_at' => $pastEvent->starts_at->copy()->addMinutes(5 * $index),
+                'check_in_method' => $index % 3 === 2 ? CheckInMethod::Manual : CheckInMethod::Qr,
+                'checked_in_by' => $officers[$index % 2 === 0 ? 0 : 1]->id,
+            ])->save();
 
             // The main demo youth (index 0) is left with an evaluation to give, to show that prompt.
             if ($index >= 1 && $index <= 3) {

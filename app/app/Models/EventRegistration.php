@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\CheckInMethod;
 use Database\Factories\EventRegistrationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +28,7 @@ class EventRegistration extends Model
     {
         return [
             'attended_at' => 'datetime',
+            'check_in_method' => CheckInMethod::class,
         ];
     }
 
@@ -62,6 +64,16 @@ class EventRegistration extends Model
                 'value' => $counts->get($start->copy()->addMonths($offset)->format('Y-m'), 0),
             ])
             ->all();
+    }
+
+    /**
+     * The officer who checked the youth in.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function checkedInBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'checked_in_by');
     }
 
     /**
