@@ -128,12 +128,12 @@
             <section id="home" class="relative overflow-hidden bg-white">
                 <div class="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-14 sm:px-6 lg:min-h-[36rem] lg:px-8 lg:pb-32 lg:pt-20">
                     <div class="max-w-xl">
-                        <p class="text-xs font-semibold tracking-[0.2em] text-navy/80 lg:text-white/80">SANGGUNIANG KABATAAN</p>
+                        <p class="text-xs font-semibold tracking-[0.2em] text-navy/80 lg:text-white/85">SANGGUNIANG KABATAAN</p>
                         <h1 class="mt-4 font-display text-[2.4rem] leading-[1.1] font-bold tracking-tight sm:text-5xl lg:text-[3.1rem] lg:whitespace-nowrap xl:text-[3.4rem]">
                             <span class="block text-navy lg:text-white">Empowering Youth.</span>
-                            <span class="block text-emerald lg:text-gold">Building Communities.</span>
+                            <span class="block text-emerald lg:text-[#5fd39d]">Building Communities.</span>
                         </h1>
-                        <p class="mt-6 max-w-md text-lg leading-relaxed text-navy/75 lg:text-white/85">
+                        <p class="mt-6 max-w-md text-lg leading-relaxed text-navy/75 lg:text-white/90">
                             Join programs, see where the SK fund goes, and follow the projects in your barangay, all in one place.
                         </p>
 
@@ -142,22 +142,22 @@
                                 Find a program
                                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['arrow'] !!}</svg>
                             </a>
-                            <a href="{{ route('transparency.index') }}" class="inline-flex items-center rounded-[8px] border border-navy/80 bg-white px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white lg:border-white/80 lg:bg-transparent lg:text-white lg:hover:bg-white lg:hover:text-navy">
+                            <a href="{{ route('transparency.index') }}" class="inline-flex items-center rounded-[8px] border border-navy/80 bg-white px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white lg:border-white lg:bg-white/10 lg:text-white lg:hover:bg-white lg:hover:text-navy">
                                 See public records
                             </a>
                         </div>
 
-                        <ul class="mt-10 grid max-w-md grid-cols-3 gap-3 text-[0.8rem] leading-snug text-navy/80 sm:gap-4 lg:text-white/85">
+                        <ul class="mt-10 grid max-w-md grid-cols-3 gap-3 text-[0.8rem] leading-snug text-navy/80 sm:gap-4 lg:text-white/90">
                             <li class="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
-                                <svg viewBox="0 0 24 24" class="h-6 w-6 shrink-0 text-emerald lg:text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['shield'] !!}</svg>
+                                <svg viewBox="0 0 24 24" class="h-6 w-6 shrink-0 text-emerald lg:text-[#5fd39d]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['shield'] !!}</svg>
                                 Transparent governance
                             </li>
                             <li class="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
-                                <svg viewBox="0 0 24 24" class="h-6 w-6 shrink-0 text-emerald lg:text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['users'] !!}</svg>
+                                <svg viewBox="0 0 24 24" class="h-6 w-6 shrink-0 text-emerald lg:text-[#5fd39d]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['users'] !!}</svg>
                                 Youth engagement
                             </li>
                             <li class="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-2.5">
-                                <svg viewBox="0 0 24 24" class="h-6 w-6 shrink-0 text-emerald lg:text-gold" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['sprout'] !!}</svg>
+                                <svg viewBox="0 0 24 24" class="h-6 w-6 shrink-0 text-emerald lg:text-[#5fd39d]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons['sprout'] !!}</svg>
                                 Community development
                             </li>
                         </ul>
