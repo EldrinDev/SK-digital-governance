@@ -31,7 +31,7 @@ class ParticipationHistoryTest extends TestCase
         $this->actingAs($officer)
             ->get(route('officer.events.show', $event))
             ->assertSeeText('1 by QR scan')
-            ->assertSeeText('by QR scan, Oscar Officer');
+            ->assertSeeText('with their QR, by Oscar Officer');
 
         $csv = $this->actingAs($officer)->get(route('officer.events.export', $event))->streamedContent();
         $this->assertStringContainsString('"Checked in via","Checked in by"', $csv);

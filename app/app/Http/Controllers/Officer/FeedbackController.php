@@ -30,10 +30,14 @@ class FeedbackController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $unansweredCount = $request->user()->barangay->feedback()->whereNull('responded_at')->count();
+        $totalCount = $request->user()->barangay->feedback()->count();
+
         return view('officer.feedback.index', [
             'feedback' => $feedback,
             'filter' => $filter,
-            'unansweredCount' => $request->user()->barangay->feedback()->whereNull('responded_at')->count(),
+            'unansweredCount' => $unansweredCount,
+            'counts' => ['' => $totalCount, 'unanswered' => $unansweredCount, 'answered' => $totalCount - $unansweredCount],
         ]);
     }
 

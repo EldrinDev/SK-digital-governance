@@ -1,13 +1,23 @@
 @php
+    use App\CheckInMethod;
+
     $checkInOpen = ! $event->starts_at->isAfter(today()->endOfDay());
     $attended = $event->registrations->filter->attended()->count();
+    $registered = $event->registrations->count();
+    $rating = $event->feedback->avg('rating');
+    $figures = [
+        ['value' => $registered, 'label' => $event->capacity ? 'registered, of '.$event->capacity.' places' : 'registered'],
+        ['value' => $attended, 'label' => $registered > 0 ? 'checked in ('.round($attended / $registered * 100).'%)' : 'checked in'],
+        ['value' => $event->capacity ? max(0, $event->capacity - $registered) : '—', 'label' => 'places left'],
+        ['value' => $rating ? number_format($rating, 1).' / 5' : '—', 'label' => $event->feedback->isNotEmpty() ? trans_choice('rating from :count youth|rating from :count youth', $event->feedback->count()) : 'no ratings yet'],
+    ];
 @endphp
-<x-layouts.app :title="$event->title" :heading="$event->title" :description="$event->kind->label().' · '.$event->starts_at->format('l, F j, Y · g:i A').' · '.$event->venue">
+<x-layouts.app :title="$event->title" :heading="$event->title" :description="$event->kind->label().' on '.$event->starts_at->format('l, F j, Y').' at '.$event->starts_at->format('g:i A').', '.$event->venue">
     <x-slot:actions>
         <div class="flex flex-wrap items-center gap-3">
         <a href="{{ route('officer.events.export', $event) }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            Download CSV
+            Registrant list (CSV)
         </a>
         <a href="{{ route('events.show', $event) }}" target="_blank" class="rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">View public page</a>
         </div>
@@ -15,18 +25,28 @@
 
     <p class="mb-6 text-sm"><a href="{{ route('officer.events.index') }}" class="font-medium text-slate-muted hover:text-emerald">&larr; All events</a></p>
 
+    <dl class="mb-8 grid grid-cols-2 gap-y-5 border-y border-line py-5 sm:grid-cols-4">
+        @foreach ($figures as $figure)
+            <div @class(['px-1 sm:px-5', 'sm:border-l sm:border-line' => ! $loop->first])>
+                <dt class="sr-only">{{ $figure['label'] }}</dt>
+                <dd class="font-display text-2xl font-semibold text-navy">{{ $figure['value'] }}</dd>
+                <dd class="text-sm text-slate-muted">{{ $figure['label'] }}</dd>
+            </div>
+        @endforeach
+    </dl>
+
     @error('attendance')
         <p role="alert" class="mb-6 rounded-[12px] border border-warning/40 bg-warning/10 p-4 text-sm">{{ $message }}</p>
     @enderror
 
-    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <section class="rounded-[12px] border border-line bg-white" aria-labelledby="registrants-heading">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
                 <h2 id="registrants-heading" class="font-display text-lg font-semibold">Registrants</h2>
                 @php
-                    $byQr = $event->registrations->where('check_in_method', \App\CheckInMethod::Qr)->count();
+                    $byQr = $event->registrations->where('check_in_method', CheckInMethod::Qr)->count();
                 @endphp
-                <p class="text-sm text-slate-muted">{{ $attended }} of {{ $event->registrations->count() }} checked in{{ $byQr ? ', '.$byQr.' by QR scan' : '' }}{{ $event->capacity ? ' · '.$event->capacity.' places' : '' }}</p>
+                <p class="text-sm text-slate-muted">{{ $attended }} of {{ $registered }} checked in{{ $byQr ? ', '.$byQr.' by QR scan' : '' }}</p>
             </div>
             @if ($event->registrations->isEmpty())
                 <p class="px-5 py-6 text-sm text-slate-muted">No one has registered yet.</p>
@@ -37,9 +57,10 @@
                             <div>
                                 <p class="text-sm font-medium">{{ $registration->user->name }}</p>
                                 <p class="text-xs text-slate-muted">
-                                    Registered {{ $registration->created_at->format('M j') }}
                                     @if ($registration->attended())
-                                        · checked in {{ $registration->attended_at->format('g:i A') }}{{ $registration->check_in_method ? ' by '.$registration->check_in_method->label() : '' }}{{ $registration->checkedInBy ? ', '.$registration->checkedInBy->name : '' }}
+                                        Checked in at {{ $registration->attended_at->format('g:i A') }}{{ match ($registration->check_in_method) { CheckInMethod::Qr => ' with their QR', CheckInMethod::Manual => ' by hand', default => '' } }}{{ $registration->checkedInBy ? ', by '.$registration->checkedInBy->name : '' }}
+                                    @else
+                                        Registered {{ $registration->created_at->format('M j') }}
                                     @endif
                                 </p>
                             </div>
@@ -86,7 +107,7 @@
                     <ul class="mt-3 space-y-3 text-sm">
                         @foreach ($event->feedback as $evaluation)
                             <li>
-                                <p><span class="font-semibold">{{ str_repeat('★', $evaluation->rating) }}</span><span class="text-line">{{ str_repeat('★', 5 - $evaluation->rating) }}</span> <span class="sr-only">{{ $evaluation->rating }} out of 5</span></p>
+                                <p><span class="text-gold" aria-hidden="true">{{ str_repeat('★', $evaluation->rating) }}</span><span class="text-line" aria-hidden="true">{{ str_repeat('★', 5 - $evaluation->rating) }}</span> <span class="sr-only">{{ $evaluation->rating }} out of 5</span></p>
                                 <p class="mt-0.5 text-navy/80">{{ $evaluation->message }}</p>
                                 <p class="text-xs text-slate-muted">{{ $evaluation->author->name }}</p>
                             </li>

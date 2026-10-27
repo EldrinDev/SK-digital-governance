@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Survey;
 use App\QuestionType;
+use App\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,8 +19,12 @@ class SurveyController extends Controller
      */
     public function index(Request $request): View
     {
+        $barangay = $request->user()->barangay;
+
         return view('officer.surveys.index', [
-            'surveys' => $request->user()->barangay->surveys()->withCount(['questions', 'responses'])->latest()->get(),
+            'surveys' => $barangay->surveys()->withCount(['questions', 'responses'])->latest()->get(),
+            // Active youth accounts, to show what share of them answered each survey.
+            'youthCount' => $barangay->users()->where('role', UserRole::Youth)->whereNull('deactivated_at')->count(),
         ]);
     }
 
