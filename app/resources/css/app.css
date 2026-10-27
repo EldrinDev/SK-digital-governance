@@ -126,21 +126,21 @@ body {
         radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) bottom / 100% 51% no-repeat;
 }
 
-/* Toasts drop into the top corner and slide away when they leave. */
+/* Toasts swipe in leftward from the right edge, and back out to the right when they leave. */
 @keyframes toast-in {
-    from { opacity: 0; transform: translateY(-0.75rem) scale(0.98); }
+    from { opacity: 0; transform: translateX(calc(100% + 2rem)); }
 }
 
 @keyframes toast-out {
-    to { opacity: 0; transform: translateX(1rem) scale(0.98); }
+    to { opacity: 0; transform: translateX(calc(100% + 2rem)); }
 }
 
 .toast {
-    animation: toast-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: toast-in 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toast.toast-leaving {
-    animation: toast-out 0.2s ease-in forwards;
+    animation: toast-out 0.28s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
