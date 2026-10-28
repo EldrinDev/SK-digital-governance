@@ -22,10 +22,12 @@
         <p role="alert" class="mb-6 rounded-[12px] border border-warning/40 bg-warning/10 p-4 text-sm">{{ $message }}</p>
     @enderror
 
-    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <ol class="space-y-4">
             @forelse ($survey->questions as $question)
-                @php($summary = $question->summary())
+                @php
+                    $summary = $question->summary();
+                @endphp
                 <li class="rounded-[12px] border border-line bg-white p-5">
                     <div class="flex items-start justify-between gap-3">
                         <div>
@@ -63,7 +65,9 @@
                         @endif
                         <dl class="mt-3 space-y-2 text-sm">
                             @foreach ($summary['counts'] as $label => $count)
-                                @php($share = (int) round($count / $summary['total'] * 100))
+                                @php
+                                    $share = (int) round($count / $summary['total'] * 100);
+                                @endphp
                                 <div class="grid grid-cols-[8rem_minmax(0,1fr)_4.5rem] items-center gap-3">
                                     <dt class="truncate">{{ $summary['type'] === 'rating' ? $label.' ★' : $label }}</dt>
                                     <dd class="h-2.5 overflow-hidden rounded-full bg-mist" aria-hidden="true"><div class="h-full rounded-full bg-emerald" style="width: {{ $share }}%"></div></dd>
@@ -99,6 +103,37 @@
                     <x-form.submit busy="Adding…">Add question</x-form.submit>
                 </form>
             </section>
+        @else
+            @php
+                $reach = $youthCount > 0 ? min(100, (int) round($survey->responses_count / $youthCount * 100)) : 0;
+            @endphp
+            <aside class="space-y-6 lg:sticky lg:top-24" aria-label="About this survey">
+                <section class="rounded-[12px] border border-line bg-white p-5">
+                    <p class="flex items-center gap-2 text-sm font-semibold">
+                        <span @class(['h-2.5 w-2.5 rounded-full', 'bg-emerald' => $survey->isOpen(), 'bg-slate-muted/50' => ! $survey->isOpen()]) aria-hidden="true"></span>
+                        <span @class(['text-emerald' => $survey->isOpen(), 'text-slate-muted' => ! $survey->isOpen()])>{{ $survey->isOpen() ? 'Open for answers' : 'Closed' }}</span>
+                    </p>
+                    <p class="mt-3 font-display text-3xl font-semibold text-navy">{{ $survey->responses_count }}</p>
+                    <p class="text-sm text-slate-muted">{{ trans_choice('response|responses', $survey->responses_count) }} from {{ $youthCount }} youth in your barangay</p>
+                    <div class="mt-3 h-2 overflow-hidden rounded-full bg-mist" role="progressbar" aria-valuenow="{{ $reach }}" aria-valuemin="0" aria-valuemax="100" aria-label="Share of youth who answered">
+                        <div class="h-full rounded-full bg-emerald" style="width: {{ max($reach, 2) }}%"></div>
+                    </div>
+                    <p class="mt-1.5 text-xs text-slate-muted">{{ $reach }}% of youth answered</p>
+
+                    <dl class="mt-5 space-y-2 border-t border-line pt-4 text-sm">
+                        <div class="flex justify-between gap-3"><dt class="text-slate-muted">Opened</dt><dd class="font-medium">{{ $survey->opened_at?->format('M j, Y') ?? '—' }}</dd></div>
+                        @if ($survey->closed_at)
+                            <div class="flex justify-between gap-3"><dt class="text-slate-muted">Closed</dt><dd class="font-medium">{{ $survey->closed_at->format('M j, Y') }}</dd></div>
+                        @endif
+                        <div class="flex justify-between gap-3"><dt class="text-slate-muted">Questions</dt><dd class="font-medium">{{ $survey->questions->count() }}</dd></div>
+                    </dl>
+                </section>
+
+                <section class="px-1 text-sm text-slate-muted">
+                    <h2 class="font-semibold text-navy">Reading the results</h2>
+                    <p class="mt-1.5 leading-relaxed">Answers are anonymous: you see totals per question, never who answered what. {{ $survey->isOpen() ? 'Youth of your barangay see this survey on their dashboard until you close it.' : 'The results stay here for your next plan.' }}</p>
+                </section>
+            </aside>
         @endcan
     </div>
 </x-layouts.app>

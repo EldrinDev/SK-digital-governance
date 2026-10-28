@@ -59,6 +59,7 @@ class SurveyController extends Controller
         return view('officer.surveys.show', [
             'survey' => $survey,
             'types' => QuestionType::cases(),
+            'youthCount' => $survey->barangay->users()->where('role', UserRole::Youth)->whereNull('deactivated_at')->count(),
         ]);
     }
 }

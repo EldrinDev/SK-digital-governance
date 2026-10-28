@@ -44,8 +44,8 @@
         @endif
     </section>
 
-    <div @class(['mt-6 grid items-start gap-6', 'lg:grid-cols-[minmax(0,1fr)_24rem]' => $isYouth, 'max-w-3xl' => ! $isYouth])>
-        <div class="min-w-0 space-y-6">
+    <div @class(['mt-6 grid items-start gap-6', 'lg:grid-cols-[minmax(0,1fr)_24rem]' => $isYouth])>
+        <div @class(['min-w-0', 'space-y-6' => $isYouth, 'grid items-start gap-6 lg:grid-cols-2' => ! $isYouth])>
             {{-- Personal details --}}
             <section class="rounded-[16px] border border-line bg-white" aria-labelledby="details-heading">
                 <div class="border-b border-line px-5 py-4 sm:px-6">

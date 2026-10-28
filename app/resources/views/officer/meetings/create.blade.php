@@ -1,5 +1,6 @@
 <x-layouts.app title="Record a session" heading="Record a session" description="Add the session first. You’ll mark attendance, upload the minutes, and add resolutions on the next page.">
-    <form method="POST" action="{{ route('officer.meetings.store') }}" class="max-w-3xl space-y-5 rounded-[12px] border border-line bg-white p-6" novalidate>
+    <x-ui.form-page>
+    <form method="POST" action="{{ route('officer.meetings.store') }}" class="space-y-5 rounded-[12px] border border-line bg-white p-6" novalidate>
         @csrf
 
         <div class="grid gap-5 sm:grid-cols-2">
@@ -26,4 +27,14 @@
             <a href="{{ route('officer.meetings.index') }}" class="rounded-[8px] px-4 py-2.5 text-sm font-medium text-slate-muted hover:text-navy">Cancel</a>
         </div>
     </form>
+
+        <x-slot:guide>
+            <x-ui.guide-steps title="Recording a session" :steps="[
+                ['Add the session', 'Its name, kind, date and venue.'],
+                ['Mark attendance', 'Who was present, absent or excused. This shows whether there was a quorum.'],
+                ['Upload the minutes', 'The signed minutes as a PDF.'],
+                ['Add its resolutions', 'Each one goes into your register of resolutions.'],
+            ]" />
+        </x-slot:guide>
+    </x-ui.form-page>
 </x-layouts.app>

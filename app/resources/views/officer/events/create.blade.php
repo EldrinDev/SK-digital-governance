@@ -1,5 +1,6 @@
 <x-layouts.app title="Post an event" heading="Post an event" description="It appears on the public events page as soon as you post it.">
-    <form method="POST" action="{{ route('officer.events.store') }}" class="max-w-3xl space-y-5 rounded-[12px] border border-line bg-white p-6" novalidate>
+    <x-ui.form-page>
+    <form method="POST" action="{{ route('officer.events.store') }}" class="space-y-5 rounded-[12px] border border-line bg-white p-6" novalidate>
         @csrf
         <div class="grid gap-5 sm:grid-cols-2">
             <x-form.select name="kind" label="Kind" required>
@@ -30,4 +31,14 @@
             <a href="{{ route('officer.events.index') }}" class="rounded-[8px] px-4 py-2.5 text-sm font-medium text-slate-muted hover:text-navy">Cancel</a>
         </div>
     </form>
+
+        <x-slot:guide>
+            <x-ui.guide-steps title="After you post it" :current="0" :steps="[
+                ['Youth see it right away', 'On the public events page and on the dashboards of your barangay’s youth.'],
+                ['They register', 'You see who is coming on the event’s page. Registration closes when places run out.'],
+                ['They get a reminder', 'By email, the evening before.'],
+                ['Check them in on the day', 'Scan the QR on their digital ID, or tick them off by hand. Afterwards they can rate the event.'],
+            ]" />
+        </x-slot:guide>
+    </x-ui.form-page>
 </x-layouts.app>

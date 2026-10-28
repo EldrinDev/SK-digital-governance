@@ -1,6 +1,6 @@
 @php($editing = $announcement->exists)
 <x-layouts.app :title="$editing ? 'Edit announcement' : 'Post an announcement'" :heading="$editing ? 'Edit announcement' : 'Post an announcement'" :description="$editing ? 'Changes show on the public portal right away.' : 'It appears on the public portal as soon as you post it.'">
-    <form method="POST" action="{{ $editing ? route('officer.announcements.update', $announcement) : route('officer.announcements.store') }}" enctype="multipart/form-data" class="grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]" novalidate>
+    <form method="POST" action="{{ $editing ? route('officer.announcements.update', $announcement) : route('officer.announcements.store') }}" enctype="multipart/form-data" class="grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_23rem]" novalidate>
         @csrf
         @if ($editing)
             @method('PUT')

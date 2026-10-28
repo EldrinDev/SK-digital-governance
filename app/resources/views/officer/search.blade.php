@@ -6,7 +6,7 @@
     </form>
 
     @if (mb_strlen($term) >= 2)
-        <div class="mt-8 max-w-3xl space-y-6">
+        <div class="mt-8 grid items-start gap-6 lg:grid-cols-2">
             @forelse ($results as $group => $items)
                 <section class="rounded-[12px] border border-line bg-white" aria-labelledby="group-{{ $loop->index }}">
                     <h2 id="group-{{ $loop->index }}" class="flex items-center justify-between border-b border-line px-5 py-3 font-display font-semibold">
@@ -25,7 +25,7 @@
                     </ul>
                 </section>
             @empty
-                <p class="rounded-[12px] border border-dashed border-line bg-white p-8 text-center text-sm text-slate-muted">Nothing in your workspace matches “{{ $term }}”.</p>
+                <p class="rounded-[12px] border border-dashed border-line bg-white p-8 text-center text-sm text-slate-muted lg:col-span-2">Nothing in your workspace matches “{{ $term }}”.</p>
             @endforelse
         </div>
     @elseif ($term !== '')
