@@ -83,7 +83,7 @@
         <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-300 lg:ease-[cubic-bezier(.2,.8,.2,1)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)] motion-reduce:transition-none">
             {{-- Side menu (desktop) --}}
             <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-[1.125rem] py-5" title="SK Digital Governance">
+                <a href="{{ route($user->role->homeRoute()) }}" class="flex h-[67px] shrink-0 items-center gap-3 border-b border-line px-[1.125rem]" title="SK Digital Governance">
                     <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0">
                     <span class="whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
                         <span class="block font-display text-sm font-semibold">SK Digital Governance</span>
@@ -91,7 +91,7 @@
                     </span>
                 </a>
 
-                <nav class="flex-1 space-y-5 px-3 py-2 lg:collapsed:space-y-3" aria-label="Workspace">
+                <nav class="flex-1 space-y-5 px-3 py-4 lg:collapsed:space-y-3" aria-label="Workspace">
                     @foreach ($navigationSections as $section => $items)
                         <div>
                             @if ($section !== '')
