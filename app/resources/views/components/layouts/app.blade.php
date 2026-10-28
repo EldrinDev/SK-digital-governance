@@ -84,7 +84,7 @@
             {{-- Side menu (desktop) --}}
             <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <a href="{{ route($user->role->homeRoute()) }}" class="flex h-[67px] shrink-0 items-center gap-3 border-b border-line px-[1.125rem]" title="SK Digital Governance">
-                    <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0">
+                    <img src="{{ $user->barangay?->logoUrl() ?? asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-full object-contain">
                     <span class="whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
                         <span class="block font-display text-sm font-semibold">SK Digital Governance</span>
                         <span class="block text-[0.65rem] font-medium tracking-[0.18em] text-slate-muted">OLONGAPO CITY</span>

@@ -19,7 +19,7 @@
 
             <header class="flex items-start justify-between gap-6 border-b-2 border-navy pb-4">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="48" height="48" class="h-12 w-12">
+                    <img src="{{ $logoUrl }}" alt="" width="48" height="48" class="h-12 w-12 rounded-full object-contain">
                     <div>
                         <p class="text-xs text-slate-muted">Sangguniang Kabataan of Barangay {{ $report['barangay'] }}, Olongapo City</p>
                         <h1 class="font-display text-2xl font-semibold">Accomplishment report · ABYIP {{ $report['year'] }}</h1>

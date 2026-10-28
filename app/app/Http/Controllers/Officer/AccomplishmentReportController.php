@@ -41,6 +41,7 @@ class AccomplishmentReportController extends Controller
 
         return view('reports.print', [
             'report' => AccomplishmentReport::compile($abyip),
+            'logoUrl' => $abyip->barangay->logoUrl(),
             'isDraft' => true,
         ]);
     }

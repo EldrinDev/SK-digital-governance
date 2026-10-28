@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Abyip;
 use App\Models\Announcement;
 use App\Models\Barangay;
 use App\Models\User;
@@ -37,6 +38,23 @@ class BarangayProfileTest extends TestCase
             ->assertSee('https://www.facebook.com/skgordonheights', false)
             ->assertSeeText('Follow SK Gordon Heights');
         $this->get(route('announcements.index'))->assertSee(route('barangays.logo', $barangay), false);
+    }
+
+    public function test_officers_see_their_sk_logo_in_the_workspace_and_on_printed_reports(): void
+    {
+        Storage::fake();
+        $barangay = Barangay::factory()->create(['is_participating' => true, 'logo_path' => 'barangays/1/logo.png']);
+        Storage::put($barangay->logo_path, UploadedFile::fake()->image('logo.png')->getContent());
+        $officer = User::factory()->officer()->for($barangay)->create();
+        $abyip = Abyip::factory()->approved()->for($barangay)->create();
+
+        $this->actingAs($officer)->get(route('officer.dashboard'))
+            ->assertOk()
+            ->assertSee($barangay->logoUrl(), false);
+        $this->actingAs($officer)->get(route('officer.abyips.report.print', $abyip))
+            ->assertOk()
+            ->assertSee($barangay->logoUrl(), false)
+            ->assertDontSee(asset('images/sk-logo.svg'), false);
     }
 
     public function test_barangay_without_a_logo_falls_back_to_the_national_sk_logo(): void

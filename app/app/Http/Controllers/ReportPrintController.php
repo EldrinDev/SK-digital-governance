@@ -17,6 +17,7 @@ class ReportPrintController extends Controller
 
         return view('reports.print', [
             'report' => $report->snapshot,
+            'logoUrl' => $report->barangay->logoUrl(),
             'isDraft' => false,
             'submission' => $report->load(['submitter:id,name', 'reviewer:id,name']),
         ]);
