@@ -49,6 +49,11 @@
         ],
     };
 
+    /** @var array<string, int> $waiting Items still needing the user's attention, by route name. */
+    $waiting = $user->isOfficer() && $user->barangay
+        ? ['officer.feedback.index' => $user->barangay->feedback()->whereNull('responded_at')->count()]
+        : [];
+
     $navigation = array_values(array_filter($navigation, fn (array $item): bool => Route::has($item['route'])));
     $navigationSections = collect($navigation)->groupBy(fn (array $item): string => $item['section'] ?? '');
     $initials = collect(explode(' ', $user->name))->filter()->map(fn (string $part): string => mb_substr($part, 0, 1))->take(2)->implode('');
@@ -58,6 +63,7 @@
         UserRole::Administrator => 'Administration',
         default => 'Olongapo City',
     };
+    $workspaceLogo = $user->barangay?->logoUrl() ?? asset('images/sk-logo.svg');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -82,39 +88,55 @@
         --}}
         <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-300 lg:ease-[cubic-bezier(.2,.8,.2,1)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)] motion-reduce:transition-none">
             {{-- Side menu (desktop) --}}
-            <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 px-[1.125rem] py-5" title="SK Digital Governance">
-                    <img src="{{ asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0">
-                    <span class="whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
-                        <span class="block font-display text-sm font-semibold">SK Digital Governance</span>
-                        <span class="block text-[0.65rem] font-medium tracking-[0.18em] text-slate-muted">OLONGAPO CITY</span>
+            <aside class="hidden bg-navy-deep text-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {{-- Whose workspace this is: the barangay's own SK logo leads. --}}
+                <a href="{{ route($user->role->homeRoute()) }}" class="flex items-center gap-3 border-b border-white/10 px-[1.125rem] pb-5 pt-6" title="{{ $workspace }}">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-gold/70">
+                        <img src="{{ $workspaceLogo }}" alt="" width="40" height="40" class="h-full w-full object-contain p-0.5">
+                    </span>
+                    <span class="min-w-0 whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
+                        <span class="block truncate font-display text-[0.95rem] font-semibold">{{ $workspace }}</span>
+                        <span class="block truncate text-xs text-white/55">{{ $user->barangay ? 'Sangguniang Kabataan' : 'Olongapo City' }}</span>
                     </span>
                 </a>
 
-                <nav class="flex-1 space-y-5 px-3 py-2 lg:collapsed:space-y-3" aria-label="Workspace">
+                <nav class="flex-1 space-y-6 px-3 py-5 lg:collapsed:space-y-3" aria-label="Workspace">
                     @foreach ($navigationSections as $section => $items)
                         <div>
                             @if ($section !== '')
                                 {{-- Section names fold away in the rail (0fr row), sliding the icons up with them. --}}
                                 <div class="grid grid-rows-[1fr] transition-[grid-template-rows,opacity] duration-300 lg:collapsed:grid-rows-[0fr] lg:collapsed:opacity-0 motion-reduce:transition-none">
-                                    <p class="overflow-hidden whitespace-nowrap px-3 text-xs font-semibold text-slate-muted"><span class="mb-1.5 block">{{ $section }}</span></p>
+                                    <p class="overflow-hidden whitespace-nowrap px-3.5 text-xs font-medium text-white/50"><span class="mb-2 block">{{ $section }}</span></p>
                                 </div>
                             @endif
                             <ul class="space-y-0.5">
                                 @foreach ($items as $item)
-                                    @php($isActive = request()->routeIs($item['active']))
+                                    @php
+                                        $isActive = request()->routeIs($item['active']);
+                                        $waitingCount = $waiting[$item['route']] ?? 0;
+                                    @endphp
                                     <li>
-                                        <a href="{{ route($item['route']) }}" title="{{ $item['label'] }}" @class([
-                                            'relative flex items-center gap-3 overflow-hidden rounded-[8px] px-3.5 py-2 text-sm font-medium transition-colors',
-                                            'text-emerald' => $isActive,
-                                            'text-navy/75 hover:bg-mist hover:text-navy' => ! $isActive,
+                                        <a href="{{ route($item['route']) }}" title="{{ $item['label'] }}{{ $waitingCount ? ", {$waitingCount} waiting" : '' }}" @class([
+                                            'relative flex items-center gap-3 overflow-hidden rounded-[8px] px-3.5 py-2.5 text-sm font-medium transition-colors',
+                                            'text-white' => $isActive,
+                                            'text-white/70 hover:bg-white/[0.06] hover:text-white' => ! $isActive,
                                         ]) @if ($isActive) aria-current="page" @endif>
                                             @if ($isActive)
                                                 {{-- One highlight shared by every page, so it glides to the new item when the page changes. --}}
-                                                <span class="absolute inset-0 rounded-[8px] bg-emerald/10 [view-transition-name:nav-active]" aria-hidden="true"></span>
+                                                <span class="absolute inset-0 rounded-[8px] bg-white/[0.09] [view-transition-name:nav-active]" aria-hidden="true">
+                                                    <span class="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-gold"></span>
+                                                </span>
                                             @endif
-                                            <svg viewBox="0 0 24 24" class="relative h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
-                                            <span class="relative whitespace-nowrap transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">{{ $item['label'] }}</span>
+                                            <span class="relative shrink-0">
+                                                <svg viewBox="0 0 24 24" @class(['h-5 w-5', 'text-gold' => $isActive]) fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
+                                                @if ($waitingCount)
+                                                    <span class="absolute -right-1 -top-1 hidden h-2 w-2 rounded-full bg-gold ring-2 ring-navy-deep lg:collapsed:block" aria-hidden="true"></span>
+                                                @endif
+                                            </span>
+                                            <span class="relative flex-1 whitespace-nowrap transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">{{ $item['label'] }}</span>
+                                            @if ($waitingCount)
+                                                <span class="relative text-xs font-semibold tabular-nums text-gold transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">{{ $waitingCount }}<span class="sr-only"> waiting</span></span>
+                                            @endif
                                         </a>
                                     </li>
                                 @endforeach
@@ -123,18 +145,27 @@
                     @endforeach
                 </nav>
 
-                <div class="border-t border-line p-3">
-                    <a href="{{ route('account.edit') }}" title="{{ $user->name }}" class="flex items-center gap-3 rounded-[10px] p-2 hover:bg-mist">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
-                        <span class="min-w-0 whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
-                            <span class="block truncate text-sm font-semibold">{{ $user->name }}</span>
-                            <span class="block truncate text-xs text-slate-muted">{{ $roleLine }}</span>
-                        </span>
-                    </a>
-                    <p class="mt-2 whitespace-nowrap px-2 text-xs text-slate-muted transition-opacity duration-200 lg:collapsed:pointer-events-none lg:collapsed:opacity-0 motion-reduce:transition-none">
-                        <a href="{{ route('home') }}" class="hover:text-emerald">Public site</a>
-                        <span aria-hidden="true">·</span>
-                        <a href="{{ route('privacy') }}" class="hover:text-emerald">Privacy</a>
+                <div class="border-t border-white/10 p-3">
+                    <div class="flex items-center gap-1">
+                        <a href="{{ route('account.edit') }}" title="{{ $user->name }}" class="flex min-w-0 flex-1 items-center gap-3 rounded-[10px] p-2 hover:bg-white/[0.06]">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold text-xs font-semibold text-navy-deep" aria-hidden="true">{{ $initials }}</span>
+                            <span class="min-w-0 whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
+                                <span class="block truncate text-sm font-semibold">{{ $user->name }}</span>
+                                <span class="block truncate text-xs text-white/55">{{ $roleLine }}</span>
+                            </span>
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}" class="shrink-0 transition-opacity duration-200 lg:collapsed:pointer-events-none lg:collapsed:opacity-0 motion-reduce:transition-none">
+                            @csrf
+                            <button type="submit" title="Log out" class="flex h-9 w-9 items-center justify-center rounded-[8px] text-white/60 hover:bg-white/[0.06] hover:text-white">
+                                <svg viewBox="0 0 24 24" class="h-[1.125rem] w-[1.125rem]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+                                <span class="sr-only">Log out</span>
+                            </button>
+                        </form>
+                    </div>
+                    <p class="mt-2 whitespace-nowrap px-2 text-xs text-white/50 transition-opacity duration-200 lg:collapsed:pointer-events-none lg:collapsed:opacity-0 motion-reduce:transition-none">
+                        <a href="{{ route('home') }}" class="hover:text-white">Public site</a>
+                        <span class="mx-1" aria-hidden="true">/</span>
+                        <a href="{{ route('privacy') }}" class="hover:text-white">Privacy</a>
                     </p>
                 </div>
             </aside>
@@ -158,14 +189,14 @@
                                             <li class="px-3 pb-1 pt-2.5 text-xs font-semibold text-slate-muted">{{ $section }}</li>
                                         @endif
                                         @foreach ($items as $item)
-                                            <li><a href="{{ route($item['route']) }}" @class(['flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm font-medium hover:bg-mist', 'bg-emerald/10 text-emerald' => request()->routeIs($item['active'])])><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>{{ $item['label'] }}</a></li>
+                                            <li><a href="{{ route($item['route']) }}" @class(['relative flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm font-medium hover:bg-mist', 'bg-navy/[0.06] text-navy before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-r-full before:bg-gold' => request()->routeIs($item['active'])]) @if (request()->routeIs($item['active'])) aria-current="page" @endif><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg><span class="flex-1">{{ $item['label'] }}</span>@if ($waiting[$item['route']] ?? 0)<span class="text-xs font-semibold tabular-nums text-[#a16207]">{{ $waiting[$item['route']] }}<span class="sr-only"> waiting</span></span>@endif</a></li>
                                         @endforeach
                                     @endforeach
                                     <li class="mt-1 border-t border-line pt-1"><a href="{{ route('account.edit') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">{{ $user->hasRole(UserRole::Youth) ? 'My profile' : 'Account settings' }}</a></li>
                                     <li><a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm text-slate-muted hover:bg-mist">Public site</a></li>
                                 </ul>
                             </details>
-                            <div class="min-w-0 leading-tight">
+                            <div class="min-w-0 leading-tight lg:hidden">
                                 <p class="truncate font-display text-base font-semibold">{{ $workspace }}</p>
                                 <p class="truncate text-xs text-slate-muted">{{ $user->role->label() }}</p>
                             </div>
