@@ -31,6 +31,6 @@
     <button type="button" data-toast-close class="-my-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] focus-visible:outline-2 {{ $style['close'] }}" aria-label="Dismiss">
         <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
-    {{-- Time left before it closes; pauses while the pointer or focus is on the toast --}}
+    {{-- Time left before it closes --}}
     <span class="toast-timer absolute inset-x-0 bottom-0 h-[3px] origin-left {{ $style['timer'] }}" aria-hidden="true"></span>
 </li>

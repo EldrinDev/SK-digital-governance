@@ -185,8 +185,8 @@ document.addEventListener('click', (event) => {
 });
 
 // Toasts: messages that swipe in at the top right and leave on their own. Each kind
-// (success, info, warning, error) stays up for its own time; hovering or focusing a toast
-// pauses it, along with the line at its bottom that shows the time left.
+// (success, info, warning, error) stays up for its own time, shown by the line at its
+// bottom; the close button dismisses one early.
 const dismissToast = (toast) => {
     if (!toast || toast.dataset.leaving) {
         return;
@@ -208,25 +208,8 @@ const dismissToast = (toast) => {
     }
 };
 
-const runToast = (toast) => {
-    toast.toastStartedAt = Date.now();
-    toast.toastTimer = setTimeout(() => dismissToast(toast), toast.toastRemaining);
-    toast.classList.remove('toast-paused');
-};
-
-const pauseToast = (toast) => {
-    clearTimeout(toast.toastTimer);
-    toast.toastRemaining -= Date.now() - toast.toastStartedAt;
-    toast.classList.add('toast-paused');
-};
-
 const watchToast = (toast) => {
-    toast.toastRemaining = Number(toast.dataset.duration) || 5000;
-    runToast(toast);
-    toast.addEventListener('mouseenter', () => pauseToast(toast));
-    toast.addEventListener('mouseleave', () => runToast(toast));
-    toast.addEventListener('focusin', () => pauseToast(toast));
-    toast.addEventListener('focusout', () => runToast(toast));
+    toast.toastTimer = setTimeout(() => dismissToast(toast), Number(toast.dataset.duration) || 5000);
 };
 
 document.querySelectorAll('[data-toaster] [data-toast]').forEach(watchToast);
