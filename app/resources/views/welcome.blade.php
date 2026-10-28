@@ -413,13 +413,6 @@
             <div class="border-t border-white/10">
                 <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-white/55 sm:px-6 md:flex-row md:justify-between lg:px-8">
                     <p>&copy; {{ date('Y') }} Integrated Sangguniang Kabataan Digital Governance Platform</p>
-                    <p>
-                        Photos:
-                        <a href="https://commons.wikimedia.org/wiki/File:Ulo_ng_Apo,_Olongapo_City,_Jan_2023.jpg" class="underline decoration-white/30 underline-offset-2 hover:text-white" rel="noopener">Ralff Nestor Nacor</a>
-                        and
-                        <a href="https://commons.wikimedia.org/wiki/File:Olongapo_City-Subic_Freeport_skyline_Santa_Rita_(Olongapo,_Zambales;_05-21-2023).jpg" class="underline decoration-white/30 underline-offset-2 hover:text-white" rel="noopener">Patrickroque01</a>,
-                        <a href="https://creativecommons.org/licenses/by-sa/4.0/" class="underline decoration-white/30 underline-offset-2 hover:text-white" rel="noopener">CC BY-SA 4.0</a>
-                    </p>
                 </div>
             </div>
         </footer>
