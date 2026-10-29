@@ -41,6 +41,8 @@ class DashboardControllerTest extends TestCase
         $response->assertViewHas('totalPpas', 3)
             ->assertViewHas('completedPpas', 1)
             ->assertViewHas('delayedPpas', 1)
+            ->assertSeeText('ABYIP '.now()->year.' so far')
+            ->assertSeeText('1 of 3')
             ->assertSeeText('₱17,500')
             ->assertSeeText('Overdue tree planting')
             ->assertDontSeeText('Elsewhere delayed');
