@@ -27,13 +27,13 @@
 
             {{-- Only the chosen CBYDP's three years; years that already have an ABYIP can't be picked. --}}
             <div>
-                <x-form.select name="year" label="Year" :placeholder="$chosenCbydp ? 'Choose the year' : 'Choose the CBYDP first'" :disabled="! $chosenCbydp" data-ready-label="Choose the year" data-waiting-label="Choose the CBYDP first" required>
+                <x-form.select name="year" label="Year" :placeholder="$chosenCbydp ? 'Choose the year' : 'Choose the CBYDP first'" data-listbox :disabled="! $chosenCbydp" data-ready-label="Choose the year" data-waiting-label="Choose the CBYDP first" required>
                     @foreach ($cbydps as $cbydp)
                         @foreach (range($cbydp->start_year, $cbydp->end_year) as $year)
                             @php
                                 $isTaken = in_array($year, $takenYears, true);
                             @endphp
-                            <option value="{{ $year }}" data-for="{{ $cbydp->id }}" @if ($isTaken) data-taken @endif @selected($chosenCbydp?->id === $cbydp->id && $chosenYear === $year) @disabled($isTaken || $chosenCbydp?->id !== $cbydp->id) @if ($chosenCbydp?->id !== $cbydp->id) hidden @endif>{{ $year }}{{ $isTaken ? ', already has an ABYIP' : '' }}</option>
+                            <option value="{{ $year }}" data-for="{{ $cbydp->id }}" data-label="{{ $year }}" data-hint="Year {{ $loop->iteration }} of {{ $loop->count }}" @if ($isTaken) data-taken data-note="Has an ABYIP" @endif @selected($chosenCbydp?->id === $cbydp->id && $chosenYear === $year) @disabled($isTaken || $chosenCbydp?->id !== $cbydp->id) @if ($chosenCbydp?->id !== $cbydp->id) hidden @endif>{{ $year }}{{ $isTaken ? ', already has an ABYIP' : '' }}</option>
                         @endforeach
                     @endforeach
                 </x-form.select>
