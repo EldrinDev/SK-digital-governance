@@ -60,7 +60,12 @@ class AbyipController extends Controller
             'approvalRecorder:id,name',
             'openAmendment.opener:id,name',
             'amendments' => fn ($query) => $query->where('status', PlanStatus::Approved)->with('approvalRecorder:id,name'),
-            'ppas' => fn ($query) => $query->with(['priority', 'milestones'])->orderBy('starts_on'),
+            'ppas' => fn ($query) => $query->with(['priority', 'milestones'])
+                ->withCount([
+                    'evidence as public_evidence_count' => fn ($evidence) => $evidence->where('is_public', true),
+                    'evidence as internal_evidence_count' => fn ($evidence) => $evidence->where('is_public', false),
+                ])
+                ->orderBy('starts_on'),
         ]);
 
         return view('officer.abyips.show', [

@@ -56,6 +56,35 @@ document.addEventListener('submit', (event) => {
     text.textContent = button.dataset.busyLabel;
 });
 
+// A form marked data-confirm="<dialog id>" asks first: submitting opens that dialog, and
+// only its data-confirm-accept button sends the form. Runs before the handlers above.
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    const dialog = form.dataset.confirm && document.getElementById(form.dataset.confirm);
+
+    if (!dialog || 'confirmed' in form.dataset) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    dialog.querySelector('[data-confirm-accept]').onclick = () => {
+        dialog.close();
+        form.dataset.confirmed = '';
+        form.requestSubmit();
+        delete form.dataset.confirmed;
+    };
+    dialog.showModal();
+}, true);
+
+// Close a dialog from its cancel button, or by clicking the dimmed page around it.
+document.addEventListener('click', (event) => {
+    const dialog = event.target.closest('[data-dialog-close]')?.closest('dialog')
+        ?? (event.target instanceof HTMLDialogElement ? event.target : null);
+
+    dialog?.close();
+});
+
 // Reset the button if the browser restores the page from its back/forward cache.
 window.addEventListener('pageshow', (event) => {
     if (!event.persisted) {

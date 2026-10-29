@@ -126,6 +126,30 @@ body {
         radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) bottom / 100% 51% no-repeat;
 }
 
+/* Dialogs rise a little into place as they open, over a page that dims in behind them. */
+@keyframes dialog-in {
+    from { opacity: 0; transform: translateY(0.75rem) scale(0.97); }
+}
+
+@keyframes backdrop-in {
+    from { opacity: 0; }
+}
+
+.dialog[open] {
+    animation: dialog-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dialog[open]::backdrop {
+    animation: backdrop-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dialog[open],
+    .dialog[open]::backdrop {
+        animation: none;
+    }
+}
+
 /* Toasts swipe in leftward from the right edge, and back out to the right when they leave. */
 @keyframes toast-in {
     from { opacity: 0; transform: translateX(calc(100% + 2rem)); }

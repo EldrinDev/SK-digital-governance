@@ -365,7 +365,7 @@
                     <p class="mt-2 text-sm text-slate-muted">Publishing shows its PPAs, budgets, progress, and public evidence to everyone. Internal evidence and personal details are never shown.</p>
                 @endif
                 <div class="mt-auto flex flex-wrap items-center gap-3 pt-4">
-                    <form method="POST" action="{{ $abyip->isPublished() ? route('officer.abyips.publication.destroy', $abyip) : route('officer.abyips.publication.store', $abyip) }}">
+                    <form method="POST" action="{{ $abyip->isPublished() ? route('officer.abyips.publication.destroy', $abyip) : route('officer.abyips.publication.store', $abyip) }}" @unless ($abyip->isPublished()) data-confirm="publish-dialog" @endunless>
                         @csrf
                         @if ($abyip->isPublished())
                             @method('DELETE')
@@ -379,6 +379,61 @@
                     @endif
                 </div>
             </section>
+
+            @unless ($abyip->isPublished())
+                @php
+                    $publicEvidence = $abyip->ppas->sum('public_evidence_count');
+                    $internalEvidence = $abyip->ppas->sum('internal_evidence_count');
+                @endphp
+                {{-- Asked before publishing: a small preview of the board entry, then what goes public and what doesn't. --}}
+                <dialog id="publish-dialog" aria-labelledby="publish-dialog-title" aria-describedby="publish-dialog-text" class="dialog m-auto w-[calc(100%-2rem)] max-w-md rounded-[16px] bg-white p-0 text-navy shadow-2xl shadow-navy-deep/30 backdrop:bg-navy-deep/50 backdrop:backdrop-blur-[2px]">
+                    <div class="p-6">
+                        <h2 id="publish-dialog-title" class="font-display text-xl font-semibold">Publish ABYIP {{ $abyip->year }} to the board?</h2>
+                        <p id="publish-dialog-text" class="mt-2 text-sm leading-relaxed text-slate-muted">It goes live on the public transparency board right away. You can take it down at any time.</p>
+
+                        <figure class="mt-5 rounded-[12px] border border-line bg-mist p-4">
+                            <div class="flex items-center gap-3">
+                                <img src="{{ $abyip->barangay->logoUrl() }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-full bg-white object-contain">
+                                <div class="min-w-0 leading-tight">
+                                    <p class="truncate font-display font-semibold">SK {{ $abyip->barangay->name }}</p>
+                                    <p class="text-sm text-slate-muted">ABYIP {{ $abyip->year }}</p>
+                                </div>
+                            </div>
+                            <dl class="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-3 text-sm">
+                                <div>
+                                    <dt class="text-xs text-slate-muted">PPAs</dt>
+                                    <dd class="mt-0.5 font-semibold tabular-nums">{{ $active->count() }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs text-slate-muted">Budget</dt>
+                                    <dd class="mt-0.5 font-semibold tabular-nums">{{ $peso($totalBudget) }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs text-slate-muted">Spent</dt>
+                                    <dd class="mt-0.5 font-semibold tabular-nums">{{ $peso($spent) }}</dd>
+                                </div>
+                            </dl>
+                            <figcaption class="mt-3 text-xs text-slate-muted">How it shows on the board</figcaption>
+                        </figure>
+
+                        <ul class="mt-5 space-y-3 text-sm">
+                            <li class="flex gap-3">
+                                <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-emerald" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <span><span class="font-medium">Everyone sees</span> <span class="text-slate-muted">its PPAs, budgets, schedules and progress, and {{ trans_choice('{0} no evidence files yet|{1} :count evidence file you marked public|[2,*] :count evidence files you marked public', $publicEvidence) }}.</span></span>
+                            </li>
+                            <li class="flex gap-3">
+                                <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-slate-muted" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                                <span><span class="font-medium">Stays private</span> <span class="text-slate-muted">{{ $internalEvidence > 0 ? trans_choice(':count internal evidence file, and|:count internal evidence files, and', $internalEvidence) : '' }} the names and contact details of the youth.</span></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="flex flex-col-reverse gap-2 border-t border-line bg-mist/60 px-6 py-4 sm:flex-row sm:justify-end">
+                        <button type="button" data-dialog-close class="rounded-[8px] px-4 py-2 text-sm font-semibold text-slate-muted hover:text-navy">Cancel</button>
+                        <button type="button" data-confirm-accept autofocus class="rounded-[8px] bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">Publish to the board</button>
+                    </div>
+                </dialog>
+            @endunless
         @elsecan('report', $abyip)
             <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="publish-heading">
                 <h2 id="publish-heading" class="font-display text-lg font-semibold">{{ $abyip->isPublished() ? 'On the public transparency board' : 'Not on the public board yet' }}</h2>
