@@ -49,7 +49,7 @@ class AbyipControllerTest extends TestCase
             ->assertOk()
             ->assertDontSee('type="number"', false)
             ->assertSeeInOrder(['<select', 'name="year"'], false)
-            ->assertSee('data-controls="year" data-listbox', false)
+            ->assertSee('data-controls="year"', false)
             ->assertSee('data-hint="1 of 3 years has an ABYIP"', false)
             ->assertSeeText('2026, already has an ABYIP')
             ->assertSee('data-hint="Year 1 of 3"  data-taken data-note="Has an ABYIP"', false)

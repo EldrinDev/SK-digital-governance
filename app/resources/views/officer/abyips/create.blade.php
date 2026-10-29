@@ -19,7 +19,7 @@
                 }
             @endphp
 
-            <x-form.select name="cbydp_id" label="From CBYDP" placeholder="Choose the CBYDP" required data-controls="year" data-listbox>
+            <x-form.select name="cbydp_id" label="From CBYDP" placeholder="Choose the CBYDP" required data-controls="year">
                 @foreach ($cbydps as $cbydp)
                     @php
                         $years = range($cbydp->start_year, $cbydp->end_year);
@@ -36,7 +36,7 @@
 
             {{-- Only the chosen CBYDP's three years; years that already have an ABYIP can't be picked. --}}
             <div>
-                <x-form.select name="year" label="Year" :placeholder="$chosenCbydp ? 'Choose the year' : 'Choose the CBYDP first'" data-listbox :disabled="! $chosenCbydp" data-ready-label="Choose the year" data-waiting-label="Choose the CBYDP first" required>
+                <x-form.select name="year" label="Year" :placeholder="$chosenCbydp ? 'Choose the year' : 'Choose the CBYDP first'" :disabled="! $chosenCbydp" data-ready-label="Choose the year" data-waiting-label="Choose the CBYDP first" required>
                     @foreach ($cbydps as $cbydp)
                         @foreach (range($cbydp->start_year, $cbydp->end_year) as $year)
                             @php

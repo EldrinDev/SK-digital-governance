@@ -123,9 +123,10 @@ document.addEventListener('change', (event) => {
     target.dispatchEvent(new Event('change', { bubbles: true }));
 });
 
-// A select marked data-listbox opens a list drawn by the page instead of the browser's own,
-// so each choice can carry a second line (data-hint) and choices that can't be picked can
-// say why (data-note). The select stays in the form and keeps the value.
+// Every select opens a list drawn by the page instead of the browser's own, so it matches
+// the rest of the app, and a choice can carry a second line (data-hint) or say why it
+// can't be picked (data-note). The select stays in the form and keeps the value; mark one
+// data-native to leave it to the browser.
 const element = (tag, className, text) => {
     const node = document.createElement(tag);
     node.className = className;
@@ -147,14 +148,24 @@ const icon = (className, paths) => {
     return svg;
 };
 
+// Classes that place the field in its row go on the wrapper; the rest style the button.
+const isLayoutClass = (name) => /^(?:[a-z0-9-]+:)*(?:w-|min-w-|max-w-|flex-(?:1|none|auto|initial)$|shrink|grow|basis-|self-|m[trblxy]?-|col-|row-|order-)/.test(name);
+
+let listboxCount = 0;
+
 const enhanceListbox = (select) => {
+    select.id ||= `select-${++listboxCount}`;
+
     const label = document.querySelector(`label[for="${select.id}"]`);
-    const wrapper = element('div', 'relative mt-1.5');
-    const button = element('button', `${select.className.replace(/\b(mt-1\.5|block)\b/g, '')} flex items-center gap-3 text-left disabled:cursor-not-allowed disabled:bg-mist disabled:text-slate-muted`);
-    const buttonText = element('span', 'flex-1 truncate');
-    const list = element('ul', 'absolute inset-x-0 top-full z-20 mt-1.5 max-h-72 space-y-0.5 overflow-y-auto rounded-[10px] border border-line bg-white p-1.5 shadow-lg shadow-navy/10 outline-none');
+    const classes = [...select.classList];
+    const wrapper = element('div', ['relative', ...classes.filter(isLayoutClass)].join(' '));
+    const button = element('button', [...classes.filter((name) => !isLayoutClass(name) && name !== 'block'), 'flex w-full items-center gap-3 text-left disabled:cursor-not-allowed disabled:bg-mist disabled:text-slate-muted'].join(' '));
+    const buttonText = element('span', 'min-w-0 flex-1 truncate');
+    const list = element('ul', 'fixed z-50 max-h-72 overflow-y-auto overscroll-contain rounded-[10px] border border-line bg-white p-1.5 text-sm text-navy shadow-lg shadow-navy/10 outline-none');
     let choices = [];
     let active = -1;
+    let typed = '';
+    let typedAt = 0;
 
     button.type = 'button';
     button.id = `${select.id}-button`;
@@ -169,10 +180,16 @@ const enhanceListbox = (select) => {
             event.preventDefault();
             button.focus();
         });
+    } else if (select.hasAttribute('aria-label')) {
+        button.setAttribute('aria-label', select.getAttribute('aria-label'));
     }
 
     if (select.hasAttribute('aria-describedby')) {
         button.setAttribute('aria-describedby', select.getAttribute('aria-describedby'));
+    }
+
+    if (select.hasAttribute('aria-invalid')) {
+        button.setAttribute('aria-invalid', select.getAttribute('aria-invalid'));
     }
 
     list.id = `${select.id}-list`;
@@ -181,11 +198,22 @@ const enhanceListbox = (select) => {
     list.setAttribute('role', 'listbox');
     button.setAttribute('aria-controls', list.id);
 
-    select.classList.add('sr-only');
+    if (label) {
+        list.setAttribute('aria-labelledby', label.id);
+    }
+
+    select.className = 'sr-only';
     select.tabIndex = -1;
     select.setAttribute('aria-hidden', 'true');
     select.after(wrapper);
     wrapper.append(button, list);
+
+    if (select.autofocus) {
+        button.focus();
+    }
+
+    // A required select left empty: point the browser's message at the button instead.
+    select.addEventListener('invalid', () => button.focus());
 
     const highlight = (index) => {
         active = index;
@@ -194,12 +222,36 @@ const enhanceListbox = (select) => {
         choices[index]?.row.scrollIntoView({ block: 'nearest' });
     };
 
+    // Sit under the button, or above it when there isn't room below.
+    const place = () => {
+        const box = button.getBoundingClientRect();
+        const below = window.innerHeight - box.bottom - 8;
+        const height = Math.min(list.scrollHeight, 288);
+
+        list.style.left = `${Math.max(8, Math.min(box.left, window.innerWidth - Math.max(box.width, list.offsetWidth) - 8))}px`;
+        list.style.minWidth = `${box.width}px`;
+        list.style.maxWidth = `${Math.max(box.width, Math.min(352, window.innerWidth - 16))}px`;
+        list.style.top = below < height && box.top > below ? `${box.top - height - 6}px` : `${box.bottom + 6}px`;
+    };
+
     const close = (refocus = true) => {
+        if (list.hidden) {
+            return;
+        }
+
         list.hidden = true;
         button.setAttribute('aria-expanded', 'false');
+        window.removeEventListener('scroll', onScroll, true);
+        window.removeEventListener('resize', onScroll);
 
         if (refocus) {
             button.focus();
+        }
+    };
+
+    const onScroll = (event) => {
+        if (!list.contains(event.target)) {
+            close(false);
         }
     };
 
@@ -210,68 +262,14 @@ const enhanceListbox = (select) => {
             return;
         }
 
+        const changed = select.value !== choice.option.value;
+
         select.value = choice.option.value;
-        select.dispatchEvent(new Event('change', { bubbles: true }));
         close();
-    };
 
-    const render = () => {
-        const chosen = select.selectedOptions[0];
-
-        button.disabled = select.disabled;
-        buttonText.textContent = chosen?.dataset.label ?? chosen?.textContent ?? '';
-        buttonText.classList.toggle('text-slate-muted', !chosen || chosen.value === '');
-
-        choices = [...select.options].filter((option) => option.value !== '' && !option.hidden).map((option, index) => {
-            const row = element('li', 'flex items-center gap-3 rounded-[8px] px-3 py-2.5 data-active:bg-mist');
-            const text = element('span', 'min-w-0 flex-1');
-
-            row.id = `${list.id}-${index}`;
-            row.setAttribute('role', 'option');
-            row.setAttribute('aria-selected', String(option === chosen));
-            row.classList.add(option.disabled ? 'cursor-default' : 'cursor-pointer');
-
-            if (option.disabled) {
-                row.setAttribute('aria-disabled', 'true');
-            }
-
-            row.append(option === chosen ? icon('h-4 w-4 shrink-0 text-emerald', '<path d="M20 6 9 17l-5-5"/>') : element('span', 'h-4 w-4 shrink-0'));
-            text.append(element('span', `block font-display font-semibold tabular-nums ${option.disabled ? 'text-slate-muted' : 'text-navy'}`, option.dataset.label ?? option.textContent));
-
-            if (option.dataset.hint) {
-                text.append(element('span', 'block text-xs text-slate-muted', option.dataset.hint));
-            }
-
-            row.append(text);
-
-            if (option.dataset.note) {
-                const note = element('span', 'flex shrink-0 items-center gap-1.5 text-xs font-medium text-emerald-dark');
-
-                note.append(icon('h-4 w-4', '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/>'), option.dataset.note);
-                row.append(note);
-            }
-
-            row.addEventListener('mousemove', () => highlight(option.disabled ? -1 : index));
-            row.addEventListener('click', () => choose(index));
-
-            return { option, row };
-        });
-
-        list.replaceChildren(...choices.map(({ row }) => row));
-    };
-
-    const open = () => {
-        if (button.disabled) {
-            return;
-        }
-
-        list.hidden = false;
-        button.setAttribute('aria-expanded', 'true');
-        list.focus();
-        highlight(choices.findIndex(({ option }) => option.selected));
-
-        if (active === -1) {
-            move(1);
+        if (changed) {
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+            select.dispatchEvent(new Event('change', { bubbles: true }));
         }
     };
 
@@ -283,6 +281,108 @@ const enhanceListbox = (select) => {
                 return;
             }
         }
+    };
+
+    // Typing letters jumps to the first choice that starts with them, as a select does.
+    const jumpTo = (key) => {
+        typed = Date.now() - typedAt > 700 ? key : typed + key;
+        typedAt = Date.now();
+
+        const index = choices.findIndex(({ option, text }) => !option.disabled && text.toLowerCase().startsWith(typed.toLowerCase()));
+
+        if (index !== -1) {
+            highlight(index);
+        }
+    };
+
+    const render = () => {
+        const chosen = select.selectedOptions[0];
+        const isEmpty = !chosen || (chosen.value === '' && chosen.disabled);
+
+        button.disabled = select.disabled;
+        buttonText.textContent = chosen?.dataset.label ?? chosen?.textContent.trim() ?? '';
+        buttonText.classList.toggle('text-slate-muted', isEmpty);
+        choices = [];
+
+        const rows = [...select.children].flatMap((child) => {
+            if (child instanceof HTMLOptGroupElement) {
+                const options = [...child.children].filter((option) => !option.hidden);
+
+                return options.length ? [element('li', 'px-3 pb-1 pt-2.5 text-xs font-medium text-slate-muted first:pt-1', child.label), ...options] : [];
+            }
+
+            return child.hidden || (child.value === '' && child.disabled) ? [] : [child];
+        }).map((item) => {
+            if (!(item instanceof HTMLOptionElement)) {
+                item.setAttribute('role', 'presentation');
+
+                return item;
+            }
+
+            const option = item;
+            const index = choices.length;
+            const hasHint = Boolean(option.dataset.hint);
+            const text = option.dataset.label ?? option.textContent.trim();
+            const row = element('li', `flex items-center gap-3 rounded-[8px] px-3 ${hasHint ? 'py-2.5' : 'py-2'} data-active:bg-mist`);
+            const body = element('span', 'min-w-0 flex-1');
+
+            row.id = `${list.id}-${index}`;
+            row.setAttribute('role', 'option');
+            row.setAttribute('aria-selected', String(option === chosen));
+            row.classList.add(option.disabled ? 'cursor-default' : 'cursor-pointer');
+
+            if (option.disabled) {
+                row.setAttribute('aria-disabled', 'true');
+            }
+
+            row.append(option === chosen ? icon('h-4 w-4 shrink-0 text-emerald', '<path d="M20 6 9 17l-5-5"/>') : element('span', 'h-4 w-4 shrink-0'));
+            body.append(element('span', [
+                'block',
+                hasHint ? 'font-display text-base font-semibold tabular-nums' : (option === chosen ? 'font-semibold' : ''),
+                option.disabled ? 'text-slate-muted' : 'text-navy',
+            ].join(' '), text));
+
+            if (hasHint) {
+                body.append(element('span', 'block text-xs text-slate-muted', option.dataset.hint));
+            }
+
+            row.append(body);
+
+            if (option.dataset.note) {
+                const note = element('span', 'flex shrink-0 items-center gap-1.5 text-xs font-medium text-emerald-dark');
+
+                note.append(icon('h-4 w-4', '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14 2 2 4-4"/>'), option.dataset.note);
+                row.append(note);
+            }
+
+            row.addEventListener('mousemove', () => highlight(option.disabled ? -1 : index));
+            row.addEventListener('click', () => choose(index));
+            choices.push({ option, row, text });
+
+            return row;
+        });
+
+        list.replaceChildren(...rows);
+    };
+
+    const open = () => {
+        if (button.disabled) {
+            return;
+        }
+
+        document.dispatchEvent(new CustomEvent('listbox:open', { detail: list }));
+        list.hidden = false;
+        button.setAttribute('aria-expanded', 'true');
+        place();
+        list.focus({ preventScroll: true });
+        highlight(choices.findIndex(({ option }) => option.selected && !option.disabled));
+
+        if (active === -1) {
+            move(1);
+        }
+
+        window.addEventListener('scroll', onScroll, true);
+        window.addEventListener('resize', onScroll);
     };
 
     button.addEventListener('click', () => (list.hidden ? open() : close()));
@@ -308,18 +408,26 @@ const enhanceListbox = (select) => {
         } else if (keys[event.key]) {
             event.preventDefault();
             keys[event.key]();
+        } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            jumpTo(event.key);
         }
     });
     document.addEventListener('click', (event) => {
-        if (!list.hidden && !wrapper.contains(event.target)) {
+        if (!wrapper.contains(event.target)) {
+            close(false);
+        }
+    });
+    document.addEventListener('listbox:open', (event) => {
+        if (event.detail !== list) {
             close(false);
         }
     });
     select.addEventListener('change', render);
+    select.form?.addEventListener('reset', () => setTimeout(render));
     render();
 };
 
-document.querySelectorAll('select[data-listbox]').forEach(enhanceListbox);
+document.querySelectorAll('select:not([multiple]):not([size]):not([data-native])').forEach(enhanceListbox);
 
 // Fold the workspace side menu down to icons, and remember the choice in this browser.
 const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
