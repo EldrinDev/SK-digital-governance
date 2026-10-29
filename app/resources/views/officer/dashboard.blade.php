@@ -7,8 +7,27 @@
         ['value' => $totalPpas, 'label' => 'PPAs across all plans', 'href' => route('officer.ppas.index')],
         ['value' => $completedPpas.' of '.$totalPpas, 'label' => 'completed, '.$completedWithEvidence.' with evidence', 'href' => route('officer.ppas.index', ['status' => 'completed'])],
         ['value' => $delayedPpas, 'label' => $delayedPpas > 0 ? ($delayedPpas === 1 ? 'PPA past its end date' : 'PPAs past their end date') : 'delayed, all on schedule', 'href' => route('officer.ppas.index', ['status' => 'delayed']), 'alert' => $delayedPpas > 0],
-        ['value' => $peso($spentBudget), 'label' => $currentAbyip ? 'spent of '.$peso($plannedBudget).' in ABYIP '.$year : 'spent, no ABYIP for '.$year.' yet', 'href' => $currentAbyip ? route('officer.abyips.show', $currentAbyip) : null],
+        ['value' => $peso($spentBudget), 'label' => $currentAbyip ? 'spent of '.$peso($plannedBudget).' in ABYIP '.$year : 'spent, no ABYIP for '.$year.' yet', 'href' => $currentAbyip ? route('officer.abyips.show', $currentAbyip) : null, 'meter' => $currentAbyip && $plannedBudget > 0 ? $budgetUsedPercent : null],
     ];
+
+    // A few words on what each logged change was about, from what the log kept.
+    $activityDetail = function ($entry): ?string {
+        $properties = $entry->properties ?? [];
+
+        return match (true) {
+            $entry->subject instanceof \App\Models\Ppa => $entry->subject->title.(isset($properties['to']) && $entry->action === 'ppa.status_changed' ? ', now '.Str::lcfirst($properties['to']) : ''),
+            isset($properties['title']) => $properties['title'],
+            isset($properties['year']) => 'ABYIP '.$properties['year'],
+            isset($properties['period']) => 'CBYDP '.$properties['period'],
+            isset($properties['file']) => $properties['file'],
+            default => null,
+        };
+    };
+    $activityDays = $recentActivity->groupBy(fn ($entry): string => match (true) {
+        $entry->created_at->isToday() => 'Today',
+        $entry->created_at->isYesterday() => 'Yesterday',
+        default => $entry->created_at->format('l, M j'),
+    });
 @endphp
 <x-layouts.app title="Overview" :heading="$greeting.', '.str(auth()->user()->name)->before(' ').'!'" :description="now()->format('l, F j').'. Here’s where '.$barangay->name.'’s youth programs stand.'">
     <x-slot:actions>
@@ -111,13 +130,19 @@
                         @endif
                     </dd>
                     <dd class="text-sm text-slate-muted">{{ $figure['label'] }}</dd>
+                    @isset($figure['meter'])
+                        <dd class="mt-2 h-1 max-w-48 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow="{{ $figure['meter'] }}" aria-valuemin="0" aria-valuemax="100" aria-label="Share of the budget spent">
+                            <span class="block h-full rounded-full bg-emerald" style="width: {{ $figure['meter'] }}%"></span>
+                        </dd>
+                    @endisset
                 </div>
             @endforeach
         </dl>
 
-        <div class="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div class="space-y-6">
-                <section class="rounded-[12px] border border-line bg-white" aria-labelledby="open-heading">
+        {{-- Two columns on wide screens; on phones the sections stack in order of use. --}}
+        <div class="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+            <div class="max-lg:contents lg:space-y-6">
+                <section class="rounded-[12px] border border-line bg-white max-lg:order-1" aria-labelledby="open-heading">
                     <div class="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
                         <h2 id="open-heading" class="font-display text-lg font-semibold">Open PPAs, by end date</h2>
                         <a href="{{ route('officer.ppas.index') }}" class="text-sm font-semibold text-emerald hover:underline">All PPAs</a>
@@ -152,45 +177,65 @@
                     @endif
                 </section>
 
-                <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="activity-heading">
+                <section class="rounded-[12px] border border-line bg-white p-5 max-lg:order-3" aria-labelledby="activity-heading">
                     <h2 id="activity-heading" class="font-display text-lg font-semibold">Recent activity</h2>
-                    <ul class="mt-3 space-y-2.5 text-sm">
-                        @forelse ($recentActivity as $entry)
-                            <li>
-                                <span class="font-medium">{{ $entry->user?->name ?? 'Someone' }}</span>
-                                <span class="text-navy/70">{{ Str::lcfirst($entry->label()) }}</span>
-                                <span class="block text-xs text-slate-muted">{{ $entry->created_at->diffForHumans() }}</span>
-                            </li>
-                        @empty
-                            <li class="text-slate-muted">No changes yet.</li>
-                        @endforelse
-                    </ul>
+                    @forelse ($activityDays as $day => $entries)
+                        <h3 class="mt-4 text-xs font-medium text-slate-muted">{{ $day }}</h3>
+                        <ol class="mt-2 border-l border-line">
+                            @foreach ($entries as $entry)
+                                @php
+                                    $detail = $activityDetail($entry);
+                                @endphp
+                                <li class="relative pb-3 pl-4 text-sm last:pb-0">
+                                    <span class="absolute -left-[3.5px] top-[0.45rem] h-1.5 w-1.5 rounded-full bg-slate-muted/50" aria-hidden="true"></span>
+                                    <p>
+                                        <span class="font-medium">{{ $entry->user?->name ?? 'Someone' }}</span>
+                                        <span class="text-navy/70">{{ Str::lcfirst($entry->label()) }}</span>
+                                        <span class="text-xs tabular-nums text-slate-muted">{{ $entry->created_at->format('g:i A') }}</span>
+                                    </p>
+                                    @if ($detail)
+                                        <p class="truncate text-xs text-slate-muted">{{ $detail }}</p>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ol>
+                    @empty
+                        <p class="mt-2 text-sm text-slate-muted">No changes yet.</p>
+                    @endforelse
                 </section>
             </div>
 
-            <div class="space-y-6">
-                <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="milestones-heading">
-                    <h2 id="milestones-heading" class="font-display text-lg font-semibold">Upcoming milestones</h2>
-                    @if ($upcomingMilestones->isEmpty())
-                        <p class="mt-2 text-sm text-slate-muted">Nothing due. Add milestones to a PPA to track it here.</p>
+            <div class="max-lg:contents lg:space-y-6">
+                <section class="rounded-[12px] border border-line bg-white max-lg:order-2" aria-labelledby="agenda-heading">
+                    <div class="border-b border-line px-5 py-4">
+                        <h2 id="agenda-heading" class="font-display text-lg font-semibold">Coming up</h2>
+                        <p class="text-xs text-slate-muted">Events, council sessions and PPA milestones.</p>
+                    </div>
+                    @if ($agenda->isEmpty())
+                        <p class="px-5 py-6 text-sm text-slate-muted">Nothing scheduled. Post an event, record a session, or add milestones to a PPA.</p>
                     @else
-                        <ul class="mt-3 space-y-3 text-sm">
-                            @foreach ($upcomingMilestones as $milestone)
-                                <li class="flex items-start justify-between gap-3">
-                                    <span class="min-w-0">
-                                        <span class="block font-medium">{{ $milestone->title }}</span>
-                                        <a href="{{ route('officer.ppas.show', $milestone->ppa_id) }}" class="text-xs text-slate-muted hover:text-emerald">{{ $milestone->ppa->title }}</a>
-                                    </span>
-                                    <span @class(['shrink-0 text-xs font-semibold tabular-nums', 'text-[#b91c1c]' => $milestone->isOverdue(), 'text-slate-muted' => ! $milestone->isOverdue()])>
-                                        {{ $milestone->isOverdue() ? 'Overdue' : $milestone->due_on->format('M j') }}
-                                    </span>
+                        <ul class="divide-y divide-line">
+                            @foreach ($agenda as $item)
+                                <li>
+                                    <a href="{{ $item['href'] }}" class="group flex items-center gap-4 px-5 py-3 hover:bg-mist/60">
+                                        <span @class(['flex w-10 shrink-0 flex-col items-center leading-none', 'text-[#b91c1c]' => $item['overdue']])>
+                                            <span @class(['text-xs', 'text-slate-muted' => ! $item['overdue']])>{{ $item['date']->format('M') }}</span>
+                                            <span class="mt-1 font-display text-lg font-semibold tabular-nums">{{ $item['date']->format('j') }}</span>
+                                        </span>
+                                        <span class="min-w-0 flex-1">
+                                            <span class="block truncate text-sm font-medium group-hover:text-emerald">{{ $item['title'] }}</span>
+                                            <span @class(['block truncate text-xs', 'font-medium text-[#b91c1c]' => $item['overdue'], 'text-slate-muted' => ! $item['overdue']])>
+                                                {{ $item['overdue'] ? 'Overdue. ' : '' }}{{ $item['detail'] }}
+                                            </span>
+                                        </span>
+                                    </a>
                                 </li>
                             @endforeach
                         </ul>
                     @endif
                 </section>
 
-                <section class="rounded-[12px] border border-line bg-white p-5" aria-labelledby="checkins-heading">
+                <section class="rounded-[12px] border border-line bg-white p-5 max-lg:order-4" aria-labelledby="checkins-heading">
                     <h2 id="checkins-heading" class="font-display text-lg font-semibold">Youth check-ins</h2>
                     @if ($hasCheckIns)
                         <p class="mb-4 text-xs text-slate-muted">Event attendance, last six months.</p>

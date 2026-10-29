@@ -4,6 +4,9 @@ namespace Tests\Feature\Officer;
 
 use App\Models\Abyip;
 use App\Models\Cbydp;
+use App\Models\Event;
+use App\Models\Meeting;
+use App\Models\Milestone;
 use App\Models\Ppa;
 use App\Models\User;
 use App\PpaStatus;
@@ -62,6 +65,22 @@ class DashboardControllerTest extends TestCase
                 '1 completed PPA has no evidence',
             ])
             ->assertSee(route('officer.abyips.create', ['cbydp' => $cbydp->id]), false);
+    }
+
+    public function test_coming_up_lists_events_sessions_and_milestones_by_date(): void
+    {
+        $officer = User::factory()->officer()->create();
+        $abyip = Abyip::factory()->approved()->for(Cbydp::factory()->approved()->for($officer->barangay))->create(['barangay_id' => $officer->barangay_id]);
+        $ppa = Ppa::factory()->create(['abyip_id' => $abyip->id, 'title' => 'Coastal clean-up']);
+        Milestone::factory()->for($ppa)->create(['title' => 'Buy supplies', 'due_on' => now()->subDay()]);
+        Meeting::factory()->for($officer->barangay)->create(['title' => 'November session', 'held_on' => now()->addDays(3)]);
+        Event::factory()->for($officer->barangay)->create(['title' => 'Liga opening', 'starts_at' => now()->addDays(10), 'capacity' => 40]);
+        Event::factory()->create(['title' => 'Someone else’s fun run', 'starts_at' => now()->addDays(5)]);
+
+        $this->actingAs($officer)->get(route('officer.dashboard'))
+            ->assertOk()
+            ->assertSeeTextInOrder(['Coming up', 'Buy supplies', 'Overdue. Milestone of Coastal clean-up', 'November session', 'Liga opening', '0 of 40 registered'])
+            ->assertDontSeeText('Someone else’s fun run');
     }
 
     public function test_next_up_says_so_when_nothing_is_waiting(): void

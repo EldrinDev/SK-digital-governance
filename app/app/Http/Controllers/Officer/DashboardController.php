@@ -12,6 +12,8 @@ use App\Models\User;
 use App\PlanStatus;
 use App\PpaStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -48,24 +50,66 @@ class DashboardController extends Controller
                 ->orderBy('ends_on')
                 ->limit(5)
                 ->get(),
-            'upcomingMilestones' => Milestone::query()
-                ->whereHas('ppa', fn ($query) => $query->where('barangay_id', $barangay->id))
-                ->whereNull('completed_at')
-                ->with('ppa:id,title')
-                ->orderBy('due_on')
-                ->limit(6)
-                ->get(),
+            'agenda' => $this->agenda($barangay),
             'monthlyCheckIns' => EventRegistration::monthlyCheckIns([$barangay->id]),
             'remarks' => $barangay->remarks()->with('author:id,name')->limit(3)->get(),
             'recentActivity' => AuditLog::query()
                 ->where('barangay_id', $barangay->id)
                 ->whereNotIn('action', ['auth.login', 'auth.logout', 'auth.failed', 'auth.lockout'])
-                ->with('user:id,name')
+                ->with(['user:id,name', 'subject'])
                 ->latest('created_at')
                 ->latest('id')
-                ->limit(6)
+                ->limit(8)
                 ->get(),
         ]);
+    }
+
+    /**
+     * Events, council sessions and milestones still ahead (and milestones already late),
+     * in date order, so the week's work reads as one list.
+     *
+     * @return Collection<int, array{date: Carbon, title: string, detail: string, href: string, overdue: bool}>
+     */
+    private function agenda(Barangay $barangay): Collection
+    {
+        $events = $barangay->events()->upcoming()->withCount('registrations')->orderBy('starts_at')->limit(6)->get()
+            ->map(fn ($event): array => [
+                'date' => $event->starts_at,
+                'title' => $event->title,
+                'detail' => $event->kind->label().' at '.$event->starts_at->format('g:i A').', '
+                    .$event->registrations_count.($event->capacity ? ' of '.$event->capacity : '').' registered',
+                'href' => route('officer.events.show', $event),
+                'overdue' => false,
+            ]);
+
+        $meetings = $barangay->meetings()->whereDate('held_on', '>=', today())->orderBy('held_on')->limit(6)->get()
+            ->map(fn ($meeting): array => [
+                'date' => $meeting->held_on,
+                'title' => $meeting->title,
+                'detail' => $meeting->kind->label().($meeting->venue ? ', '.$meeting->venue : ''),
+                'href' => route('officer.meetings.show', $meeting),
+                'overdue' => false,
+            ]);
+
+        $milestones = Milestone::query()
+            ->whereHas('ppa', fn ($query) => $query->where('barangay_id', $barangay->id)->whereIn('status', [PpaStatus::Planned, PpaStatus::Ongoing]))
+            ->whereNull('completed_at')
+            ->with('ppa:id,title')
+            ->orderBy('due_on')
+            ->limit(6)
+            ->get()
+            ->map(fn ($milestone): array => [
+                'date' => $milestone->due_on,
+                'title' => $milestone->title,
+                'detail' => 'Milestone of '.$milestone->ppa->title,
+                'href' => route('officer.ppas.show', $milestone->ppa_id),
+                'overdue' => $milestone->isOverdue(),
+            ]);
+
+        return $events->toBase()->merge($meetings)->merge($milestones)
+            ->sortBy(fn (array $item): int => $item['date']->getTimestamp())
+            ->take(7)
+            ->values();
     }
 
     /**
