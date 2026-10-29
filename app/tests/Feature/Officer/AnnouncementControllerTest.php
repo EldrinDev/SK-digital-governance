@@ -35,6 +35,25 @@ class AnnouncementControllerTest extends TestCase
         Notification::assertNotSentTo([$officer, $elsewhere], AnnouncementPosted::class);
     }
 
+    public function test_form_previews_the_post_with_a_poster_for_each_kind(): void
+    {
+        $officer = User::factory()->officer()->create();
+        $announcement = Announcement::factory()->for($officer->barangay)->create(['category' => 'reminder', 'title' => 'Assembly on Saturday', 'body' => "Kita-kits!\n🗓️ November 7, 2026"]);
+
+        $this->actingAs($officer)->get(route('officer.announcements.create'))
+            ->assertOk()
+            ->assertSeeText('How youth will see it')
+            ->assertSeeText('SK '.$officer->barangay->name)
+            ->assertSee('data-poster="announcement"', false)
+            ->assertSee('data-poster="recognition"', false)
+            ->assertSee('data-insert-line="🗓️ "', false);
+
+        $this->actingAs($officer)->get(route('officer.announcements.edit', $announcement))
+            ->assertOk()
+            ->assertSeeInOrder(['data-preview-title', 'Assembly on Saturday'], false)
+            ->assertSeeText('November 7, 2026');
+    }
+
     public function test_officer_edits_and_takes_down_an_announcement(): void
     {
         $officer = User::factory()->officer()->create();

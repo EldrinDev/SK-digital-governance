@@ -598,3 +598,157 @@ window.toast = (message, kind = 'success') => {
     [...toaster.querySelectorAll('[data-toast]:not([data-leaving])')].slice(0, -3).forEach(dismissToast);
     watchToast(toast);
 };
+
+// The announcement form's preview: the post card beside the form follows what's typed,
+// the kind picked and the image chosen, the way it will show on the portal.
+const announcementForm = document.querySelector('[data-announcement-form]');
+
+if (announcementForm) {
+    const field = (name) => announcementForm.elements.namedItem(name);
+    const title = field('title');
+    const body = field('body');
+    const image = field('image');
+    const removeImage = announcementForm.querySelector('[data-remove-image]');
+    const previewImage = announcementForm.querySelector('[data-preview-image]');
+    const fileName = announcementForm.querySelector('[data-file-name]');
+    const clearImage = announcementForm.querySelector('[data-clear-image]');
+    const dropzone = announcementForm.querySelector('[data-dropzone]');
+    const detailLine = /^\s*(🗓️?|📅|⏰|[\u{1F550}-\u{1F567}]|📍)\s*(.+)$/u;
+    let objectUrl = null;
+
+    const detailKind = (marker) => (marker.startsWith('📍') ? 'place' : (marker.startsWith('🗓') || marker.startsWith('📅') ? 'date' : 'time'));
+
+    const showCounts = () => {
+        announcementForm.querySelectorAll('[data-count-for]').forEach((counter) => {
+            const input = field(counter.dataset.countFor);
+            counter.textContent = `${input.value.length.toLocaleString()} / ${Number(input.maxLength).toLocaleString()}`;
+        });
+    };
+
+    const showText = () => {
+        const heading = announcementForm.querySelector('[data-preview-title]');
+        heading.textContent = title.value.trim() || heading.dataset.placeholder;
+        heading.classList.toggle('text-slate-muted', title.value.trim() === '');
+
+        const lines = body.value.split(/\r?\n/);
+        const details = lines.map((line) => line.match(detailLine)).filter(Boolean).map((match) => ({ kind: detailKind(match[1]), text: match[2].trim() }));
+        const caption = lines.filter((line) => !detailLine.test(line)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+        const excerpt = caption.length > 180 ? `${caption.slice(0, caption.lastIndexOf(' ', 180) > 120 ? caption.lastIndexOf(' ', 180) : 180)}…` : caption;
+
+        const detailList = announcementForm.querySelector('[data-preview-details]');
+        detailList.replaceChildren(...details.map((detail) => {
+            const row = document.createElement('div');
+            const term = document.createElement('dt');
+            const value = document.createElement('dd');
+
+            row.className = 'flex gap-2';
+            term.className = 'w-11 shrink-0 text-xs font-medium leading-5 text-emerald';
+            term.textContent = { date: 'Date', time: 'Time', place: 'Place' }[detail.kind];
+            value.className = 'font-medium text-navy';
+            value.textContent = detail.text;
+            row.append(term, value);
+
+            return row;
+        }));
+        detailList.hidden = details.length === 0;
+
+        const captionText = announcementForm.querySelector('[data-preview-caption]');
+        captionText.replaceChildren(...(excerpt || captionText.dataset.placeholder).split(/(#[\p{L}\p{N}_]+)/u).map((part) => {
+            if (!part.startsWith('#')) {
+                return document.createTextNode(part);
+            }
+
+            const tag = document.createElement('span');
+            tag.className = 'font-medium text-emerald';
+            tag.textContent = part;
+
+            return tag;
+        }));
+        captionText.classList.toggle('text-slate-muted', excerpt === '');
+
+        const date = details.find((detail) => detail.kind === 'date')?.text ?? '';
+        announcementForm.querySelectorAll('[data-poster-date]').forEach((line) => {
+            line.textContent = date;
+            line.hidden = date === '';
+        });
+    };
+
+    const showCover = () => {
+        const chosen = announcementForm.querySelector('input[name="category"]:checked')?.value;
+        const source = objectUrl ?? (removeImage?.checked ? '' : previewImage.dataset.savedImage);
+
+        previewImage.hidden = !source;
+        previewImage.src = source || '';
+        announcementForm.querySelectorAll('[data-poster]').forEach((poster) => {
+            poster.hidden = Boolean(source) || poster.dataset.poster !== chosen;
+        });
+    };
+
+    const showFile = () => {
+        const file = image.files[0];
+
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+        }
+
+        objectUrl = file ? URL.createObjectURL(file) : null;
+        fileName.textContent = file ? file.name : fileName.dataset.empty;
+        clearImage.hidden = !file;
+        showCover();
+    };
+
+    announcementForm.addEventListener('input', (event) => {
+        if (event.target === title || event.target === body) {
+            showText();
+            showCounts();
+        }
+    });
+
+    announcementForm.addEventListener('change', (event) => {
+        if (event.target.name === 'category' || event.target === removeImage) {
+            showCover();
+        } else if (event.target === image) {
+            showFile();
+        } else if (event.target.matches('[data-preview-pin-toggle]')) {
+            announcementForm.querySelector('[data-preview-pin]').hidden = !event.target.checked;
+        }
+    });
+
+    clearImage.addEventListener('click', () => {
+        image.value = '';
+        showFile();
+    });
+
+    // Date, time and place buttons start a new caption line with their marker.
+    announcementForm.querySelectorAll('[data-insert-line]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const at = body.selectionStart ?? body.value.length;
+            const before = body.value.slice(0, at);
+            const prefix = before === '' || before.endsWith('\n') ? '' : '\n';
+            const line = `${prefix}${button.dataset.insertLine}`;
+
+            body.focus();
+            body.setRangeText(line, at, body.selectionEnd ?? at, 'end');
+            body.placeholder = body.value === line ? `${button.dataset.insertLine}${button.dataset.example}` : body.placeholder;
+            body.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+
+    ['dragenter', 'dragover'].forEach((type) => dropzone.addEventListener(type, (event) => {
+        event.preventDefault();
+        dropzone.toggleAttribute('data-dragging', true);
+    }));
+    ['dragleave', 'drop'].forEach((type) => dropzone.addEventListener(type, () => dropzone.toggleAttribute('data-dragging', false)));
+    dropzone.addEventListener('drop', (event) => {
+        event.preventDefault();
+
+        if (event.dataTransfer.files.length) {
+            image.files = event.dataTransfer.files;
+            showFile();
+        }
+    });
+
+    showText();
+    showCounts();
+    showCover();
+}

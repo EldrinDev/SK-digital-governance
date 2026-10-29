@@ -1,6 +1,7 @@
 @props([
     'announcement',
     'size' => 'card',
+    'live' => false,
 ])
 @php
     use App\AnnouncementCategory;
@@ -9,6 +10,7 @@
      * Posts with a photo show it. Posts without one get a "pubmat" tile, the poster style
      * SK pages use on social media. The category is set large as the poster's word, with
      * the date from the caption under it, so the headline beside the tile isn't repeated.
+     * A live cover (the form's preview) always has the date line, for the script to fill in.
      */
     $tone = match ($announcement->category) {
         AnnouncementCategory::Reminder => ['bg' => 'bg-gold', 'text' => 'text-navy', 'muted' => 'text-navy/70', 'rule' => 'bg-navy'],
@@ -47,8 +49,8 @@
                 'text-4xl' => $size === 'card',
                 'text-2xl' => $size === 'compact',
             ])>{{ $announcement->category->label() }}</p>
-            @if ($date)
-                <p @class(['font-semibold', 'mt-3 text-lg' => $size === 'feature', 'mt-3 text-sm' => $size === 'card', 'mt-1.5 text-xs' => $size === 'compact'])>{{ $date }}</p>
+            @if ($date || $live)
+                <p @class(['font-semibold', 'mt-3 text-lg' => $size === 'feature', 'mt-3 text-sm' => $size === 'card', 'mt-1.5 text-xs' => $size === 'compact']) @if ($live) data-poster-date @endif @unless ($date) hidden @endunless>{{ $date }}</p>
             @endif
         </div>
     </div>
