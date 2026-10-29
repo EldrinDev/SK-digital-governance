@@ -137,6 +137,8 @@ class DemoDataSeeder extends Seeder
                 $this->event($barangay, $kind, $eventTitle, $inDays, $venue, $capacity);
             }
         }
+
+        $this->officers(Barangay::firstWhere('name', 'Banicain'), ['Marco Dizon' => 'officer.banicain@sk.test']);
     }
 
     /**

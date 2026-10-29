@@ -94,6 +94,7 @@ Every demo account uses the password **`password123`**.
 | SK Treasurer, Santa Rita | `treasurer.santarita@sk.test` | `/sk-access` |
 | SK Kagawad, Santa Rita | `kagawad1.santarita@sk.test`, `kagawad2.santarita@sk.test` | `/sk-access` |
 | SK officer, Barretto | `officer.barretto@sk.test` | `/sk-access` |
+| SK officer, Banicain | `officer.banicain@sk.test` | `/sk-access` |
 | SK officer, Kalaklan | `officer.kalaklan@sk.test` | `/sk-access` |
 | SK Federation | `federation@sk.test` | `/sk-access` |
 | System administrator | `admin@sk.test` | `/sk-access` |
