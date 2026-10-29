@@ -19,9 +19,18 @@
                 }
             @endphp
 
-            <x-form.select name="cbydp_id" label="From CBYDP" placeholder="Choose the CBYDP" required data-controls="year">
+            <x-form.select name="cbydp_id" label="From CBYDP" placeholder="Choose the CBYDP" required data-controls="year" data-listbox>
                 @foreach ($cbydps as $cbydp)
-                    <option value="{{ $cbydp->id }}" @selected($chosenCbydp?->id === $cbydp->id)>CBYDP {{ $cbydp->period() }}</option>
+                    @php
+                        $years = range($cbydp->start_year, $cbydp->end_year);
+                        $doneYears = count(array_intersect($years, $takenYears));
+                        $progress = match ($doneYears) {
+                            0 => 'No ABYIP yet',
+                            count($years) => 'Every year has an ABYIP',
+                            default => "{$doneYears} of ".count($years).($doneYears === 1 ? ' years has an ABYIP' : ' years have an ABYIP'),
+                        };
+                    @endphp
+                    <option value="{{ $cbydp->id }}" data-label="CBYDP {{ $cbydp->period() }}" data-hint="{{ $progress }}" @selected($chosenCbydp?->id === $cbydp->id)>CBYDP {{ $cbydp->period() }}</option>
                 @endforeach
             </x-form.select>
 
