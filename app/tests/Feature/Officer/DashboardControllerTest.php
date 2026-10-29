@@ -42,4 +42,37 @@ class DashboardControllerTest extends TestCase
             ->assertSeeText('Overdue tree planting')
             ->assertDontSeeText('Elsewhere delayed');
     }
+
+    public function test_next_up_points_to_the_missing_abyip_and_delayed_work(): void
+    {
+        $officer = User::factory()->officer()->create();
+        $year = now()->year;
+        $cbydp = Cbydp::factory()->approved()->for($officer->barangay)->create(['start_year' => $year - 1, 'end_year' => $year + 1]);
+        $lastYear = Abyip::factory()->approved()->for($cbydp)->create(['barangay_id' => $officer->barangay_id, 'year' => $year - 1]);
+        Ppa::factory()->delayed()->create(['abyip_id' => $lastYear->id, 'title' => 'Basketball league']);
+        Ppa::factory()->create(['abyip_id' => $lastYear->id, 'status' => PpaStatus::Completed]);
+
+        $this->actingAs($officer)->get(route('officer.dashboard'))
+            ->assertOk()
+            ->assertSeeTextInOrder([
+                'Next up for SK '.$officer->barangay->name,
+                '1 PPA is past its end date and still open',
+                'Basketball league. Mark each one completed, or cancel it.',
+                "There’s no ABYIP for {$year} yet",
+                '1 completed PPA has no evidence',
+            ])
+            ->assertSee(route('officer.abyips.create', ['cbydp' => $cbydp->id]), false);
+    }
+
+    public function test_next_up_says_so_when_nothing_is_waiting(): void
+    {
+        $officer = User::factory()->officer()->create();
+        $cbydp = Cbydp::factory()->approved()->for($officer->barangay)->create();
+        $abyip = Abyip::factory()->approved()->for($cbydp)->create(['barangay_id' => $officer->barangay_id, 'year' => now()->year, 'published_at' => now()]);
+        Ppa::factory()->create(['abyip_id' => $abyip->id, 'ends_on' => now()->addMonth()]);
+
+        $this->actingAs($officer)->get(route('officer.dashboard'))
+            ->assertOk()
+            ->assertSeeText('Nothing needs you right now');
+    }
 }
