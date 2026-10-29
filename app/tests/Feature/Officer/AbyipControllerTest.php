@@ -40,6 +40,22 @@ class AbyipControllerTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'abyip.created', 'subject_id' => $abyip->id]);
     }
 
+    public function test_form_offers_only_the_cbydp_years_and_marks_taken_ones(): void
+    {
+        Abyip::factory()->for($this->officer->barangay)->create(['cbydp_id' => $this->cbydp->id, 'year' => 2026]);
+
+        $this->actingAs($this->officer)
+            ->get(route('officer.abyips.create'))
+            ->assertOk()
+            ->assertDontSee('type="number"', false)
+            ->assertSeeInOrder(['<select', 'name="year"'], false)
+            ->assertSeeText('2026, already has an ABYIP')
+            ->assertSee('<option value="2027" data-for="'.$this->cbydp->id.'"  selected', false)
+            ->assertSee('value="2028"', false)
+            ->assertDontSee('value="2025"', false)
+            ->assertDontSee('value="2029"', false);
+    }
+
     public function test_draft_cbydp_cannot_be_used(): void
     {
         $draft = Cbydp::factory()->for($this->officer->barangay)->create(['start_year' => 2029, 'end_year' => 2031]);

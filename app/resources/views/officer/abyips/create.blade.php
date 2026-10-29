@@ -9,13 +9,36 @@
         <form method="POST" action="{{ route('officer.abyips.store') }}" class="space-y-5 rounded-[12px] border border-line bg-white p-6" novalidate>
             @csrf
 
-            <x-form.select name="cbydp_id" label="From CBYDP" placeholder="Choose the CBYDP" required>
+            @php
+                $chosenCbydp = $cbydps->firstWhere('id', (int) old('cbydp_id', $selectedCbydp));
+                $chosenYear = (int) old('year');
+
+                if ($chosenCbydp && ! $chosenYear) {
+                    $freeYears = collect(range($chosenCbydp->start_year, $chosenCbydp->end_year))->diff($takenYears);
+                    $chosenYear = $freeYears->contains(now()->year) ? now()->year : $freeYears->first();
+                }
+            @endphp
+
+            <x-form.select name="cbydp_id" label="From CBYDP" placeholder="Choose the CBYDP" required data-controls="year">
                 @foreach ($cbydps as $cbydp)
-                    <option value="{{ $cbydp->id }}" @selected((string) old('cbydp_id', $selectedCbydp) === (string) $cbydp->id)>CBYDP {{ $cbydp->period() }}</option>
+                    <option value="{{ $cbydp->id }}" @selected($chosenCbydp?->id === $cbydp->id)>CBYDP {{ $cbydp->period() }}</option>
                 @endforeach
             </x-form.select>
 
-            <x-form.input name="year" type="number" label="Year" :value="now()->year" min="2020" max="2100" hint="Must fall within the CBYDP’s three years." required />
+            {{-- Only the chosen CBYDP's three years; years that already have an ABYIP can't be picked. --}}
+            <div>
+                <x-form.select name="year" label="Year" :placeholder="$chosenCbydp ? 'Choose the year' : 'Choose the CBYDP first'" :disabled="! $chosenCbydp" data-ready-label="Choose the year" data-waiting-label="Choose the CBYDP first" required>
+                    @foreach ($cbydps as $cbydp)
+                        @foreach (range($cbydp->start_year, $cbydp->end_year) as $year)
+                            @php
+                                $isTaken = in_array($year, $takenYears, true);
+                            @endphp
+                            <option value="{{ $year }}" data-for="{{ $cbydp->id }}" @if ($isTaken) data-taken @endif @selected($chosenCbydp?->id === $cbydp->id && $chosenYear === $year) @disabled($isTaken || $chosenCbydp?->id !== $cbydp->id) @if ($chosenCbydp?->id !== $cbydp->id) hidden @endif>{{ $year }}{{ $isTaken ? ', already has an ABYIP' : '' }}</option>
+                        @endforeach
+                    @endforeach
+                </x-form.select>
+                <p class="mt-1.5 text-xs text-slate-muted">One ABYIP for each year of the CBYDP.</p>
+            </div>
 
             <div class="flex flex-wrap items-center gap-3">
                 <x-form.submit busy="Starting…" :block="false">Start ABYIP</x-form.submit>

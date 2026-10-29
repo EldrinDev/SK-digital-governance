@@ -47,7 +47,7 @@ class StoreAbyipRequest extends FormRequest
         return [
             'cbydp_id.required' => 'Choose the approved CBYDP this program comes from.',
             'cbydp_id.exists' => 'Choose one of your barangay’s approved CBYDPs.',
-            'year.required' => 'Enter the year of the program.',
+            'year.required' => 'Choose the year of the program.',
         ];
     }
 

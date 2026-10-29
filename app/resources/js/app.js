@@ -69,6 +69,30 @@ window.addEventListener('pageshow', (event) => {
     });
 });
 
+// A select whose choices depend on another one (data-controls="<id>"): show only the
+// options marked data-for the chosen value, and pick the first one that can be picked.
+document.addEventListener('change', (event) => {
+    const source = event.target.closest('select[data-controls]');
+    const target = source && document.getElementById(source.dataset.controls);
+
+    if (!target) {
+        return;
+    }
+
+    const options = [...target.querySelectorAll('option[data-for]')];
+
+    options.forEach((option) => {
+        const belongs = option.dataset.for === source.value;
+
+        option.hidden = !belongs;
+        option.disabled = !belongs || 'taken' in option.dataset;
+    });
+
+    target.disabled = source.value === '';
+    target.value = options.find((option) => !option.hidden && !option.disabled)?.value ?? '';
+    target.options[0].textContent = target.disabled ? target.dataset.waitingLabel : target.dataset.readyLabel;
+});
+
 // Fold the workspace side menu down to icons, and remember the choice in this browser.
 const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
 

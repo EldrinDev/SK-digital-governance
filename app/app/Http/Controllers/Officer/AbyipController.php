@@ -20,12 +20,15 @@ class AbyipController extends Controller
      */
     public function create(Request $request): View
     {
+        $cbydps = $request->user()->barangay->cbydps()
+            ->where('status', PlanStatus::Approved)
+            ->orderByDesc('start_year')
+            ->get();
+
         return view('officer.abyips.create', [
-            'cbydps' => $request->user()->barangay->cbydps()
-                ->where('status', PlanStatus::Approved)
-                ->orderByDesc('start_year')
-                ->get(),
-            'selectedCbydp' => $request->integer('cbydp') ?: null,
+            'cbydps' => $cbydps,
+            'selectedCbydp' => $request->integer('cbydp') ?: ($cbydps->count() === 1 ? $cbydps->first()->id : null),
+            'takenYears' => $request->user()->barangay->abyips()->pluck('year')->all(),
         ]);
     }
 
