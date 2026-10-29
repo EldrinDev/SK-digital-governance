@@ -9,25 +9,6 @@
         ['value' => $delayedPpas, 'label' => $delayedPpas > 0 ? ($delayedPpas === 1 ? 'PPA past its end date' : 'PPAs past their end date') : 'delayed, all on schedule', 'href' => route('officer.ppas.index', ['status' => 'delayed']), 'alert' => $delayedPpas > 0],
         ['value' => $peso($spentBudget), 'label' => $currentAbyip ? 'spent of '.$peso($plannedBudget).' in ABYIP '.$year : 'spent, no ABYIP for '.$year.' yet', 'href' => $currentAbyip ? route('officer.abyips.show', $currentAbyip) : null, 'meter' => $currentAbyip && $plannedBudget > 0 ? $budgetUsedPercent : null],
     ];
-
-    // A few words on what each logged change was about, from what the log kept.
-    $activityDetail = function ($entry): ?string {
-        $properties = $entry->properties ?? [];
-
-        return match (true) {
-            $entry->subject instanceof \App\Models\Ppa => $entry->subject->title.(isset($properties['to']) && $entry->action === 'ppa.status_changed' ? ', now '.Str::lcfirst($properties['to']) : ''),
-            isset($properties['title']) => $properties['title'],
-            isset($properties['year']) => 'ABYIP '.$properties['year'],
-            isset($properties['period']) => 'CBYDP '.$properties['period'],
-            isset($properties['file']) => $properties['file'],
-            default => null,
-        };
-    };
-    $activityDays = $recentActivity->groupBy(fn ($entry): string => match (true) {
-        $entry->created_at->isToday() => 'Today',
-        $entry->created_at->isYesterday() => 'Yesterday',
-        default => $entry->created_at->format('l, M j'),
-    });
 @endphp
 <x-layouts.app title="Overview" :heading="$greeting.', '.str(auth()->user()->name)->before(' ').'!'" :description="now()->format('l, F j').'. Here’s where '.$barangay->name.'’s youth programs stand.'">
     <x-slot:actions>
@@ -176,33 +157,6 @@
                         </ul>
                     @endif
                 </section>
-
-                <section class="rounded-[12px] border border-line bg-white p-5 max-lg:order-3" aria-labelledby="activity-heading">
-                    <h2 id="activity-heading" class="font-display text-lg font-semibold">Recent activity</h2>
-                    @forelse ($activityDays as $day => $entries)
-                        <h3 class="mt-4 text-xs font-medium text-slate-muted">{{ $day }}</h3>
-                        <ol class="mt-2 border-l border-line">
-                            @foreach ($entries as $entry)
-                                @php
-                                    $detail = $activityDetail($entry);
-                                @endphp
-                                <li class="relative pb-3 pl-4 text-sm last:pb-0">
-                                    <span class="absolute -left-[3.5px] top-[0.45rem] h-1.5 w-1.5 rounded-full bg-slate-muted/50" aria-hidden="true"></span>
-                                    <p>
-                                        <span class="font-medium">{{ $entry->user?->name ?? 'Someone' }}</span>
-                                        <span class="text-navy/70">{{ Str::lcfirst($entry->label()) }}</span>
-                                        <span class="text-xs tabular-nums text-slate-muted">{{ $entry->created_at->format('g:i A') }}</span>
-                                    </p>
-                                    @if ($detail)
-                                        <p class="truncate text-xs text-slate-muted">{{ $detail }}</p>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ol>
-                    @empty
-                        <p class="mt-2 text-sm text-slate-muted">No changes yet.</p>
-                    @endforelse
-                </section>
             </div>
 
             <div class="max-lg:contents lg:space-y-6">
@@ -235,7 +189,7 @@
                     @endif
                 </section>
 
-                <section class="rounded-[12px] border border-line bg-white p-5 max-lg:order-4" aria-labelledby="checkins-heading">
+                <section class="rounded-[12px] border border-line bg-white p-5 max-lg:order-3" aria-labelledby="checkins-heading">
                     <h2 id="checkins-heading" class="font-display text-lg font-semibold">Youth check-ins</h2>
                     @if ($hasCheckIns)
                         <p class="mb-4 text-xs text-slate-muted">Event attendance, last six months.</p>

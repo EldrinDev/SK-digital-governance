@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Officer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Abyip;
-use App\Models\AuditLog;
 use App\Models\Barangay;
 use App\Models\EventRegistration;
 use App\Models\Milestone;
@@ -20,7 +19,7 @@ class DashboardController extends Controller
 {
     /**
      * Show the barangay workspace summary: what needs doing next, PPA counts, budget,
-     * upcoming milestones and recent activity.
+     * open PPAs and what's coming up.
      */
     public function __invoke(Request $request): View
     {
@@ -53,14 +52,6 @@ class DashboardController extends Controller
             'agenda' => $this->agenda($barangay),
             'monthlyCheckIns' => EventRegistration::monthlyCheckIns([$barangay->id]),
             'remarks' => $barangay->remarks()->with('author:id,name')->limit(3)->get(),
-            'recentActivity' => AuditLog::query()
-                ->where('barangay_id', $barangay->id)
-                ->whereNotIn('action', ['auth.login', 'auth.logout', 'auth.failed', 'auth.lockout'])
-                ->with(['user:id,name', 'subject'])
-                ->latest('created_at')
-                ->latest('id')
-                ->limit(8)
-                ->get(),
         ]);
     }
 
