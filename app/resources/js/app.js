@@ -476,6 +476,51 @@ document.addEventListener('toggle', (event) => {
     }
 }, true);
 
+// On phones and tablets the side menu is a drawer: the menu button slides it in, and the
+// close button, the dimmed page behind it or Escape slide it away.
+const drawer = document.getElementById('sidebar');
+const drawerBackdrop = document.querySelector('[data-drawer-backdrop]');
+const drawerOpener = document.querySelector('[data-drawer-open]');
+
+const setDrawer = (open) => {
+    if (!drawer || !drawerBackdrop) {
+        return;
+    }
+
+    drawer.toggleAttribute('data-open', open);
+    drawerBackdrop.toggleAttribute('data-open', open);
+    drawerOpener?.setAttribute('aria-expanded', String(open));
+    document.documentElement.classList.toggle('overflow-hidden', open);
+
+    // Visible at once when opening, so its close button can take focus; when closing, it
+    // stays visible until the slide ends.
+    if (open) {
+        drawer.style.transitionProperty = 'translate';
+        drawer.style.visibility = 'visible';
+        drawer.querySelector('[data-drawer-close]')?.focus();
+    } else {
+        drawer.style.removeProperty('transition-property');
+        drawer.style.removeProperty('visibility');
+    }
+};
+
+drawerOpener?.addEventListener('click', () => setDrawer(true));
+drawerBackdrop?.addEventListener('click', () => {
+    setDrawer(false);
+    drawerOpener?.focus();
+});
+drawer?.querySelector('[data-drawer-close]')?.addEventListener('click', () => {
+    setDrawer(false);
+    drawerOpener?.focus();
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && drawer?.hasAttribute('data-open')) {
+        setDrawer(false);
+        drawerOpener?.focus();
+    }
+});
+window.matchMedia('(min-width: 64rem)').addEventListener('change', (event) => event.matches && setDrawer(false));
+
 // Fold the workspace side menu down to icons, and remember the choice in this browser.
 const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
 

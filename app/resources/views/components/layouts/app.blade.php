@@ -81,9 +81,14 @@
             fade out (so screen readers still hear them); the rail is narrow enough that only icons show.
         --}}
         <div class="lg:grid lg:min-h-dvh lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:transition-[grid-template-columns] lg:duration-300 lg:ease-[cubic-bezier(.2,.8,.2,1)] lg:collapsed:grid-cols-[4.75rem_minmax(0,1fr)] motion-reduce:transition-none">
-            {{-- Side menu (desktop) --}}
-            <aside class="hidden border-r border-line bg-white [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <a href="{{ route($user->role->homeRoute()) }}" class="flex h-[67px] shrink-0 items-center gap-3 border-b border-line px-[1.125rem]" title="SK Digital Governance">
+            {{-- Side menu: beside the page on wide screens; on phones and tablets it slides in over the page from the menu button. --}}
+            <div class="fixed inset-0 z-50 bg-navy-deep/40 opacity-0 transition-opacity duration-300 pointer-events-none data-open:pointer-events-auto data-open:opacity-100 motion-reduce:transition-none print:hidden lg:hidden" data-drawer-backdrop aria-hidden="true"></div>
+            <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 flex w-80 max-w-[85vw] -translate-x-full flex-col overflow-y-auto overflow-x-hidden border-r border-line bg-white shadow-2xl shadow-navy-deep/20 transition-[translate,visibility] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] max-lg:invisible max-lg:data-open:visible max-lg:data-open:translate-x-0 motion-reduce:transition-none [view-transition-name:sidebar] print:!hidden lg:sticky lg:top-0 lg:bottom-auto lg:z-auto lg:h-dvh lg:w-auto lg:max-w-none lg:translate-x-0 lg:self-start lg:shadow-none lg:transition-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Side menu">
+                <button type="button" class="absolute right-3 top-3.5 flex h-10 w-10 items-center justify-center rounded-[8px] text-navy/70 hover:bg-mist hover:text-navy lg:hidden" data-drawer-close>
+                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    <span class="sr-only">Close menu</span>
+                </button>
+                <a href="{{ route($user->role->homeRoute()) }}" class="flex h-[67px] shrink-0 items-center gap-3 border-b border-line px-[1.125rem] max-lg:pr-14" title="SK Digital Governance">
                     <img src="{{ $user->barangay?->logoUrl() ?? asset('images/sk-logo.svg') }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-full object-contain">
                     <span class="whitespace-nowrap leading-tight transition-opacity duration-200 lg:collapsed:opacity-0 motion-reduce:transition-none">
                         <span class="block font-display text-sm font-semibold">SK Digital Governance</span>
@@ -147,24 +152,10 @@
                                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="m15 10-2 2 2 2" class="collapsed:hidden"/><path d="m13 10 2 2-2 2" class="hidden collapsed:block"/></svg>
                                 <span class="sr-only" data-sidebar-label>Collapse menu</span>
                             </button>
-                            <details class="relative lg:hidden" data-dropdown>
-                                <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-[8px] border border-line [&::-webkit-details-marker]:hidden">
-                                    <span class="sr-only">Open menu</span>
-                                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-                                </summary>
-                                <ul class="absolute left-0 mt-2 max-h-[75dvh] w-60 overflow-y-auto rounded-[12px] border border-line bg-white p-2 shadow-lg shadow-navy/10">
-                                    @foreach ($navigationSections as $section => $items)
-                                        @if ($section !== '')
-                                            <li class="px-3 pb-1 pt-2.5 text-xs font-semibold text-slate-muted">{{ $section }}</li>
-                                        @endif
-                                        @foreach ($items as $item)
-                                            <li><a href="{{ route($item['route']) }}" @class(['flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm font-medium hover:bg-mist', 'bg-emerald/10 text-emerald' => request()->routeIs($item['active'])])><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>{{ $item['label'] }}</a></li>
-                                        @endforeach
-                                    @endforeach
-                                    <li class="mt-1 border-t border-line pt-1"><a href="{{ route('account.edit') }}" class="block rounded-[8px] px-3 py-2 text-sm hover:bg-mist">{{ $user->hasRole(UserRole::Youth) ? 'My profile' : 'Account settings' }}</a></li>
-                                    <li><a href="{{ route('home') }}" class="block rounded-[8px] px-3 py-2 text-sm text-slate-muted hover:bg-mist">Public site</a></li>
-                                </ul>
-                            </details>
+                            <button type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-line hover:border-navy lg:hidden" aria-controls="sidebar" aria-expanded="false" data-drawer-open>
+                                <span class="sr-only">Open menu</span>
+                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                            </button>
                             <div class="min-w-0 leading-tight">
                                 <p class="truncate font-display text-base font-semibold">{{ $workspace }}</p>
                                 <p class="truncate text-xs text-slate-muted">{{ $user->role->label() }}</p>
