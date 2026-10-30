@@ -2,6 +2,12 @@
     $hour = (int) now()->format('G');
     $greeting = $hour < 12 ? 'Magandang umaga' : ($hour < 18 ? 'Magandang hapon' : 'Magandang gabi');
     $peso = fn (float $amount): string => '₱'.number_format($amount);
+    $newItems = [
+        ['label' => 'Announcement', 'hint' => 'News, a paalala or a pasasalamat', 'href' => route('officer.announcements.create'), 'icon' => '<path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'],
+        ['label' => 'Event', 'hint' => 'Invite the youth and take registrations', 'href' => route('officer.events.create'), 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'],
+        ['label' => 'Council session', 'hint' => 'Record attendance, minutes and resolutions', 'href' => route('officer.meetings.create'), 'icon' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'],
+        ['label' => 'Survey', 'hint' => 'Ask the youth what they need', 'href' => route('officer.surveys.index').'#new-survey', 'icon' => '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>'],
+    ];
     $checkInTotal = collect($monthlyCheckIns)->sum('value');
     $hasCheckIns = $checkInTotal > 0;
     $completedPercent = $currentPpaCount > 0 ? (int) round($currentPpaCompleted / $currentPpaCount * 100) : 0;
@@ -25,20 +31,29 @@
 @endphp
 <x-layouts.app title="Overview" :heading="$greeting.', '.str(auth()->user()->name)->before(' ').'!'" :description="now()->format('l, F j').'. Here’s where '.$barangay->name.'’s youth programs stand.'">
     <x-slot:actions>
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ route('officer.announcements.create') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-3.5 py-2 text-sm font-semibold text-white hover:bg-emerald-dark">
-                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-                Post announcement
-            </a>
-            <a href="{{ route('officer.events.create') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-3.5 py-2 text-sm font-semibold hover:border-navy">
-                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                Post event
-            </a>
-            <a href="{{ route('officer.meetings.create') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-3.5 py-2 text-sm font-semibold hover:border-navy">
-                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-                Record session
-            </a>
-        </div>
+        {{-- One way in to everything an officer posts or records; each also has its own page in the menu. --}}
+        <details class="relative" data-dropdown>
+            <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark [&::-webkit-details-marker]:hidden">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                New
+                <svg viewBox="0 0 24 24" class="h-4 w-4 opacity-80 transition-transform [details[open]_&]:rotate-180" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <ul class="absolute right-0 z-30 mt-2 w-72 rounded-[12px] border border-line bg-white p-2 shadow-lg shadow-navy/10 max-sm:left-0 max-sm:right-auto">
+                @foreach ($newItems as $item)
+                    <li>
+                        <a href="{{ $item['href'] }}" class="flex items-start gap-3 rounded-[8px] px-3 py-2.5 hover:bg-mist">
+                            <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-emerald/10 text-emerald">
+                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $item['icon'] !!}</svg>
+                            </span>
+                            <span class="leading-tight">
+                                <span class="block text-sm font-semibold text-navy">{{ $item['label'] }}</span>
+                                <span class="text-xs text-slate-muted">{{ $item['hint'] }}</span>
+                            </span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </details>
     </x-slot:actions>
     @if ($remarks->isNotEmpty())
         <section class="mb-6 rounded-[12px] border border-info/30 bg-info/5 p-5" aria-labelledby="remarks-heading">
@@ -220,12 +235,23 @@
 
             <div class="max-lg:contents lg:space-y-6">
                 <section class="rounded-[12px] border border-line bg-white max-lg:order-2" aria-labelledby="agenda-heading">
-                    <div class="border-b border-line px-5 py-4">
-                        <h2 id="agenda-heading" class="font-display text-lg font-semibold">Coming up</h2>
-                        <p class="text-xs text-slate-muted">Events, council sessions and PPA milestones.</p>
+                    <div class="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+                        <div>
+                            <h2 id="agenda-heading" class="font-display text-lg font-semibold">Coming up</h2>
+                            <p class="text-xs text-slate-muted">Events, sessions and milestones.</p>
+                        </div>
+                        <div class="flex shrink-0 gap-1">
+                            <a href="{{ route('officer.events.create') }}" class="rounded-[6px] px-2 py-1 text-xs font-semibold text-emerald hover:bg-emerald/10">+ Event</a>
+                            <a href="{{ route('officer.meetings.create') }}" class="rounded-[6px] px-2 py-1 text-xs font-semibold text-emerald hover:bg-emerald/10">+ Session</a>
+                        </div>
                     </div>
                     @if ($agenda->isEmpty())
-                        <p class="px-5 py-6 text-sm text-slate-muted">Nothing scheduled. Post an event, record a session, or add milestones to a PPA.</p>
+                        <p class="px-5 py-6 text-sm leading-relaxed text-slate-muted">
+                            Nothing scheduled.
+                            <a href="{{ route('officer.events.create') }}" class="font-semibold text-emerald hover:underline">Post an event</a>,
+                            <a href="{{ route('officer.meetings.create') }}" class="font-semibold text-emerald hover:underline">record a session</a>,
+                            or <a href="{{ route('officer.ppas.index') }}" class="font-semibold text-emerald hover:underline">add milestones to a PPA</a>.
+                        </p>
                     @else
                         <ul class="divide-y divide-line">
                             @foreach ($agenda as $item)

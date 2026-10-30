@@ -85,6 +85,20 @@ class DashboardControllerTest extends TestCase
             ->assertDontSeeText('Someone else’s fun run');
     }
 
+    public function test_one_new_menu_leads_to_everything_an_officer_posts(): void
+    {
+        $officer = User::factory()->officer()->create();
+        Abyip::factory()->approved()->for(Cbydp::factory()->approved()->for($officer->barangay))->create(['barangay_id' => $officer->barangay_id]);
+
+        $this->actingAs($officer)->get(route('officer.dashboard'))
+            ->assertOk()
+            ->assertSeeInOrder(['Announcement', 'Event', 'Council session', 'Survey'])
+            ->assertSee(route('officer.announcements.create'), false)
+            ->assertSee(route('officer.surveys.index').'#new-survey', false)
+            ->assertDontSeeText('Post announcement')
+            ->assertDontSeeText('Record session');
+    }
+
     public function test_next_up_says_so_when_nothing_is_waiting(): void
     {
         $officer = User::factory()->officer()->create();
