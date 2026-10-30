@@ -6,6 +6,7 @@
     $editing = $announcement->exists;
     $barangay = $announcement->barangay;
     $offersFacebookImport = ! $editing && FacebookPages::isConfigured();
+    $canImportByLink = $offersFacebookImport && $barangay->hasFacebookPage();
     $isChairperson = auth()->user()->holdsPosition(OfficerPosition::Chairperson);
     $facebookIcon = '<path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/>';
     $chosenCategory = old('category', $announcement->category?->value ?? AnnouncementCategory::Announcement->value);
@@ -31,18 +32,20 @@
         <input type="hidden" name="imported_image" value="" data-imported-image>
 
         <div class="space-y-6">
-            @if ($offersFacebookImport)
-                {{-- Already on the SK's Facebook Page: paste the link and the form fills itself in. --}}
+            @unless ($editing)
+                {{-- Already on the SK's Facebook Page: bring it over instead of typing it again. --}}
                 <section class="rounded-[12px] border border-[#1877f2]/25 bg-[#1877f2]/[0.04] p-5 sm:p-6" aria-labelledby="import-heading">
                     <div class="flex items-start gap-3">
                         <svg viewBox="0 0 24 24" class="mt-0.5 h-6 w-6 shrink-0 text-[#1877f2]" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
                         <div class="min-w-0 flex-1">
                             <h2 id="import-heading" class="font-display text-base font-semibold">Already posted it on Facebook?</h2>
-                            <p class="mt-0.5 text-sm text-slate-muted">Paste the post’s link. The caption, photo, kind and original date fill in for you to check.</p>
+                            <p class="mt-0.5 text-sm text-slate-muted">
+                                {{ $canImportByLink ? 'Paste the post’s link. The caption, photo, kind and original date fill in for you to check.' : 'Copy the post from Facebook and paste it here. The headline, caption, kind and date fill in for you to check.' }}
+                            </p>
                         </div>
                     </div>
 
-                    @if ($barangay->hasFacebookPage())
+                    @if ($canImportByLink)
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row" data-facebook-import data-endpoint="{{ route('officer.announcements.facebook-import') }}">
                             <label for="facebook_link" class="sr-only">Link to the Facebook post</label>
                             <input id="facebook_link" type="url" inputmode="url" autocomplete="off" placeholder="https://www.facebook.com/{{ Str::slug($barangay->facebook_page_name, '') }}/posts/…" class="min-w-0 flex-1 rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20">
@@ -58,19 +61,34 @@
                                 <button type="submit" form="facebook-disconnect" class="font-medium text-slate-muted underline underline-offset-2 hover:text-navy">Disconnect</button>
                             @endif
                         </p>
-                    @elseif ($isChairperson)
-                        <div class="mt-4 flex flex-wrap items-center gap-3">
-                            <a href="{{ route('officer.facebook.connect') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-[#1877f2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1465d0]">
-                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
-                                Connect SK {{ $barangay->name }}’s Facebook Page
-                            </a>
-                            <p class="text-xs text-slate-muted">Once, so the platform can read the Page’s posts. It never posts for you.</p>
-                        </div>
                     @else
-                        <p class="mt-4 rounded-[8px] bg-white px-3.5 py-2.5 text-sm text-slate-muted">Your SK Chairperson needs to connect SK {{ $barangay->name }}’s Facebook Page first. Until then, copy the caption over and add the link under Options.</p>
+                        <div class="mt-4 space-y-3" data-facebook-paste>
+                            <div>
+                                <label for="facebook_text" class="block text-sm font-medium">The post, copied from Facebook</label>
+                                <textarea id="facebook_text" rows="4" class="mt-1.5 block w-full rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm leading-relaxed outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20" placeholder="Select the whole post on Facebook, from the Page’s name down to its last line, then copy and paste it here. Likes, comments and “See more” are cleaned out."></textarea>
+                            </div>
+                            <div>
+                                <label for="facebook_post_link" class="block text-sm font-medium">Link to the post <span class="font-normal text-slate-muted">(optional)</span></label>
+                                <input id="facebook_post_link" type="url" inputmode="url" autocomplete="off" placeholder="https://www.facebook.com/…" class="mt-1.5 block w-full rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20">
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <button type="button" class="inline-flex items-center gap-2 rounded-[8px] bg-[#1877f2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1465d0]" data-paste-fill>Fill in the form</button>
+                                <p class="text-sm" role="status" aria-live="polite" data-paste-status></p>
+                            </div>
+                            <p class="flex items-start gap-2 rounded-[8px] bg-white px-3.5 py-2.5 text-xs leading-relaxed text-slate-muted">
+                                <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-[#1877f2]" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+                                <span>For the photo: right-click it on Facebook and choose <span class="font-medium text-navy">Copy image</span>, then press <kbd class="rounded border border-line bg-mist px-1 font-sans text-[0.7rem] text-navy">Ctrl</kbd> + <kbd class="rounded border border-line bg-mist px-1 font-sans text-[0.7rem] text-navy">V</kbd> anywhere on this page.</span>
+                            </p>
+                        </div>
+
+                        @if ($offersFacebookImport && $isChairperson)
+                            <p class="mt-3 text-xs text-slate-muted">
+                                Or <a href="{{ route('officer.facebook.connect') }}" class="font-medium text-[#1877f2] hover:underline">connect SK {{ $barangay->name }}’s Facebook Page</a> to bring posts over from just their link.
+                            </p>
+                        @endif
                     @endif
                 </section>
-            @endif
+            @endunless
 
             <section class="space-y-5 rounded-[12px] border border-line bg-white p-6">
                 <fieldset>
@@ -197,7 +215,7 @@
                     </span>
                     <span class="min-w-0 flex-1 leading-tight">
                         <span class="block truncate text-sm font-medium" data-file-name data-empty="{{ $announcement->image_path ? 'Replace the image' : 'Drop an image or choose one' }}">{{ $announcement->image_path ? 'Replace the image' : 'Drop an image or choose one' }}</span>
-                        <span class="text-xs text-slate-muted">JPG, PNG or WebP, up to 5 MB. Without one, the post gets the poster above.</span>
+                        <span class="text-xs text-slate-muted">Or paste one with Ctrl + V. JPG, PNG or WebP, up to 5 MB. Without one, the post gets the poster above.</span>
                     </span>
                     <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
                 </label>
@@ -224,7 +242,7 @@
         </div>
     </form>
 
-    @if ($offersFacebookImport && $isChairperson && $barangay->hasFacebookPage())
+    @if ($canImportByLink && $isChairperson)
         <form id="facebook-disconnect" method="POST" action="{{ route('officer.facebook.destroy') }}" hidden>
             @csrf
             @method('DELETE')

@@ -80,7 +80,8 @@ class FacebookImportTest extends TestCase
         $this->actingAs($kagawad)->get(route('officer.facebook.connect'))->assertForbidden();
         $this->actingAs($kagawad)->get(route('officer.announcements.create'))
             ->assertOk()
-            ->assertSeeText('Your SK Chairperson needs to connect');
+            ->assertSeeText('The post, copied from Facebook')
+            ->assertDontSee(route('officer.facebook.connect'), false);
     }
 
     public function test_officer_brings_a_post_over_with_its_photo_and_posts_it(): void
@@ -195,8 +196,32 @@ class FacebookImportTest extends TestCase
         config(['services.facebook.app_id' => null]);
         $officer = $this->officerWithConnectedPage();
 
-        $this->actingAs($officer)->get(route('officer.announcements.create'))->assertOk()->assertDontSeeText('Already posted it on Facebook?');
+        $this->actingAs($officer)->get(route('officer.announcements.create'))
+            ->assertOk()
+            ->assertSeeText('The post, copied from Facebook')
+            ->assertDontSee('data-facebook-import', false)
+            ->assertDontSee(route('officer.facebook.connect'), false);
         $this->actingAs($officer)->postJson(route('officer.announcements.facebook-import'), ['url' => 'https://www.facebook.com/skbanicain/posts/1'])->assertNotFound();
+    }
+
+    public function test_chairperson_can_still_paste_a_post_and_is_offered_the_connection(): void
+    {
+        $chairperson = User::factory()->officer()->create();
+
+        $this->actingAs($chairperson)->get(route('officer.announcements.create'))
+            ->assertOk()
+            ->assertSee('data-facebook-paste', false)
+            ->assertSee(route('officer.facebook.connect'), false);
+    }
+
+    public function test_the_paste_box_is_only_for_new_posts(): void
+    {
+        $officer = $this->officerWithConnectedPage();
+        $announcement = Announcement::factory()->for($officer->barangay)->create();
+
+        $this->actingAs($officer)->get(route('officer.announcements.edit', $announcement))
+            ->assertOk()
+            ->assertDontSeeText('Already posted it on Facebook?');
     }
 
     public function test_chairperson_disconnects_the_page(): void

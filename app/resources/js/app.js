@@ -838,6 +838,200 @@ if (announcementForm) {
         }
     });
 
+    // A photo pasted with Ctrl + V anywhere on the form becomes the post's image.
+    announcementForm.addEventListener('paste', (event) => {
+        const picture = [...(event.clipboardData?.files ?? [])].find((file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type));
+
+        if (!picture) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const files = new DataTransfer();
+        const extension = picture.type.split('/')[1].replace('jpeg', 'jpg');
+        files.items.add(new File([picture], `pasted-photo.${extension}`, { type: picture.type }));
+        image.files = files.files;
+        showFile();
+        fileName.textContent = 'Photo pasted from the clipboard';
+        announcementForm.querySelector('[data-photo-note]')?.remove();
+    });
+
+    // "Paste from Facebook": clean a post copied off Facebook and fill the form with it.
+    const pastePanel = announcementForm.querySelector('[data-facebook-paste]');
+
+    if (pastePanel) {
+        const pasted = pastePanel.querySelector('#facebook_text');
+        const pastedLink = pastePanel.querySelector('#facebook_post_link');
+        const status = pastePanel.querySelector('[data-paste-status]');
+        const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+
+        // Facebook's buttons, counters and menus that come along when a post is selected and copied.
+        const clutter = [
+            /^(like|love|comment|share|send|reply|follow|following|see more|see less|see translation|see original|rate this translation|all reactions:?|most relevant|newest|all comments|top fan|author|edited|hide|public|shared with public|sponsored|·)$/i,
+            /^(write|view|see) (a |all |more |previous )?.*(comment|replies|reply)s?…?\.?$/i,
+            /^[^\p{L}\p{N}]*[\d.,]+\s*[km]?$/iu,
+            /^[\d.,]+\s*[km]?\s*(comments?|shares?|reactions?|views?|likes?|reacts?|plays?)$/i,
+            /^(you|and)\b.*\bothers?$/i,
+        ];
+
+        // "2d", "Yesterday at 3:15 PM", "October 28 at 10:00 AM": when it went up on Facebook.
+        const readTimestamp = (line) => {
+            const text = line.replace(/[^\p{L}\p{N}:, ]/gu, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+            const now = new Date();
+            let match;
+
+            if (/^just now$/.test(text)) {
+                return now;
+            }
+
+            if ((match = text.match(/^(\d+)\s*(m|min|mins|h|hr|hrs|d|w|y)$/))) {
+                const minutes = { m: 1, min: 1, mins: 1, h: 60, hr: 60, hrs: 60, d: 1440, w: 10080, y: 525600 }[match[2]];
+
+                return new Date(now.getTime() - Number(match[1]) * minutes * 60000);
+            }
+
+            const clock = (date, time) => {
+                const parts = time?.match(/(\d{1,2}):(\d{2})\s*(am|pm)/);
+
+                if (parts) {
+                    date.setHours((Number(parts[1]) % 12) + (parts[3] === 'pm' ? 12 : 0), Number(parts[2]), 0, 0);
+                }
+
+                return date;
+            };
+
+            if ((match = text.match(/^yesterday(?: at (.+))?$/))) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - 1);
+
+                return clock(date, match[1]);
+            }
+
+            if ((match = text.match(/^([a-z]+) (\d{1,2})(?:, (\d{4}))?(?: at (.+))?$/)) && months.some((month) => month.startsWith(match[1].slice(0, 3)))) {
+                const month = months.findIndex((name) => name.startsWith(match[1].slice(0, 3)));
+                const date = clock(new Date(Number(match[3] ?? now.getFullYear()), month, Number(match[2]), 12), match[4]);
+
+                if (!match[3] && date > now) {
+                    date.setFullYear(date.getFullYear() - 1);
+                }
+
+                return date;
+            }
+
+            return null;
+        };
+
+        // "📅 Date: Nov 7", "Oras: 2:00 PM", "📍 Venue: Covered court" become the form's date, time and place lines.
+        const detail = (line) => {
+            const match = line.match(/^\s*(?:(🗓️?|📅|📆|⏰|⌚|[\u{1F550}-\u{1F567}]|📍)\s*)?(?:(date|petsa|kailan|when|time|oras|venue|place|lugar|saan|where|location)\s*[:\-–]\s*)?(.+)$/iu);
+
+            if (!match || (!match[1] && !match[2])) {
+                return line;
+            }
+
+            const label = (match[2] ?? '').toLowerCase();
+            const marker = match[1] ?? '';
+            const kind = ['date', 'petsa', 'kailan', 'when'].includes(label) || /🗓|📅|📆/u.test(marker) ? 'date'
+                : ['time', 'oras'].includes(label) || /⏰|⌚|[\u{1F550}-\u{1F567}]/u.test(marker) ? 'time'
+                : 'place';
+
+            return `${{ date: '🗓️', time: '🕑', place: '📍' }[kind]} ${match[3].trim()}`;
+        };
+
+        const read = (text) => {
+            let lines = text.replace(/\r/g, '').split('\n').map((line) => line.replace(/\s*(…|\.\.\.)?\s*see more$/i, '').trimEnd());
+            let postedAt = null;
+
+            // The Page's name and the time stamp under it, at the top of a copied post.
+            const top = lines.findIndex((line) => line.trim() !== '');
+            const stampAt = [top, top + 1, top + 2].find((index) => index >= 0 && lines[index] !== undefined && readTimestamp(lines[index]));
+
+            if (stampAt !== undefined) {
+                postedAt = readTimestamp(lines[stampAt]);
+                lines = lines.filter((_, index) => index > stampAt || (index < top));
+            }
+
+            lines = lines.filter((line) => !clutter.some((pattern) => pattern.test(line.trim()))).map(detail);
+
+            // The first line that says something becomes the headline, and leaves the caption so it isn't shown twice.
+            const headlineAt = lines.findIndex((line) => line.trim() !== ''
+                && !/^(#[\p{L}\p{N}_]+\s*)+$/u.test(line.trim())
+                && !/^(🗓️|🕑|📍) /u.test(line.trim()));
+            const headline = headlineAt === -1 ? '' : lines[headlineAt].trim().replace(/^[^\p{L}\p{N}#]+/u, '');
+
+            if (headlineAt !== -1) {
+                lines.splice(headlineAt, 1);
+            }
+
+            const body = lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+            const words = `${headline}\n${body}`.toLowerCase();
+            const category = /paalala|reminder|deadline|huling araw/.test(words) ? 'reminder'
+                : /salamat|thank you|congratulations|congrats|pagbati|recap/.test(words) ? 'recognition'
+                : /^(🗓️|📍) /mu.test(body) || /join us|inaanyayahan|tara na|register/.test(words) ? 'event'
+                : 'announcement';
+
+            return {
+                body,
+                category,
+                postedAt,
+                title: headline.length > 150 ? `${headline.slice(0, headline.lastIndexOf(' ', 148) > 100 ? headline.lastIndexOf(' ', 148) : 148)}…` : headline,
+            };
+        };
+
+        const localDateTime = (date) => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+        const fill = () => {
+            if (pasted.value.trim() === '') {
+                status.className = 'text-sm text-error';
+                status.textContent = 'Paste the post from Facebook first.';
+
+                return;
+            }
+
+            const post = read(pasted.value);
+            const set = (name, value) => {
+                field(name).value = value;
+                field(name).dispatchEvent(new Event('input', { bubbles: true }));
+            };
+
+            set('title', post.title);
+            set('body', post.body);
+            announcementForm.querySelector(`input[name="category"][value="${post.category}"]`).checked = true;
+            showCover();
+
+            const notes = ['Filled in. Check the headline and kind, then post it.'];
+
+            if (pastedLink.value.trim() !== '') {
+                set('source_url', pastedLink.value.trim());
+                field('source_url').closest('details').open = true;
+
+                if (post.postedAt) {
+                    set('originally_posted_at', localDateTime(post.postedAt));
+                } else {
+                    notes.push('Add when it went up on Facebook, under Options.');
+                }
+            }
+
+            status.className = 'text-sm text-emerald';
+            status.textContent = notes.join(' ');
+
+            if (!image.files.length && !importedPreview) {
+                const photoNote = document.createElement('span');
+                photoNote.dataset.photoNote = '';
+                photoNote.textContent = ' Paste the photo with Ctrl + V if it had one.';
+                status.append(photoNote);
+            }
+        };
+
+        pastePanel.querySelector('[data-paste-fill]').addEventListener('click', fill);
+        pasted.addEventListener('paste', () => setTimeout(() => {
+            if (field('title').value.trim() === '' && field('body').value.trim() === '') {
+                fill();
+            }
+        }));
+    }
+
     showText();
     showCounts();
     showCover();
