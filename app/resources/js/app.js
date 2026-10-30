@@ -429,6 +429,53 @@ const enhanceListbox = (select) => {
 
 document.querySelectorAll('select:not([multiple]):not([size]):not([data-native])').forEach(enhanceListbox);
 
+// Sections marked <details data-animate> slide open and shut instead of jumping, and their
+// contents fade in. data-expanded follows what the person asked for straight away, so the
+// arrow turns with the click rather than when the closing slide ends.
+document.addEventListener('click', (event) => {
+    const summary = event.target.closest('details[data-animate] > summary');
+
+    if (!summary || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const details = summary.parentElement;
+    const opening = !details.open || details.dataset.closing === 'true';
+    const from = details.offsetHeight;
+
+    details.slide?.cancel();
+    details.toggleAttribute('data-expanded', opening);
+    details.dataset.closing = String(!opening);
+    details.open = true;
+
+    const borders = details.offsetHeight - details.clientHeight;
+    const to = opening ? details.offsetHeight : summary.offsetHeight + borders;
+
+    details.slide = details.animate({ height: [`${from}px`, `${to}px`] }, { duration: opening ? 320 : 240, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
+
+    if (opening) {
+        details.querySelectorAll(':scope > :not(summary):not([hidden])').forEach((part) => part.animate(
+            { opacity: [0, 1], transform: ['translateY(-6px)', 'translateY(0)'] },
+            { duration: 260, delay: 60, easing: 'ease-out', fill: 'backwards' },
+        ));
+    }
+
+    details.slide.onfinish = () => {
+        details.open = opening;
+        delete details.dataset.closing;
+        details.slide = null;
+    };
+});
+
+// Without the slide (reduced motion), keep data-expanded in step with the native toggle.
+document.addEventListener('toggle', (event) => {
+    if (event.target.matches?.('details[data-animate]') && !event.target.slide) {
+        event.target.toggleAttribute('data-expanded', event.target.open);
+    }
+}, true);
+
 // Fold the workspace side menu down to icons, and remember the choice in this browser.
 const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
 

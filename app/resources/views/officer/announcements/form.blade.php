@@ -61,7 +61,7 @@
                     </section>
                 @else
                     {{-- Paste a post copied off Facebook; folded away for officers writing a new one. --}}
-                    <details class="group overflow-hidden rounded-[12px] border border-[#1877f2]/25 bg-white open:bg-[#1877f2]/[0.03]" data-facebook-paste>
+                    <details class="group overflow-hidden rounded-[12px] border border-[#1877f2]/25 bg-white transition-colors duration-300 data-expanded:bg-[#1877f2]/[0.03]" data-facebook-paste data-animate>
                         <summary class="flex cursor-pointer list-none items-center gap-3 px-5 py-4 hover:bg-[#1877f2]/[0.04] sm:px-6 [&::-webkit-details-marker]:hidden">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1877f2] text-white">
                                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
@@ -70,8 +70,8 @@
                                 <span class="block font-display text-base font-semibold">Already posted it on Facebook?</span>
                                 <span class="mt-0.5 block text-sm text-slate-muted" data-paste-summary>Paste it in and the form fills itself.</span>
                             </span>
-                            <span class="hidden shrink-0 rounded-[8px] border border-[#1877f2]/30 bg-white px-3 py-1.5 text-sm font-semibold text-[#1877f2] group-open:hidden sm:inline-block">Paste a post</span>
-                            <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0 text-slate-muted transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                            <span class="hidden shrink-0 rounded-[8px] border border-[#1877f2]/30 bg-white px-3 py-1.5 text-sm font-semibold text-[#1877f2] group-data-expanded:hidden sm:inline-block">Paste a post</span>
+                            <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0 text-slate-muted transition-transform duration-300 group-data-expanded:rotate-180 motion-reduce:transition-none" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                         </summary>
 
                         <div class="border-t border-[#1877f2]/15 px-5 pb-5 pt-4 sm:px-6" data-paste-input>
