@@ -14,7 +14,7 @@
 @endphp
 <x-layouts.app title="Events" heading="Events and consultations" description="Events you post appear on the public events page right away. Youth of your barangay register there.">
     <x-slot:actions>
-        <a href="{{ route('officer.events.create') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark">
+        <a href="{{ route('officer.events.create') }}" class="inline-flex items-center justify-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark max-sm:w-full max-sm:py-3">
             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             Post an event
         </a>

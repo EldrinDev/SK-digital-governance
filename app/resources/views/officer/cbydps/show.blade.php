@@ -1,9 +1,12 @@
 <x-layouts.app :title="'CBYDP '.$cbydp->period()" :heading="'CBYDP '.$cbydp->period()" description="Youth needs and priorities for these three years, grouped by center of participation.">
     <x-slot:actions>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3 max-sm:w-full">
             <x-ui.plan-status :plan="$cbydp" />
             @if ($cbydp->isApproved())
-                <a href="{{ route('officer.abyips.create', ['cbydp' => $cbydp->id]) }}" class="rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark">New ABYIP</a>
+                <a href="{{ route('officer.abyips.create', ['cbydp' => $cbydp->id]) }}" class="inline-flex items-center justify-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark max-sm:w-full max-sm:py-3">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    New ABYIP
+                </a>
             @endif
         </div>
     </x-slot:actions>

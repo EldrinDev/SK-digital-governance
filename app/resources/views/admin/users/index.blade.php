@@ -3,12 +3,12 @@
 @endphp
 <x-layouts.app title="Users" heading="Users" description="Everyone who can sign in, with their role and workspace.">
     <x-slot:actions>
-        <div class="flex flex-wrap items-center gap-3">
-        <a href="{{ route('admin.users.export') }}" class="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
+        <div class="flex flex-wrap items-center gap-3 max-sm:w-full max-sm:flex-col-reverse max-sm:items-stretch">
+        <a href="{{ route('admin.users.export') }}" class="inline-flex items-center justify-center gap-2 rounded-[8px] border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:border-navy">
             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
             Download CSV
         </a>
-        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark">
+        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark max-sm:w-full max-sm:py-3">
             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             Add account
         </a>
