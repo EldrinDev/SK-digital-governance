@@ -22,21 +22,21 @@ class FacebookImportTest extends TestCase
     {
         parent::setUp();
 
-        config(['services.facebook' => ['app_id' => 'app-id', 'app_secret' => 'app-secret', 'graph_version' => 'v24.0']]);
+        config(['services.facebook' => ['app_id' => 'app-id', 'app_secret' => 'app-secret', 'graph_version' => 'v26.0']]);
     }
 
     public function test_chairperson_connects_the_sks_facebook_page(): void
     {
         $chairperson = User::factory()->officer()->create();
         Http::fake([
-            'graph.facebook.com/v24.0/oauth/access_token*' => Http::sequence()
+            'graph.facebook.com/v26.0/oauth/access_token*' => Http::sequence()
                 ->push(['access_token' => 'short-lived'])
                 ->push(['access_token' => 'long-lived']),
-            'graph.facebook.com/v24.0/me/accounts*' => Http::response(['data' => [['id' => self::PAGE_ID, 'name' => 'SK Banicain', 'access_token' => 'page-token']]]),
+            'graph.facebook.com/v26.0/me/accounts*' => Http::response(['data' => [['id' => self::PAGE_ID, 'name' => 'SK Banicain', 'access_token' => 'page-token']]]),
         ]);
 
         $redirect = $this->actingAs($chairperson)->get(route('officer.facebook.connect'));
-        $redirect->assertRedirectContains('https://www.facebook.com/v24.0/dialog/oauth');
+        $redirect->assertRedirectContains('https://www.facebook.com/v26.0/dialog/oauth');
         $this->assertStringContainsString('pages_read_user_content', $redirect->headers->get('Location'));
 
         $this->actingAs($chairperson)
@@ -49,6 +49,16 @@ class FacebookImportTest extends TestCase
         $this->assertSame('page-token', $barangay->facebook_page_token);
         $this->assertNotSame('page-token', $barangay->getRawOriginal('facebook_page_token'));
         $this->assertDatabaseHas('audit_logs', ['action' => 'facebook.connected', 'subject_id' => $barangay->id]);
+    }
+
+    public function test_apps_with_a_login_configuration_send_its_id_instead_of_permissions(): void
+    {
+        config(['services.facebook.config_id' => '998877']);
+
+        $location = $this->actingAs(User::factory()->officer()->create())->get(route('officer.facebook.connect'))->headers->get('Location');
+
+        $this->assertStringContainsString('config_id=998877', $location);
+        $this->assertStringNotContainsString('scope=', $location);
     }
 
     public function test_callback_with_a_wrong_state_connects_nothing(): void
@@ -78,7 +88,7 @@ class FacebookImportTest extends TestCase
         Storage::fake();
         $officer = $this->officerWithConnectedPage();
         Http::fake([
-            'graph.facebook.com/v24.0/'.self::PAGE_ID.'_987654321*' => Http::response([
+            'graph.facebook.com/v26.0/'.self::PAGE_ID.'_987654321*' => Http::response([
                 'id' => self::PAGE_ID.'_987654321',
                 'message' => "PAALALA: Katipunan ng Kabataan Assembly\n🗓️ November 7, 2026 (Saturday)\n📍 Covered court\n#LinggoNgKabataan",
                 'full_picture' => 'https://scontent.xx.fbcdn.net/v/pubmat.jpg',
@@ -120,7 +130,7 @@ class FacebookImportTest extends TestCase
     {
         $officer = $this->officerWithConnectedPage();
         Http::fake([
-            'graph.facebook.com/v24.0/'.self::PAGE_ID.'/posts*' => Http::response(['data' => [
+            'graph.facebook.com/v26.0/'.self::PAGE_ID.'/posts*' => Http::response(['data' => [
                 ['id' => self::PAGE_ID.'_1', 'message' => 'Older post', 'created_time' => '2026-10-01T01:00:00+0000', 'permalink_url' => 'https://www.facebook.com/skbanicain/posts/pfbid0aaa'],
                 ['id' => self::PAGE_ID.'_2', 'message' => "Maraming salamat sa lahat ng dumalo!\n#SKBanicain", 'created_time' => '2026-10-20T01:00:00+0000', 'permalink_url' => 'https://www.facebook.com/skbanicain/posts/pfbid02XyZ'],
             ]]),
@@ -136,7 +146,7 @@ class FacebookImportTest extends TestCase
     {
         $officer = $this->officerWithConnectedPage();
         Http::fake([
-            'graph.facebook.com/v24.0/'.self::PAGE_ID.'/posts*' => Http::response(['data' => []]),
+            'graph.facebook.com/v26.0/'.self::PAGE_ID.'/posts*' => Http::response(['data' => []]),
             'graph.facebook.com/*' => Http::response(['error' => ['code' => 100, 'message' => 'Unsupported get request.']], 400),
         ]);
 

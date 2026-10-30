@@ -33,16 +33,19 @@ class FacebookPages
     }
 
     /**
-     * Get the Facebook page where the officer agrees to connect their Pages.
+     * Get the Facebook page where the officer agrees to connect their Pages. Apps set up with
+     * Facebook Login for Business name a login configuration instead of listing permissions.
      */
     public function loginUrl(string $state): string
     {
+        $configId = config('services.facebook.config_id');
+
         return 'https://www.facebook.com/'.config('services.facebook.graph_version').'/dialog/oauth?'.http_build_query([
             'client_id' => config('services.facebook.app_id'),
             'redirect_uri' => route('officer.facebook.callback'),
             'state' => $state,
-            'scope' => implode(',', self::SCOPES),
             'response_type' => 'code',
+            ...(filled($configId) ? ['config_id' => $configId] : ['scope' => implode(',', self::SCOPES)]),
         ]);
     }
 
