@@ -1,5 +1,5 @@
 <x-layouts.app title="Resolutions" heading="Register of resolutions" description="Every resolution of your SK council, with its outcome and signed copy. Add new ones from the session that adopted them.">
-    <form method="GET" class="mb-5 flex max-w-xl gap-2">
+    <form method="GET" data-live class="mb-5 flex max-w-xl gap-2">
         <label for="search" class="sr-only">Search resolutions</label>
         <input id="search" name="search" type="search" value="{{ $search }}" placeholder="Search by number or subject" class="flex-1 rounded-[8px] border border-line bg-white px-3 py-2 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">
         <button type="submit" class="rounded-[8px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep">Search</button>

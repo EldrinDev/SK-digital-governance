@@ -189,3 +189,8 @@ body {
         opacity: 0;
     }
 }
+
+/* A live search form updates as you type, so its Filter or Search button isn't needed. */
+form[data-live-ready] [type="submit"] {
+    display: none;
+}

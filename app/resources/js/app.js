@@ -154,6 +154,11 @@ const isLayoutClass = (name) => /^(?:[a-z0-9-]+:)*(?:w-|min-w-|max-w-|flex-(?:1|
 let listboxCount = 0;
 
 const enhanceListbox = (select) => {
+    if ('enhanced' in select.dataset) {
+        return;
+    }
+
+    select.dataset.enhanced = '';
     select.id ||= `select-${++listboxCount}`;
 
     const label = document.querySelector(`label[for="${select.id}"]`);
@@ -427,7 +432,9 @@ const enhanceListbox = (select) => {
     render();
 };
 
-document.querySelectorAll('select:not([multiple]):not([size]):not([data-native])').forEach(enhanceListbox);
+const enhanceSelects = (root = document) => root.querySelectorAll('select:not([multiple]):not([size]):not([data-native])').forEach(enhanceListbox);
+
+enhanceSelects();
 
 // Sections marked <details data-animate> slide open and shut instead of jumping, and their
 // contents fade in. data-expanded follows what the person asked for straight away, so the
@@ -1190,4 +1197,105 @@ if (announcementForm) {
     showText();
     showCounts();
     showCover();
+}
+
+// Search and filter forms marked data-live update their results as you type or pick a filter,
+// without reloading the page. The results come from the server as a whole page; the part of
+// the page around the form is swapped in, while the form itself stays put so typing isn't
+// interrupted. The address bar keeps the search, so refreshing, going back or sharing works.
+const liveForm = document.querySelector('main form[data-live]');
+
+if (liveForm) {
+    const main = liveForm.closest('main');
+    let controller = null;
+    let pending = null;
+    let lastUrl = location.href;
+
+    liveForm.toggleAttribute('data-live-ready', true);
+
+    const urlFor = (form) => {
+        const params = new URLSearchParams();
+
+        new FormData(form).forEach((value, name) => {
+            if (String(value).trim() !== '') {
+                params.append(name, value);
+            }
+        });
+
+        const base = new URL(form.getAttribute('action') || location.pathname, location.href);
+
+        return `${base.origin}${base.pathname}${params.size ? `?${params}` : ''}`;
+    };
+
+    // The form the person is using stays; only its refreshable parts (data-live-slot) are swapped.
+    const show = async (url) => {
+        if (url === lastUrl) {
+            return;
+        }
+
+        lastUrl = url;
+        controller?.abort();
+        controller = new AbortController();
+        main.setAttribute('aria-busy', 'true');
+        [...main.children].filter((part) => !part.contains(liveForm)).forEach((part) => part.classList.add('opacity-60', 'transition-opacity'));
+
+        try {
+            const response = await fetch(url, { headers: { Accept: 'text/html' }, signal: controller.signal });
+            const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const freshMain = page.querySelector('main');
+            const freshForm = freshMain?.querySelector('form[data-live]');
+
+            if (!response.ok || !freshMain || !freshForm) {
+                location.href = url;
+
+                return;
+            }
+
+            const focused = document.activeElement;
+            const caret = focused && 'selectionStart' in focused ? [focused.selectionStart, focused.selectionEnd] : null;
+
+            liveForm.querySelectorAll('[data-live-slot]').forEach((slot) => {
+                const fresh = freshForm.querySelector(`[data-live-slot="${slot.dataset.liveSlot}"]`);
+
+                if (fresh) {
+                    slot.replaceWith(document.importNode(fresh, true));
+                }
+            });
+            freshForm.replaceWith(liveForm);
+            main.replaceChildren(...freshMain.childNodes);
+            enhanceSelects(main);
+            history.replaceState(null, '', url);
+            document.title = page.title;
+
+            if (focused && document.contains(focused)) {
+                focused.focus({ preventScroll: true });
+                caret && focused.setSelectionRange?.(...caret);
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                location.href = url;
+            }
+        } finally {
+            main.removeAttribute('aria-busy');
+        }
+    };
+
+    const refresh = () => show(urlFor(liveForm));
+
+    liveForm.addEventListener('input', (event) => {
+        if (event.target.matches('input[type="search"], input[type="text"], input:not([type])')) {
+            clearTimeout(pending);
+            pending = setTimeout(refresh, 300);
+        }
+    });
+    liveForm.addEventListener('change', (event) => {
+        if (!event.target.matches('input[type="search"], input[type="text"], input:not([type])')) {
+            refresh();
+        }
+    });
+    liveForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        clearTimeout(pending);
+        refresh();
+    });
 }

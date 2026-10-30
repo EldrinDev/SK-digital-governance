@@ -34,19 +34,19 @@
                 @endforeach
             </nav>
 
-            <form method="GET" action="{{ route('programs.index') }}" class="flex flex-col gap-2 sm:flex-row">
+            <form method="GET" data-live action="{{ route('programs.index') }}" class="flex flex-col gap-2 sm:flex-row">
                 @if ($selectedStatus)
                     <input type="hidden" name="status" value="{{ $selectedStatus }}">
                 @endif
                 <label for="area" class="sr-only">Area</label>
-                <select id="area" name="area" onchange="this.form.requestSubmit()" class="h-11 rounded-[10px] border border-line bg-white px-3 text-sm sm:w-56">
+                <select id="area" name="area" class="h-11 rounded-[10px] border border-line bg-white px-3 text-sm sm:w-56">
                     <option value="">All areas</option>
                     @foreach ($areas as $area)
                         <option value="{{ $area->value }}" @selected($selectedArea === $area)>{{ $area->label() }}</option>
                     @endforeach
                 </select>
                 <label for="barangay" class="sr-only">Barangay</label>
-                <select id="barangay" name="barangay" onchange="this.form.requestSubmit()" class="h-11 rounded-[10px] border border-line bg-white px-3 text-sm sm:w-52">
+                <select id="barangay" name="barangay" class="h-11 rounded-[10px] border border-line bg-white px-3 text-sm sm:w-52">
                     <option value="">All barangays</option>
                     @foreach ($barangays as $barangay)
                         <option value="{{ $barangay->id }}" @selected($selectedBarangay === $barangay->id)>{{ $barangay->name }}</option>

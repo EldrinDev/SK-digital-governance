@@ -19,7 +19,7 @@
 
     {{-- Filters: kind of post, search, and barangay --}}
     <div class="mt-8 rounded-[16px] border border-line bg-white p-4 sm:p-5">
-        <form method="GET" action="{{ route('announcements.index') }}" class="flex flex-col gap-3 lg:flex-row lg:items-center" role="search">
+        <form method="GET" data-live action="{{ route('announcements.index') }}" class="flex flex-col gap-3 lg:flex-row lg:items-center" role="search">
             @if ($selectedCategory)
                 <input type="hidden" name="category" value="{{ $selectedCategory->value }}">
             @endif
@@ -30,7 +30,7 @@
             </div>
             <div class="flex gap-2">
                 <label for="barangay" class="sr-only">Barangay</label>
-                <select id="barangay" name="barangay" onchange="this.form.requestSubmit()" class="h-11 min-w-0 flex-1 rounded-[10px] border border-line bg-white px-3 text-sm lg:w-56 lg:flex-none">
+                <select id="barangay" name="barangay" class="h-11 min-w-0 flex-1 rounded-[10px] border border-line bg-white px-3 text-sm lg:w-56 lg:flex-none">
                     <option value="">All barangays ({{ $barangays->count() }})</option>
                     @foreach ($barangays as $barangay)
                         <option value="{{ $barangay->id }}" @selected($selectedBarangay === $barangay->id)>{{ $barangay->name }}</option>

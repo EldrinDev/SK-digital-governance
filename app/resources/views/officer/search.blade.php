@@ -1,5 +1,5 @@
 <x-layouts.app title="Search" heading="Search your workspace" description="Find PPAs, evidence, sessions, resolutions, events and announcements of your barangay.">
-    <form method="GET" action="{{ route('officer.search') }}" class="flex max-w-2xl gap-2" role="search">
+    <form method="GET" data-live action="{{ route('officer.search') }}" class="flex max-w-2xl gap-2" role="search">
         <label for="q" class="sr-only">Search</label>
         <input id="q" name="q" type="search" value="{{ $term }}" placeholder="e.g. clean-up, Res. No. 7, attendance sheet" autofocus class="block w-full rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">
         <button type="submit" class="rounded-[8px] bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep">Search</button>

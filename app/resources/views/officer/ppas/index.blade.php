@@ -9,7 +9,7 @@
         </a>
     </x-slot:actions>
 
-    <form method="GET" class="mb-5 grid gap-3 rounded-[12px] border border-line bg-white p-4 sm:grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,1fr))_auto]">
+    <form method="GET" data-live class="mb-5 grid gap-3 rounded-[12px] border border-line bg-white p-4 sm:grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,1fr))_auto]">
         <label class="sr-only" for="search">Search PPAs</label>
         <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search by name" class="rounded-[8px] border border-line px-3 py-2 text-sm outline-none focus:border-emerald focus:ring-3 focus:ring-emerald/20">
 
@@ -30,7 +30,7 @@
             @endforeach
         </select>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2" data-live-slot="actions">
             <button type="submit" class="rounded-[8px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep">Filter</button>
             @if (array_filter($filters))
                 <a href="{{ route('officer.ppas.index') }}" class="rounded-[8px] px-3 py-2 text-sm font-medium text-slate-muted hover:text-navy">Clear</a>

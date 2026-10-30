@@ -37,14 +37,14 @@
         </nav>
 
         @if ($scope === 'all')
-            <form method="GET" action="{{ route('events.index') }}" class="sm:ml-auto">
+            <form method="GET" data-live action="{{ route('events.index') }}" class="sm:ml-auto">
                 @foreach (['scope' => $youth ? 'all' : null, 'kind' => $selectedKind?->value, 'date' => $selectedDate?->format('Y-m-d')] as $name => $value)
                     @if ($value)
                         <input type="hidden" name="{{ $name }}" value="{{ $value }}">
                     @endif
                 @endforeach
                 <label for="barangay" class="sr-only">Barangay</label>
-                <select id="barangay" name="barangay" onchange="this.form.requestSubmit()" class="h-10 rounded-[10px] border border-line bg-white px-3 text-sm">
+                <select id="barangay" name="barangay" class="h-10 rounded-[10px] border border-line bg-white px-3 text-sm">
                     <option value="">Every barangay</option>
                     @foreach ($barangays as $barangay)
                         <option value="{{ $barangay->id }}" @selected($selectedBarangay === $barangay->id)>{{ $barangay->name }}</option>
