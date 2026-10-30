@@ -32,13 +32,13 @@
 <x-layouts.app title="Overview" :heading="$greeting.', '.str(auth()->user()->name)->before(' ').'!'" :description="now()->format('l, F j').'. Here’s where '.$barangay->name.'’s youth programs stand.'">
     <x-slot:actions>
         {{-- One way in to everything an officer posts or records; each also has its own page in the menu. --}}
-        <details class="relative" data-dropdown>
-            <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-dark [&::-webkit-details-marker]:hidden">
+        <details class="relative max-sm:w-full" data-dropdown>
+            <summary class="inline-flex cursor-pointer list-none items-center justify-center gap-2 rounded-[8px] bg-emerald px-4 py-2.5 max-sm:flex max-sm:w-full max-sm:py-3 text-sm font-semibold text-white hover:bg-emerald-dark [&::-webkit-details-marker]:hidden">
                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                 New
                 <svg viewBox="0 0 24 24" class="h-4 w-4 opacity-80 transition-transform [details[open]_&]:rotate-180" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </summary>
-            <ul class="absolute right-0 z-30 mt-2 w-72 rounded-[12px] border border-line bg-white p-2 shadow-lg shadow-navy/10 max-sm:left-0 max-sm:right-auto">
+            <ul class="absolute right-0 z-30 mt-2 w-72 rounded-[12px] border border-line bg-white p-2 shadow-lg shadow-navy/10 max-sm:inset-x-0 max-sm:w-auto">
                 @foreach ($newItems as $item)
                     <li>
                         <a href="{{ $item['href'] }}" class="flex items-start gap-3 rounded-[8px] px-3 py-2.5 hover:bg-mist">
