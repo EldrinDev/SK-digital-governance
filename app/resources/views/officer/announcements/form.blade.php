@@ -1,7 +1,13 @@
 @php
     use App\AnnouncementCategory;
+    use App\FacebookPages;
+    use App\OfficerPosition;
 
     $editing = $announcement->exists;
+    $barangay = $announcement->barangay;
+    $offersFacebookImport = ! $editing && FacebookPages::isConfigured();
+    $isChairperson = auth()->user()->holdsPosition(OfficerPosition::Chairperson);
+    $facebookIcon = '<path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/>';
     $chosenCategory = old('category', $announcement->category?->value ?? AnnouncementCategory::Announcement->value);
     $swatches = [
         AnnouncementCategory::Announcement->value => 'bg-navy',
@@ -22,7 +28,50 @@
             @method('PUT')
         @endif
 
+        <input type="hidden" name="imported_image" value="" data-imported-image>
+
         <div class="space-y-6">
+            @if ($offersFacebookImport)
+                {{-- Already on the SK's Facebook Page: paste the link and the form fills itself in. --}}
+                <section class="rounded-[12px] border border-[#1877f2]/25 bg-[#1877f2]/[0.04] p-5 sm:p-6" aria-labelledby="import-heading">
+                    <div class="flex items-start gap-3">
+                        <svg viewBox="0 0 24 24" class="mt-0.5 h-6 w-6 shrink-0 text-[#1877f2]" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
+                        <div class="min-w-0 flex-1">
+                            <h2 id="import-heading" class="font-display text-base font-semibold">Already posted it on Facebook?</h2>
+                            <p class="mt-0.5 text-sm text-slate-muted">Paste the post’s link. The caption, photo, kind and original date fill in for you to check.</p>
+                        </div>
+                    </div>
+
+                    @if ($barangay->hasFacebookPage())
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row" data-facebook-import data-endpoint="{{ route('officer.announcements.facebook-import') }}">
+                            <label for="facebook_link" class="sr-only">Link to the Facebook post</label>
+                            <input id="facebook_link" type="url" inputmode="url" autocomplete="off" placeholder="https://www.facebook.com/{{ Str::slug($barangay->facebook_page_name, '') }}/posts/…" class="min-w-0 flex-1 rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20">
+                            <button type="button" class="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#1877f2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1465d0] disabled:cursor-wait disabled:opacity-70" data-import-button>
+                                <svg viewBox="0 0 24 24" class="hidden h-4 w-4 animate-spin" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" data-import-spinner><path d="M21 12a9 9 0 1 1-6.2-8.6" stroke-linecap="round"/></svg>
+                                <span data-import-label>Bring it over</span>
+                            </button>
+                        </div>
+                        <p class="mt-2 min-h-5 text-sm" role="status" aria-live="polite" data-import-status></p>
+                        <p class="mt-1 text-xs text-slate-muted">
+                            Connected to <span class="font-medium text-navy">{{ $barangay->facebook_page_name }}</span>.
+                            @if ($isChairperson)
+                                <button type="submit" form="facebook-disconnect" class="font-medium text-slate-muted underline underline-offset-2 hover:text-navy">Disconnect</button>
+                            @endif
+                        </p>
+                    @elseif ($isChairperson)
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                            <a href="{{ route('officer.facebook.connect') }}" class="inline-flex items-center gap-2 rounded-[8px] bg-[#1877f2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1465d0]">
+                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
+                                Connect SK {{ $barangay->name }}’s Facebook Page
+                            </a>
+                            <p class="text-xs text-slate-muted">Once, so the platform can read the Page’s posts. It never posts for you.</p>
+                        </div>
+                    @else
+                        <p class="mt-4 rounded-[8px] bg-white px-3.5 py-2.5 text-sm text-slate-muted">Your SK Chairperson needs to connect SK {{ $barangay->name }}’s Facebook Page first. Until then, copy the caption over and add the link under Options.</p>
+                    @endif
+                </section>
+            @endif
+
             <section class="space-y-5 rounded-[12px] border border-line bg-white p-6">
                 <fieldset>
                     <legend class="text-sm font-medium">Kind of post</legend>
@@ -90,8 +139,8 @@
                 <details class="group border-t border-line px-6 py-4" @if (old('source_url', $announcement->source_url) || $errors->hasAny(['source_url', 'originally_posted_at'])) open @endif>
                     <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
                         <span class="flex items-center gap-2.5">
-                            <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#1877f2]" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
-                            Bringing it over from Facebook?
+                            <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#1877f2]" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
+                            Link to the Facebook post
                         </span>
                         <svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-muted transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                     </summary>
@@ -174,4 +223,11 @@
             <a href="{{ route('officer.announcements.index') }}" class="rounded-[8px] px-4 py-2.5 text-sm font-medium text-slate-muted hover:text-navy">Cancel</a>
         </div>
     </form>
+
+    @if ($offersFacebookImport && $isChairperson && $barangay->hasFacebookPage())
+        <form id="facebook-disconnect" method="POST" action="{{ route('officer.facebook.destroy') }}" hidden>
+            @csrf
+            @method('DELETE')
+        </form>
+    @endif
 </x-layouts.app>

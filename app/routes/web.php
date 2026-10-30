@@ -93,7 +93,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('abyips/{abyip}/report', [Officer\AccomplishmentReportController::class, 'store'])->name('abyips.report.store');
         Route::get('disclosure', [Officer\DisclosureController::class, 'index'])->name('disclosure.index');
 
+        Route::post('announcements/facebook-import', Officer\FacebookImportController::class)->middleware('throttle:20,1')->name('announcements.facebook-import');
         Route::resource('announcements', Officer\AnnouncementController::class)->except('show');
+        Route::get('facebook/connect', [Officer\FacebookConnectionController::class, 'redirect'])->name('facebook.connect');
+        Route::get('facebook/callback', [Officer\FacebookConnectionController::class, 'callback'])->name('facebook.callback');
+        Route::post('facebook/page', [Officer\FacebookConnectionController::class, 'store'])->name('facebook.store');
+        Route::delete('facebook', [Officer\FacebookConnectionController::class, 'destroy'])->name('facebook.destroy');
         Route::resource('events', Officer\EventController::class)->only(['index', 'create', 'store', 'show']);
         Route::patch('events/{event}/registrations/{registration}', [Officer\EventAttendanceController::class, 'update'])
             ->scopeBindings()

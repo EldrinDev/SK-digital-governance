@@ -80,6 +80,8 @@ class AuditLog extends Model
         'announcement.posted' => 'Posted an announcement',
         'announcement.updated' => 'Updated an announcement',
         'announcement.removed' => 'Took down an announcement',
+        'facebook.connected' => 'Connected the Facebook Page',
+        'facebook.disconnected' => 'Disconnected the Facebook Page',
         'event.created' => 'Posted an event',
         'event.registered' => 'Registered for an event',
         'event.unregistered' => 'Cancelled an event registration',

@@ -62,6 +62,8 @@ class AnnouncementController extends Controller
 
         if ($request->hasFile('image')) {
             $announcement->image_path = $request->file('image')->store("announcements/{$barangay->id}");
+        } else {
+            $announcement->image_path = $this->importedImage($request, $barangay->id);
         }
 
         $announcement->save();
@@ -105,11 +107,13 @@ class AnnouncementController extends Controller
         $this->fillSource($request, $announcement);
         $announcement->pinned_at = $request->boolean('pinned') ? ($announcement->pinned_at ?? now()) : null;
 
-        if ($request->hasFile('image') || $request->boolean('remove_image')) {
+        $imported = $request->hasFile('image') ? null : $this->importedImage($request, $announcement->barangay_id);
+
+        if ($request->hasFile('image') || $imported !== null || $request->boolean('remove_image')) {
             $this->deleteImage($announcement);
             $announcement->image_path = $request->hasFile('image')
                 ? $request->file('image')->store("announcements/{$announcement->barangay_id}")
-                : null;
+                : $imported;
         }
 
         $announcement->save();
@@ -170,6 +174,25 @@ class AnnouncementController extends Controller
         $announcement->source_url = $request->filled('source_url') ? $request->string('source_url')->toString() : null;
         $announcement->originally_posted_at = $announcement->source_url !== null ? $request->date('originally_posted_at') : null;
         $announcement->image_credit = $request->filled('image_credit') ? $request->string('image_credit')->toString() : null;
+    }
+
+    /**
+     * Move a photo brought over from Facebook into place. The form only knows the photo by a
+     * token this session handed out, so it can't point at any other file.
+     */
+    private function importedImage(Request $request, int $barangayId): ?string
+    {
+        $token = $request->string('imported_image')->toString();
+        $path = $token !== '' ? $request->session()->pull("facebook.images.{$token}") : null;
+
+        if (! is_string($path) || ! Storage::exists($path)) {
+            return null;
+        }
+
+        $destination = "announcements/{$barangayId}/".basename($path);
+        Storage::move($path, $destination);
+
+        return $destination;
     }
 
     private function deleteImage(Announcement $announcement): void

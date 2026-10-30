@@ -5,6 +5,7 @@ namespace App\Models;
 use App\UserRole;
 use Database\Factories\BarangayFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['name', 'is_participating', 'facebook_url'])]
+#[Hidden(['facebook_page_token'])]
 class Barangay extends Model
 {
     /** @use HasFactory<BarangayFactory> */
@@ -27,6 +29,8 @@ class Barangay extends Model
     {
         return [
             'is_participating' => 'boolean',
+            'facebook_page_token' => 'encrypted',
+            'facebook_connected_at' => 'datetime',
         ];
     }
 
@@ -50,6 +54,14 @@ class Barangay extends Model
         return $this->logo_path !== null
             ? route('barangays.logo', ['barangay' => $this, 'v' => substr(md5($this->logo_path), 0, 8)])
             : asset('images/sk-logo.svg');
+    }
+
+    /**
+     * Determine whether the SK's Facebook Page is connected, so its posts can be imported.
+     */
+    public function hasFacebookPage(): bool
+    {
+        return $this->facebook_page_id !== null && $this->facebook_page_token !== null;
     }
 
     /**

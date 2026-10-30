@@ -613,6 +613,9 @@ if (announcementForm) {
     const fileName = announcementForm.querySelector('[data-file-name]');
     const clearImage = announcementForm.querySelector('[data-clear-image]');
     const dropzone = announcementForm.querySelector('[data-dropzone]');
+    const importedImage = announcementForm.querySelector('[data-imported-image]');
+    const importer = announcementForm.querySelector('[data-facebook-import]');
+    let importedPreview = null;
     const detailLine = /^\s*(🗓️?|📅|⏰|[\u{1F550}-\u{1F567}]|📍)\s*(.+)$/u;
     let objectUrl = null;
 
@@ -675,7 +678,7 @@ if (announcementForm) {
 
     const showCover = () => {
         const chosen = announcementForm.querySelector('input[name="category"]:checked')?.value;
-        const source = objectUrl ?? (removeImage?.checked ? '' : previewImage.dataset.savedImage);
+        const source = objectUrl ?? importedPreview ?? (removeImage?.checked ? '' : previewImage.dataset.savedImage);
 
         previewImage.hidden = !source;
         previewImage.src = source || '';
@@ -692,8 +695,15 @@ if (announcementForm) {
         }
 
         objectUrl = file ? URL.createObjectURL(file) : null;
-        fileName.textContent = file ? file.name : fileName.dataset.empty;
-        clearImage.hidden = !file;
+
+        // A photo picked by hand replaces one brought over from Facebook.
+        if (file) {
+            importedPreview = null;
+            importedImage.value = '';
+        }
+
+        fileName.textContent = file ? file.name : (importedPreview ? 'Photo from the Facebook post' : fileName.dataset.empty);
+        clearImage.hidden = !file && !importedPreview;
         showCover();
     };
 
@@ -716,8 +726,88 @@ if (announcementForm) {
 
     clearImage.addEventListener('click', () => {
         image.value = '';
+        importedPreview = null;
+        importedImage.value = '';
         showFile();
     });
+
+    // Bring a post over from the SK's connected Facebook Page: the server reads it, and the
+    // form fills in for the officer to check before posting.
+    if (importer) {
+        const link = importer.querySelector('input');
+        const button = importer.querySelector('[data-import-button]');
+        const status = announcementForm.querySelector('[data-import-status]');
+
+        const say = (message, isError = false) => {
+            status.textContent = message;
+            status.className = `mt-2 min-h-5 text-sm ${isError ? 'text-error' : 'text-emerald'}`;
+        };
+
+        const setValue = (name, value) => {
+            const input = field(name);
+            input.value = value ?? '';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+
+        const bringOver = async () => {
+            if (link.value.trim() === '' || button.disabled) {
+                return say('Paste the link to the Facebook post first.', true);
+            }
+
+            button.disabled = true;
+            importer.querySelector('[data-import-spinner]').classList.remove('hidden');
+            importer.querySelector('[data-import-label]').textContent = 'Reading the post…';
+            say('');
+
+            try {
+                const response = await fetch(importer.dataset.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': field('_token').value },
+                    body: JSON.stringify({ url: link.value.trim() }),
+                });
+                const post = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    say(post.errors?.url?.[0] ?? post.message ?? 'The post couldn’t be brought over. Try again.', true);
+
+                    return;
+                }
+
+                announcementForm.querySelector(`input[name="category"][value="${post.category}"]`).checked = true;
+                setValue('title', post.title);
+                setValue('body', post.body);
+                setValue('source_url', post.source_url);
+                setValue('originally_posted_at', post.originally_posted_at);
+                field('source_url').closest('details').open = true;
+
+                image.value = '';
+                objectUrl = null;
+                importedPreview = post.image?.preview ?? null;
+                importedImage.value = post.image?.token ?? '';
+                showFile();
+
+                say(post.image
+                    ? 'Brought over with its photo. Check the headline and kind, then post it.'
+                    : 'Brought over. The post had no photo, so it gets a poster. Check the headline and kind, then post it.');
+                field('title').focus();
+            } catch {
+                say('The post couldn’t be brought over. Check the internet connection and try again.', true);
+            } finally {
+                button.disabled = false;
+                importer.querySelector('[data-import-spinner]').classList.add('hidden');
+                importer.querySelector('[data-import-label]').textContent = 'Bring it over';
+            }
+        };
+
+        button.addEventListener('click', bringOver);
+        link.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                bringOver();
+            }
+        });
+        link.addEventListener('paste', () => setTimeout(bringOver));
+    }
 
     // Date, time and place buttons start a new caption line with their marker.
     announcementForm.querySelectorAll('[data-insert-line]').forEach((button) => {
