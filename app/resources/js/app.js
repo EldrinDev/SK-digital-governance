@@ -705,6 +705,7 @@ if (announcementForm) {
         fileName.textContent = file ? file.name : (importedPreview ? 'Photo from the Facebook post' : fileName.dataset.empty);
         clearImage.hidden = !file && !importedPreview;
         showCover();
+        photoChanged();
     };
 
     announcementForm.addEventListener('input', (event) => {
@@ -838,6 +839,9 @@ if (announcementForm) {
         }
     });
 
+    // Told when the photo changes, so the Facebook checklist can tick it off.
+    let photoChanged = () => {};
+
     // A photo pasted with Ctrl + V anywhere on the form becomes the post's image.
     announcementForm.addEventListener('paste', (event) => {
         const picture = [...(event.clipboardData?.files ?? [])].find((file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type));
@@ -854,7 +858,6 @@ if (announcementForm) {
         image.files = files.files;
         showFile();
         fileName.textContent = 'Photo pasted from the clipboard';
-        announcementForm.querySelector('[data-photo-note]')?.remove();
     });
 
     // "Paste from Facebook": clean a post copied off Facebook and fill the form with it.
@@ -981,15 +984,70 @@ if (announcementForm) {
 
         const localDateTime = (date) => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
+        const input = pastePanel.querySelector('[data-paste-input]');
+        const result = pastePanel.querySelector('[data-paste-result]');
+        const checklist = pastePanel.querySelector('[data-paste-checklist]');
+        const summary = pastePanel.querySelector('[data-paste-summary]');
+        const icons = {
+            done: ['bg-emerald text-white', '<path d="M20 6 9 17l-5-5"/>'],
+            todo: ['bg-gold/25 text-[#a16207]', '<path d="M12 8v5M12 16h.01"/>'],
+            none: ['bg-mist text-slate-muted', '<path d="M7 12h10"/>'],
+        };
+        let lastFill = null;
+
+        // One line of the checklist: what came over from the post, or what's still to do.
+        const row = ([state, label, value]) => {
+            const item = document.createElement('li');
+            const mark = document.createElement('span');
+            const text = document.createElement('span');
+            const name = document.createElement('span');
+            const detail = document.createElement('span');
+
+            item.className = 'flex min-w-0 items-start gap-2.5';
+            mark.className = `mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${icons[state][0]}`;
+            mark.append(icon('h-3 w-3', icons[state][1]));
+            text.className = 'min-w-0 leading-snug';
+            name.className = 'block font-medium';
+            name.textContent = label;
+            detail.className = 'block truncate text-xs text-slate-muted';
+            detail.textContent = value;
+            text.append(name, detail);
+            item.append(mark, text);
+
+            return item;
+        };
+
+        const showChecklist = () => {
+            if (!lastFill) {
+                return;
+            }
+
+            const { post, link } = lastFill;
+            const kind = announcementForm.querySelector(`input[name="category"][value="${post.category}"]`).closest('label').querySelector('.font-semibold').textContent.trim();
+            const details = post.body.split('\n').filter((line) => /^(🗓️|🕑|📍) /u.test(line)).length;
+            const hasPhoto = image.files.length > 0 || Boolean(importedPreview);
+            const postedOn = post.postedAt?.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+            checklist.replaceChildren(...[
+                [post.title ? 'done' : 'todo', 'Headline', post.title || 'Type one below'],
+                ['done', 'Kind of post', `${kind}, change it below if it’s wrong`],
+                [details ? 'done' : 'none', 'Date, time and place', details ? `${details} ${details === 1 ? 'line' : 'lines'} for the poster and calendar` : 'None in the post'],
+                [!link ? 'none' : (postedOn ? 'done' : 'todo'), 'Facebook link and date', !link ? 'No link pasted' : (postedOn ? `Posted ${postedOn}` : 'Add when it went up, under Options')],
+                [hasPhoto ? 'done' : 'todo', 'Photo', hasPhoto ? 'Added to the post' : 'Copy it on Facebook, then Ctrl + V'],
+            ].map(row));
+        };
+
+        photoChanged = showChecklist;
+
         const fill = () => {
             if (pasted.value.trim() === '') {
-                status.className = 'text-sm text-error';
                 status.textContent = 'Paste the post from Facebook first.';
 
                 return;
             }
 
             const post = read(pasted.value);
+            const link = pastedLink.value.trim();
             const set = (name, value) => {
                 field(name).value = value;
                 field(name).dispatchEvent(new Event('input', { bubbles: true }));
@@ -1000,29 +1058,34 @@ if (announcementForm) {
             announcementForm.querySelector(`input[name="category"][value="${post.category}"]`).checked = true;
             showCover();
 
-            const notes = ['Filled in. Check the headline and kind, then post it.'];
-
-            if (pastedLink.value.trim() !== '') {
-                set('source_url', pastedLink.value.trim());
+            if (link !== '') {
+                set('source_url', link);
                 field('source_url').closest('details').open = true;
 
                 if (post.postedAt) {
                     set('originally_posted_at', localDateTime(post.postedAt));
-                } else {
-                    notes.push('Add when it went up on Facebook, under Options.');
                 }
             }
 
-            status.className = 'text-sm text-emerald';
-            status.textContent = notes.join(' ');
-
-            if (!image.files.length && !importedPreview) {
-                const photoNote = document.createElement('span');
-                photoNote.dataset.photoNote = '';
-                photoNote.textContent = ' Paste the photo with Ctrl + V if it had one.';
-                status.append(photoNote);
-            }
+            lastFill = { post, link };
+            status.textContent = '';
+            input.hidden = true;
+            result.hidden = false;
+            summary.textContent = post.title ? `Filled in from “${post.title}”` : 'Filled in from your Facebook post';
+            summary.classList.add('truncate', 'text-emerald');
+            showChecklist();
         };
+
+        pastePanel.querySelector('[data-paste-again]').addEventListener('click', () => {
+            lastFill = null;
+            pasted.value = '';
+            pastedLink.value = '';
+            input.hidden = false;
+            result.hidden = true;
+            summary.textContent = 'Paste it in and the form fills itself.';
+            summary.classList.remove('truncate', 'text-emerald');
+            pasted.focus();
+        });
 
         pastePanel.querySelector('[data-paste-fill]').addEventListener('click', fill);
         pasted.addEventListener('paste', () => setTimeout(() => {

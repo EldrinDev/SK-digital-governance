@@ -23,7 +23,7 @@
     ];
 @endphp
 <x-layouts.app :title="$editing ? 'Edit announcement' : 'Post an announcement'" :heading="$editing ? 'Edit announcement' : 'Post an announcement'" :description="$editing ? 'Changes show on the public portal right away.' : 'It appears on the public portal as soon as you post it.'">
-    <form method="POST" action="{{ $editing ? route('officer.announcements.update', $announcement) : route('officer.announcements.store') }}" enctype="multipart/form-data" class="grid items-start gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_21rem] xl:grid-cols-[minmax(0,1fr)_24rem]" data-announcement-form novalidate>
+    <form method="POST" action="{{ $editing ? route('officer.announcements.update', $announcement) : route('officer.announcements.store') }}" enctype="multipart/form-data" class="grid grid-cols-1 items-start gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_21rem] xl:grid-cols-[minmax(0,1fr)_24rem]" data-announcement-form novalidate>
         @csrf
         @if ($editing)
             @method('PUT')
@@ -33,19 +33,16 @@
 
         <div class="space-y-6">
             @unless ($editing)
-                {{-- Already on the SK's Facebook Page: bring it over instead of typing it again. --}}
-                <section class="rounded-[12px] border border-[#1877f2]/25 bg-[#1877f2]/[0.04] p-5 sm:p-6" aria-labelledby="import-heading">
-                    <div class="flex items-start gap-3">
-                        <svg viewBox="0 0 24 24" class="mt-0.5 h-6 w-6 shrink-0 text-[#1877f2]" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
-                        <div class="min-w-0 flex-1">
-                            <h2 id="import-heading" class="font-display text-base font-semibold">Already posted it on Facebook?</h2>
-                            <p class="mt-0.5 text-sm text-slate-muted">
-                                {{ $canImportByLink ? 'Paste the post’s link. The caption, photo, kind and original date fill in for you to check.' : 'Copy the post from Facebook and paste it here. The headline, caption, kind and date fill in for you to check.' }}
-                            </p>
+                @if ($canImportByLink)
+                    {{-- The SK's Facebook Page is connected: the post's link is enough. --}}
+                    <section class="rounded-[12px] border border-[#1877f2]/25 bg-[#1877f2]/[0.04] p-5 sm:p-6" aria-labelledby="import-heading">
+                        <div class="flex items-start gap-3">
+                            <svg viewBox="0 0 24 24" class="mt-0.5 h-6 w-6 shrink-0 text-[#1877f2]" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
+                            <div class="min-w-0 flex-1">
+                                <h2 id="import-heading" class="font-display text-base font-semibold">Already posted it on Facebook?</h2>
+                                <p class="mt-0.5 text-sm text-slate-muted">Paste the post’s link. The caption, photo, kind and original date fill in for you to check.</p>
+                            </div>
                         </div>
-                    </div>
-
-                    @if ($canImportByLink)
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row" data-facebook-import data-endpoint="{{ route('officer.announcements.facebook-import') }}">
                             <label for="facebook_link" class="sr-only">Link to the Facebook post</label>
                             <input id="facebook_link" type="url" inputmode="url" autocomplete="off" placeholder="https://www.facebook.com/{{ Str::slug($barangay->facebook_page_name, '') }}/posts/…" class="min-w-0 flex-1 rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20">
@@ -61,33 +58,69 @@
                                 <button type="submit" form="facebook-disconnect" class="font-medium text-slate-muted underline underline-offset-2 hover:text-navy">Disconnect</button>
                             @endif
                         </p>
-                    @else
-                        <div class="mt-4 space-y-3" data-facebook-paste>
-                            <div>
-                                <label for="facebook_text" class="block text-sm font-medium">The post, copied from Facebook</label>
-                                <textarea id="facebook_text" rows="4" class="mt-1.5 block w-full rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm leading-relaxed outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20" placeholder="Select the whole post on Facebook, from the Page’s name down to its last line, then copy and paste it here. Likes, comments and “See more” are cleaned out."></textarea>
+                    </section>
+                @else
+                    {{-- Paste a post copied off Facebook; folded away for officers writing a new one. --}}
+                    <details class="group overflow-hidden rounded-[12px] border border-[#1877f2]/25 bg-white open:bg-[#1877f2]/[0.03]" data-facebook-paste>
+                        <summary class="flex cursor-pointer list-none items-center gap-3 px-5 py-4 hover:bg-[#1877f2]/[0.04] sm:px-6 [&::-webkit-details-marker]:hidden">
+                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1877f2] text-white">
+                                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="currentColor" aria-hidden="true">{!! $facebookIcon !!}</svg>
+                            </span>
+                            <span class="min-w-0 flex-1 leading-tight">
+                                <span class="block font-display text-base font-semibold">Already posted it on Facebook?</span>
+                                <span class="mt-0.5 block text-sm text-slate-muted" data-paste-summary>Paste it in and the form fills itself.</span>
+                            </span>
+                            <span class="hidden shrink-0 rounded-[8px] border border-[#1877f2]/30 bg-white px-3 py-1.5 text-sm font-semibold text-[#1877f2] group-open:hidden sm:inline-block">Paste a post</span>
+                            <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0 text-slate-muted transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </summary>
+
+                        <div class="border-t border-[#1877f2]/15 px-5 pb-5 pt-4 sm:px-6" data-paste-input>
+                            <ol class="grid gap-3 text-sm sm:grid-cols-3">
+                                @foreach ([
+                                    ['Copy the post', 'Select it on Facebook, from the Page’s name to the last line.'],
+                                    ['Paste it below', 'Likes, comments and “See more” are cleaned out.'],
+                                    ['Copy the photo', 'Right-click it, Copy image, then Ctrl + V on this page.'],
+                                ] as [$step, $hint])
+                                    <li class="flex gap-2.5">
+                                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1877f2]/10 text-xs font-semibold text-[#1877f2]">{{ $loop->iteration }}</span>
+                                        <span class="leading-snug">
+                                            <span class="block font-medium">{{ $step }}</span>
+                                            <span class="text-xs text-slate-muted">{{ $hint }}</span>
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ol>
+
+                            <label for="facebook_text" class="sr-only">The post, copied from Facebook</label>
+                            <textarea id="facebook_text" rows="5" class="mt-4 block w-full resize-y rounded-[10px] border-2 border-dashed border-[#1877f2]/30 bg-white px-4 py-3 text-sm leading-relaxed outline-none placeholder:text-slate-muted/80 focus:border-solid focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/15" placeholder="Paste the post here (Ctrl + V)"></textarea>
+
+                            <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <label for="facebook_post_link" class="sr-only">Link to the post (optional)</label>
+                                <div class="relative min-w-0 flex-1">
+                                    <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-muted" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+                                    <input id="facebook_post_link" type="url" inputmode="url" autocomplete="off" placeholder="Link to the post (optional), keeps its date" class="block w-full rounded-[8px] border border-line bg-white py-2.5 pl-9 pr-3.5 text-sm outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20">
+                                </div>
+                                <button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-[8px] bg-[#1877f2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1465d0]" data-paste-fill>Fill in the form</button>
                             </div>
-                            <div>
-                                <label for="facebook_post_link" class="block text-sm font-medium">Link to the post <span class="font-normal text-slate-muted">(optional)</span></label>
-                                <input id="facebook_post_link" type="url" inputmode="url" autocomplete="off" placeholder="https://www.facebook.com/…" class="mt-1.5 block w-full rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-[#1877f2] focus:ring-3 focus:ring-[#1877f2]/20">
-                            </div>
-                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                <button type="button" class="inline-flex items-center gap-2 rounded-[8px] bg-[#1877f2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1465d0]" data-paste-fill>Fill in the form</button>
-                                <p class="text-sm" role="status" aria-live="polite" data-paste-status></p>
-                            </div>
-                            <p class="flex items-start gap-2 rounded-[8px] bg-white px-3.5 py-2.5 text-xs leading-relaxed text-slate-muted">
-                                <svg viewBox="0 0 24 24" class="mt-0.5 h-4 w-4 shrink-0 text-[#1877f2]" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
-                                <span>For the photo: right-click it on Facebook and choose <span class="font-medium text-navy">Copy image</span>, then press <kbd class="rounded border border-line bg-mist px-1 font-sans text-[0.7rem] text-navy">Ctrl</kbd> + <kbd class="rounded border border-line bg-mist px-1 font-sans text-[0.7rem] text-navy">V</kbd> anywhere on this page.</span>
-                            </p>
+                            <p class="mt-2 min-h-5 text-sm text-error" role="status" aria-live="polite" data-paste-status></p>
+
+                            @if ($offersFacebookImport && $isChairperson)
+                                <p class="text-xs text-slate-muted">
+                                    Or <a href="{{ route('officer.facebook.connect') }}" class="font-medium text-[#1877f2] hover:underline">connect SK {{ $barangay->name }}’s Facebook Page</a> to bring posts over from just their link.
+                                </p>
+                            @endif
                         </div>
 
-                        @if ($offersFacebookImport && $isChairperson)
-                            <p class="mt-3 text-xs text-slate-muted">
-                                Or <a href="{{ route('officer.facebook.connect') }}" class="font-medium text-[#1877f2] hover:underline">connect SK {{ $barangay->name }}’s Facebook Page</a> to bring posts over from just their link.
-                            </p>
-                        @endif
-                    @endif
-                </section>
+                        {{-- After filling: what came over, and what's left to do. --}}
+                        <div class="border-t border-[#1877f2]/15 px-5 pb-5 pt-4 sm:px-6" data-paste-result hidden>
+                            <ul class="grid grid-cols-1 gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2" data-paste-checklist></ul>
+                            <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#1877f2]/15 pt-3">
+                                <p class="flex-1 text-xs text-slate-muted">Check the headline and kind below, then post it.</p>
+                                <button type="button" class="text-sm font-semibold text-[#1877f2] hover:underline" data-paste-again>Paste a different post</button>
+                            </div>
+                        </div>
+                    </details>
+                @endif
             @endunless
 
             <section class="space-y-5 rounded-[12px] border border-line bg-white p-6">
