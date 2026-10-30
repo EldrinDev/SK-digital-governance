@@ -23,7 +23,6 @@ class FacebookConnectionController extends Controller
         abort_unless(FacebookPages::isConfigured(), 404);
 
         $request->session()->put('facebook.state', $state = Str::random(40));
-        $request->session()->put('facebook.return_to', url()->previous(route('officer.announcements.create')));
 
         return redirect()->away($facebook->loginUrl($state));
     }
@@ -37,7 +36,7 @@ class FacebookConnectionController extends Controller
         $this->authorizeChairperson($request);
 
         $state = (string) $request->session()->pull('facebook.state');
-        $returnTo = (string) $request->session()->get('facebook.return_to', route('officer.announcements.create'));
+        $returnTo = route('officer.announcements.create');
 
         if ($state === '' || ! hash_equals($state, (string) $request->query('state')) || ! $request->filled('code')) {
             return redirect($returnTo)->toast('The Facebook Page wasn’t connected. Try again, and choose Continue on Facebook.', 'warning');
@@ -113,7 +112,7 @@ class FacebookConnectionController extends Controller
         $request->session()->forget('facebook.pages');
         AuditLog::record('facebook.connected', $request->user(), ['page' => $page['name']], $barangay);
 
-        return redirect((string) $request->session()->pull('facebook.return_to', route('officer.announcements.create')))
+        return redirect()->route('officer.announcements.create')
             ->with('status', "{$page['name']} is connected. Paste a post’s link to bring it over.");
     }
 
